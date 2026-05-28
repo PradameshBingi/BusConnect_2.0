@@ -1,0 +1,6 @@
+{
+  "name": "busconnect-retired",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Redundant package file. Root package.json is the source of truth."
+}

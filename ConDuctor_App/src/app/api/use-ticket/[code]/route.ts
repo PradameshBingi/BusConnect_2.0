@@ -1,0 +1,74 @@
+import { NextResponse } from 'next/server';
+import dbConnect, { getTicketModel } from '@/lib/mongodb';
+
+export const dynamic = "force-dynamic";
+
+export async function POST(
+  request: Request,
+  { params }: { params: Promise<{ code: string }> }
+) {
+  try {
+    const conn = await dbConnect();
+    if (!conn) {
+      return NextResponse.json({ 
+        error: "Database Unreachable", 
+        details: "Could not establish connection to MongoDB." 
+      }, { status: 503 });
+    }
+
+    const { code } = await params;
+    const ticketCode = code.toUpperCase();
+    
+    let updateData: any = {};
+    try {
+      const text = await request.text();
+      updateData = text ? JSON.parse(text) : {};
+    } catch (e) {
+      updateData = {};
+    }
+    
+    const Ticket = getTicketModel();
+    const ticket = await Ticket.findOne({ ticketCode });
+    if (!ticket) return NextResponse.json({ status: "invalid" }, { status: 404 });
+
+    if (ticket.status === "used") {
+      return NextResponse.json({ status: "already_used", message: "Ticket already validated" }, { status: 400 });
+    }
+
+    if (ticket.status === "cancelled") {
+      return NextResponse.json({ status: "cancelled", message: "Ticket is cancelled" }, { status: 400 });
+    }
+
+    // Re-implemented Auto-expire check during the validation process
+    if (ticket.status === 'valid') {
+        const now = new Date();
+        const createdAt = new Date(ticket.createdAt);
+        const expiryTime = new Date(createdAt.getTime() + 10 * 60 * 1000);
+
+        if (now > expiryTime) {
+            ticket.status = 'expired';
+            await ticket.save();
+            return NextResponse.json({ status: "expired", message: "Ticket has expired and cannot be validated" }, { status: 400 });
+        }
+    } else if (ticket.status === 'expired') {
+        return NextResponse.json({ status: "expired", message: "Ticket has already expired" }, { status: 400 });
+    }
+
+    ticket.status = "used";
+    ticket.validatedAt = new Date();
+
+    if (updateData.busType) ticket.busType = updateData.busType;
+    if (updateData.totalFare) ticket.totalFare = updateData.totalFare;
+    if (updateData.fare) ticket.fare = updateData.fare;
+
+    await ticket.save();
+    return NextResponse.json({ status: "updated", ticket: ticket.toObject() });
+
+  } catch (err: any) {
+    console.error("❌ API /use-ticket Error:", err);
+    return NextResponse.json({ 
+      error: "Database Unreachable", 
+      details: err.message 
+    }, { status: 500 });
+  }
+}

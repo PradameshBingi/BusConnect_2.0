@@ -1,0 +1,7 @@
+{
+    "private": true,
+    "workspaces": [
+      "Conductor_App",
+      "Passenger_App"
+    ]
+  }   
