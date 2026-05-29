@@ -5,7 +5,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import Header from '@/app/components/header';
-import { HelpCircle, User, Briefcase, Zap } from "lucide-react";
+import { HelpCircle, User, Briefcase, Zap, Ticket, ShieldCheck } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 const passengerFaqs = [
@@ -15,77 +15,64 @@ const passengerFaqs = [
   },
   {
     question: "How is the fare calculated?",
-    answer: "Fares are based on distance. Women travel free on City Ordinary and Metro Express buses under the Maha Lakshmi scheme. Surcharges apply for men and children on premium services (Metro Express and Metro Deluxe), and for women on Metro Deluxe buses."
+    answer: "Fares are based on distance. Women travel free on City Ordinary and Metro Express buses. Surcharges apply for men and children on premium services, and for everyone on Metro Deluxe buses."
   },
   {
-    question: "How do I cancel my ticket?",
-    answer: "Go to your 'Booking History'. If a ticket is still valid (within 1 minute of booking), you'll see a 'Cancel Ticket' button. A 10% cancellation fee on the original fare is applied, and any amount you paid is credited automatically to your wallet."
+    question: "How do I modify my booking?",
+    answer: "Go to 'Modify Booking' if your ticket is valid. You can update the route or passenger count. Refunds for removed members (minus 10% fee) go to your wallet, and additions require digital payment."
   },
   {
-    question: "What happens if my ticket expires?",
-    answer: "If your ticket expires (after the 1-minute cancellation window), it can no longer be used for travel. However, the amount you paid, minus a 10% processing fee, will be automatically credited to your wallet since the ticket was not used."
+    question: "What are the cancellation rules?",
+    answer: "Valid tickets can be cancelled in 'Booking History'. A 10% processing fee is applied, and the balance is credited to the wallet."
   },
   {
-    question: "How do I upgrade my ticket?",
-    answer: "If you have a valid ticket and wish to travel on a higher-tier bus, you can upgrade it in 'Booking History'. The system calculates the fare difference, which you can pay digitally. Your ticket is updated instantly."
-  },
-  {
-    question: "What if I have no mobile network while boarding?",
-    answer: "Your ticket details are stored locally in your browser. Simply open your 'Booking History' to show the conductor your Ticket Code and Security PIN. An active internet connection is not required for verification once the ticket is booked."
-  },
-  {
-    question: "Is the digital payment secure?",
-    answer: "Yes. BusConnect uses a secure, simulated payment gateway that mimics industry-standard encryption. Your transactions are safe, and your sensitive data is never stored in plain text."
-  },
-  {
-    question: "Can I book a ticket for someone else?",
-    answer: "Yes! You can book a ticket on your device and share the 10-digit Ticket Code and 5-digit Security PIN with the person travelling. The conductor will use these codes to verify their journey."
+    question: "What happens if a ticket expires?",
+    answer: "Tickets expire if not validated within 10 minutes. An automatic refund (minus 10% fee) is credited to the passenger's wallet to ensure fair usage."
   },
 ];
 
 const conductorFaqs = [
   {
     question: "How do I verify a standard ticket?",
-    answer: "Navigate to 'Ticket Tools' > 'Verify Ticket Code'. Enter the ticket code from the passenger's screen and press 'Verify'. The system will instantly show you if the ticket is valid. After verification, a digital receipt is generated."
+    answer: "Go to 'Ticket Tools' > 'Verify Ticket Code'. Enter the passenger's code. If valid, check their 5-digit PIN for security. Click 'Validate Boarding' to mark as USED and generate the digital receipt."
   },
   {
     question: "What is 'Verify by Bus Type' used for?",
-    answer: "This tool is for when a passenger boards a different bus type than booked (e.g., has an 'Ordinary' ticket but is on a 'Deluxe' bus). It calculates the fare difference."
+    answer: "Use this if a passenger boards a higher category bus than they booked (e.g., Ordinary ticket on a Deluxe bus). The system calculates the fare difference to collect in cash."
   },
   {
-    question: "How do I handle a fare difference?",
-    answer: "After checking the fare in 'Verify by Bus Type', the system shows the difference. If it's a positive amount, collect it in cash. If it's negative, a refund is due. The refund code will be generated on the digital ticket after you validate it."
+    question: "How do I handle manual refunds?",
+    answer: "If you need to issue a manual refund code (e.g., for bus breakdowns), the passenger will need their original 5-digit Security PIN to redeem it in their wallet. PINs are viewable in their history even for USED tickets."
   },
   {
     question: "How do I verify a Bus Pass?",
-    answer: "From the conductor dashboard, select 'Bus Pass Verification'. Enter the 10-digit code from the pass. The system will check its validity and display pass details like type (General/Route) and expiry."
+    answer: "Select 'Bus Pass Verification' and enter the 10-digit alphanumeric code. The system displays the holder's name, category, route restrictions, and expiry status directly from the database."
   },
   {
-    question: "What should I do if a ticket shows as 'Expired', 'Used', or 'Canceled'?",
-    answer: "These tickets are not valid for travel. You should inform the passenger that their ticket cannot be accepted and they will need to book a new one. If the ticket just expired, their fare may have been auto-refunded to their wallet."
+    question: "What about expired or cancelled tickets?",
+    answer: "The system will block validation for these. Inform the passenger they must book a new ticket. Expired tickets are automatically refunded to their wallet minus a fee, so they can use that balance for the new booking."
   },
   {
-    question: "What if a passenger's security code doesn't match?",
-    answer: "Politely ask the passenger to double-check the code on their ticket screen. If it still doesn't match, the ticket cannot be validated. This is a security measure to prevent fraud."
+    question: "Where can I see operational stats?",
+    answer: "Use 'Verification Insights' to see real-time data on tickets validated, cash collected from upgrades, and bus pass verification density across routes."
   },
 ];
 
-const howItWorksSteps = [
+const operationalGuides = [
   {
-    title: "Book",
-    description: "Select your route and bus type. Pay via UPI, Cards, or Wallet.",
+    title: "Boarding Check",
+    description: "Always verify the 5-digit Security PIN to prevent screenshot fraud.",
+    icon: <ShieldCheck className="h-4 w-4 text-emerald-600" />
   },
   {
-    title: "Secure",
-    description: "A 5-digit Security PIN is generated for your ticket to prevent fraud.",
+    title: "Upgrade Fare",
+    description: "Collect fare differences in cash for inter-category upgrades during boarding.",
+    icon: <Zap className="h-4 w-4 text-emerald-600" />
   },
   {
-    title: "Verify",
-    description: "Show your unique Ticket Code to the conductor. They will verify it on their device using your PIN.",
-  },
-  {
-    title: "Refunds",
-    description: "If you change buses or cancel, credits are added to your wallet for future use.",
+    title: "Pass Photo Box",
+    description: "Compare the passenger's physical face with the name displayed on valid passes.",
+    icon: <User className="h-4 w-4 text-emerald-600" />
   },
 ];
 
@@ -93,48 +80,40 @@ export default function ConductorHelpPage() {
   return (
     <>
       <Header showBackButton={true} backHref="/conductor/dashboard" title="Help & FAQs" />
-      <div className="p-4 md:p-8 max-w-3xl mx-auto space-y-8">
+      <div className="p-4 md:p-8 max-w-3xl mx-auto space-y-8 pb-32">
         <div className="flex items-center gap-3 mb-2">
-          <HelpCircle className="h-8 w-8 text-primary" />
-          <h1 className="text-2xl font-bold font-headline">Help & FAQs</h1>
+          <HelpCircle className="h-8 w-8 text-[#00B893]" />
+          <h1 className="text-2xl font-bold font-headline">Conductor Manual</h1>
         </div>
 
-        {/* How It Works Section */}
-        <div className="space-y-4">
-          <div className="flex items-center gap-2">
-            <Zap className="h-6 w-6 text-primary" />
-            <h2 className="text-2xl font-bold text-primary font-headline">How It Works</h2>
-          </div>
-          <Card className="bg-slate-50/50 border-slate-200 shadow-sm rounded-xl">
-            <CardContent className="p-4 space-y-2">
-              {howItWorksSteps.map((step, index) => (
-                <div key={index} className="flex gap-3 items-start">
-                  <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary text-white font-bold text-[10px] mt-0.5">
-                    {index + 1}
-                  </div>
-                  <p className="text-sm leading-snug text-slate-700 font-body">
-                    <span className="font-bold text-slate-900">{step.title}: </span>
-                    {step.description}
-                  </p>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
+        {/* Operational Highlights */}
+        <div className="grid gap-4 md:grid-cols-3">
+          {operationalGuides.map((step, index) => (
+            <Card key={index} className="border-none shadow-sm bg-emerald-50">
+              <CardContent className="p-4 flex flex-col items-center text-center space-y-2">
+                <div className="bg-white p-2 rounded-full shadow-sm">{step.icon}</div>
+                <p className="font-bold text-[10px] uppercase tracking-wider text-emerald-800">{step.title}</p>
+                <p className="text-[11px] text-emerald-700 leading-relaxed">{step.description}</p>
+              </CardContent>
+            </Card>
+          ))}
         </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 font-headline">
-              <Briefcase className="h-6 w-6" />
-              For Conductors
+        <Card className="border-none shadow-lg overflow-hidden">
+          <CardHeader className="bg-[#0A2B70] text-white">
+            <CardTitle className="flex items-center gap-2 text-lg font-headline uppercase tracking-tight">
+              <Briefcase className="h-5 w-5 text-[#FF80A0]" />
+              Conductor Operations
             </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-0">
             <Accordion type="single" collapsible className="w-full">
               {conductorFaqs.map((faq, index) => (
-                <AccordionItem value={`c-item-${index}`} key={index}>
-                  <AccordionTrigger className="text-left font-semibold font-body">{faq.question}</AccordionTrigger>
-                  <AccordionContent className="text-muted-foreground font-body">
+                <AccordionItem value={`c-item-${index}`} key={index} className="px-6 border-b last:border-0 border-slate-100">
+                  <AccordionTrigger className="text-left font-bold text-slate-800 py-5 hover:no-underline">
+                    {faq.question}
+                  </AccordionTrigger>
+                  <AccordionContent className="text-slate-600 pb-6 text-sm leading-relaxed">
                     {faq.answer}
                   </AccordionContent>
                 </AccordionItem>
@@ -143,19 +122,21 @@ export default function ConductorHelpPage() {
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 font-headline">
-              <User className="h-6 w-6" />
-              For Passengers
+        <Card className="border-none shadow-md overflow-hidden opacity-80">
+          <CardHeader className="bg-slate-100 text-slate-600">
+            <CardTitle className="flex items-center gap-2 text-sm font-headline uppercase">
+              <User className="h-4 w-4" />
+              Reference: Passenger Rules
             </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-0">
             <Accordion type="single" collapsible className="w-full">
               {passengerFaqs.map((faq, index) => (
-                <AccordionItem value={`p-item-${index}`} key={index}>
-                  <AccordionTrigger className="text-left font-semibold font-body">{faq.question}</AccordionTrigger>
-                  <AccordionContent className="text-muted-foreground font-body">
+                <AccordionItem value={`p-item-${index}`} key={index} className="px-6 border-b last:border-0 border-slate-50">
+                  <AccordionTrigger className="text-left font-medium text-slate-700 py-4 hover:no-underline text-xs">
+                    {faq.question}
+                  </AccordionTrigger>
+                  <AccordionContent className="text-slate-500 pb-4 text-[11px]">
                     {faq.answer}
                   </AccordionContent>
                 </AccordionItem>
