@@ -32,7 +32,11 @@ export default function BookingHistoryPage() {
 
   const loadLocalTickets = () => {
     const storedTickets: TicketDetails[] = JSON.parse(localStorage.getItem('generatedTickets') || '[]');
-    setTickets([...storedTickets].reverse());
+    // Ensure newest tickets are always at the top by sorting by date
+    const sorted = [...storedTickets].sort((a, b) => 
+      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
+    setTickets(sorted);
   };
 
   const syncStatuses = async (silent = false) => {
@@ -85,7 +89,10 @@ export default function BookingHistoryPage() {
       }
 
       localStorage.setItem('generatedTickets', JSON.stringify(updatedTickets));
-      setTickets([...updatedTickets].reverse());
+      const sorted = [...updatedTickets].sort((a, b) => 
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      );
+      setTickets(sorted);
       if (!silent) toast({ title: "Updated", description: "Status synced with database." });
     } catch (error) {
       if (!silent) toast({ variant: 'destructive', title: "Sync Error", description: "Could not reach server." });

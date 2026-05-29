@@ -1,7 +1,8 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { 
@@ -13,13 +14,31 @@ import {
   Globe, 
   User, 
   Wallet, 
-  HelpCircle
+  HelpCircle,
+  LogOut
 } from 'lucide-react';
 import Header from '@/app/components/header';
 
 export const dynamic = "force-dynamic";
 
 export default function Home() {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const router = useRouter();
+
+  useEffect(() => {
+    const user = localStorage.getItem('currentUser');
+    if (!user) {
+      router.replace('/login');
+    } else {
+      setIsLoggedIn(true);
+    }
+  }, [router]);
+
+  const handleLogout = () => {
+    localStorage.removeItem('currentUser');
+    router.push('/login');
+  };
+
   const serviceLinks = [
     { 
       href: '/select-ticket-type', 
@@ -28,15 +47,6 @@ export default function Home() {
       icon: <Ticket className="h-6 w-6 text-purple-600" />,
       bgColor: 'bg-purple-50'
     },
-    /* 
-    { 
-      href: '/conductor', 
-      title: 'Conductor Tool', 
-      description: 'Verify tickets and check fares.', 
-      icon: <User className="h-6 w-6 text-red-500" />,
-      bgColor: 'bg-red-50'
-    },
-    */
     { 
       href: '/wallet', 
       title: 'My Wallet', 
@@ -60,6 +70,8 @@ export default function Home() {
     },
   ];
 
+  if (!isLoggedIn) return null;
+
   return (
     <div className="bg-white min-h-screen pb-32">
       <header className="bg-primary text-white p-4 flex items-center justify-between sticky top-0 z-50 shadow-sm h-16 w-full">
@@ -74,6 +86,9 @@ export default function Home() {
           <h1 className="text-xl font-bold tracking-wider font-headline uppercase">TGSRTC</h1>
         </div>
         <div className="flex items-center gap-4">
+          <button onClick={handleLogout} className="text-white hover:opacity-80 transition-opacity">
+            <LogOut className="h-5 w-5" />
+          </button>
           <Bell className="h-5 w-5 cursor-pointer hover:opacity-80" />
           <MessageSquare className="h-5 w-5 cursor-pointer hover:opacity-80" />
           <Globe className="h-5 w-5 cursor-pointer hover:opacity-80" />
@@ -81,6 +96,12 @@ export default function Home() {
       </header>
 
       <main className="p-4 space-y-4 max-w-2xl mx-auto pt-6">
+        {/* User Welcome */}
+        <div className="mb-2 px-2">
+          <p className="text-xs text-muted-foreground font-bold uppercase tracking-widest">Logged in as</p>
+          <p className="text-xl font-bold text-slate-800">9999999999</p>
+        </div>
+
         {/* Service List */}
         <div className="space-y-3">
           {serviceLinks.map((link) => (

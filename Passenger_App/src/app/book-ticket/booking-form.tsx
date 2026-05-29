@@ -146,6 +146,7 @@ export function BookingForm() {
     try {
       const busType = searchParams.get('type') || 'ordinary';
       const routeNo = hyderabadLocalities.find(l => l.name === from)?.routeNumber || "00";
+      const currentUserId = localStorage.getItem('currentUser') || 'GUEST';
       
       const passengerSummary = Object.entries(quantities)
         .filter(([, count]) => count > 0)
@@ -162,7 +163,8 @@ export function BookingForm() {
         fare: finalFare,
         walletAmountUsed: useWallet ? Math.min(totalFare, walletBalance) : 0,
         securityCode: securityCode.toUpperCase(),
-        busType
+        busType,
+        bookedBy: currentUserId
       };
 
       const response = await fetch(API_ENDPOINTS.CREATE, {

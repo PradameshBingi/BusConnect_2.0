@@ -77,7 +77,8 @@ const TicketSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now },
   busType: { type: String, required: true },
   validatedAt: Date,
-  walletAmountUsed: { type: Number, default: 0 }
+  walletAmountUsed: { type: Number, default: 0 },
+  bookedBy: { type: String } // Added for user tracking
 }, { 
   bufferCommands: true,
   timestamps: true,
