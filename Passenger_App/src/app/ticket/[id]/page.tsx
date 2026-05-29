@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -210,7 +211,7 @@ export default function TicketDetailPage() {
           <CardFooter className="flex flex-col gap-3">
             {displayStatus === 'valid' && (
               <div className="grid grid-cols-2 gap-3 w-full">
-                <Button className="bg-red-600 hover:bg-red-700 h-12 font-bold text-white shadow-lg" asChild>
+                <Button className="bg-red-600 hover:bg-red-700 h-12 font-bold text-white shadow-lg border-none" asChild>
                   <Link href={`/ticket-cancellation?code=${ticket.ticketCode}`}>
                     Cancel
                   </Link>

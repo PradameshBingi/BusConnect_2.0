@@ -1,3 +1,4 @@
+
 'use client';
 import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
@@ -76,7 +77,7 @@ function CancellationContent() {
       });
 
       if (!res.ok) {
-        const data = await res.json();
+        const data = await res.json().catch(() => ({}));
         throw new Error(data.message || "Server rejected cancellation");
       }
 
@@ -147,14 +148,14 @@ function CancellationContent() {
         return (
           <div className="space-y-4">
             <div className="p-4 bg-muted rounded-lg text-sm">
-                <div className="flex justify-between"><span>Original Fare:</span> <span className="font-bold">Rs. {ticketData?.totalFare}</span></div>
+                <div className="flex justify-between"><span>Original Fare:</span> <span className="font-bold">Rs. {Math.round(ticketData?.totalFare)}</span></div>
                 <div className="flex justify-between text-red-600"><span>Cancellation Fee (10%):</span> <span className="font-bold">- Rs. {Math.round(ticketData?.totalFare * 0.10)}</span></div>
-                <div className="border-t mt-2 pt-2 flex justify-between font-bold text-green-600"><span>Refund Amount:</span> <span>Rs. {ticketData?.totalFare - Math.round(ticketData?.totalFare * 0.10)}</span></div>
+                <div className="border-t mt-2 pt-2 flex justify-between font-bold text-green-600"><span>Refund Amount:</span> <span>Rs. {Math.round(ticketData?.totalFare - Math.round(ticketData?.totalFare * 0.10))}</span></div>
             </div>
             
             <AlertDialog>
               <AlertDialogTrigger asChild>
-                <Button variant="destructive" className="w-full h-12 text-lg font-bold bg-red-600 hover:bg-red-700" disabled={isLoading}>
+                <Button variant="destructive" className="w-full h-12 text-lg font-bold bg-red-600 hover:bg-red-700 border-none" disabled={isLoading}>
                   {isLoading ? <Loader2 className="animate-spin mr-2" /> : null}
                   Confirm Cancellation
                 </Button>

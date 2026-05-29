@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
@@ -54,14 +55,17 @@ export function UpgradeForm({ ticket }: { ticket: Ticket }) {
         }
     }, []);
 
-    const currentBusMeta = useMemo(() => busTypeMeta.find(b => b.name === ticket.busType)!, [ticket.busType]);
+    const currentBusMeta = useMemo(() => {
+        const found = busTypeMeta.find(b => b.name === ticket.busType.toLowerCase());
+        return found || busTypeMeta[0];
+    }, [ticket.busType]);
 
     const upgradeOptions = useMemo(() => {
         return busTypeMeta
             .filter(b => b.level > currentBusMeta.level)
             .map(upgradeBus => {
                 const newTotalFare = calculateFare(ticket.from, ticket.to, ticket.quantities, upgradeBus.name);
-                const fareDifference = Math.max(0, newTotalFare - ticket.totalFare);
+                const fareDifference = Math.round(Math.max(0, newTotalFare - ticket.totalFare));
                 let amountToPay = fareDifference;
                 let walletUsedForUpgrade = 0;
 
@@ -89,14 +93,13 @@ export function UpgradeForm({ ticket }: { ticket: Ticket }) {
 
         setIsLoading(opt.name);
         try {
-            // 1. Sync with Database
             const response = await fetch(`${API_ENDPOINTS.USE}/${ticket.ticketCode}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     busType: opt.name,
                     totalFare: opt.newTotalFare,
-                    fare: ticket.fare + opt.amountToPay
+                    fare: Math.round((ticket.fare || 0) + opt.amountToPay)
                 })
             });
 
@@ -105,7 +108,6 @@ export function UpgradeForm({ ticket }: { ticket: Ticket }) {
             const result = await response.json();
             const updatedDbTicket = result.ticket;
 
-            // 2. Update Wallet if used
             if (useWallet && opt.walletUsedForUpgrade > 0) {
                 const storedWallet = JSON.parse(localStorage.getItem('userWallet') || '{"balance":0, "transactions": []}');
                 storedWallet.balance -= opt.walletUsedForUpgrade;
@@ -118,11 +120,10 @@ export function UpgradeForm({ ticket }: { ticket: Ticket }) {
                 localStorage.setItem('userWallet', JSON.stringify(storedWallet));
             }
 
-            // 3. Update Local History
             const storedTickets: Ticket[] = JSON.parse(localStorage.getItem('generatedTickets') || '[]');
             const ticketIndex = storedTickets.findIndex(t => t.ticketCode === ticket.ticketCode);
             if (ticketIndex > -1) {
-                storedTickets[ticketIndex] = { ...updatedDbTicket, status: 'valid' }; // Ensure status remains valid after upgrade
+                storedTickets[ticketIndex] = { ...updatedDbTicket, status: 'valid' };
                 localStorage.setItem('generatedTickets', JSON.stringify(storedTickets));
             }
             
@@ -145,8 +146,8 @@ export function UpgradeForm({ ticket }: { ticket: Ticket }) {
                         <CardTitle className="text-2xl font-headline uppercase tracking-tight">Upgrade Portal</CardTitle>
                     </div>
                     <CardDescription>
-                        Current: <span className="font-bold text-foreground">{currentBusMeta.title}</span><br/>
-                        Paid Fare: <span className="font-bold text-primary">Rs. {ticket.totalFare}</span>
+                        Current: <span className="font-bold text-foreground capitalize">{ticket.busType}</span><br/>
+                        Paid Fare: <span className="font-bold text-primary">Rs. {Math.round(ticket.totalFare)}</span>
                     </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
@@ -158,7 +159,7 @@ export function UpgradeForm({ ticket }: { ticket: Ticket }) {
                                 <Wallet className="h-6 w-6 text-primary" />
                                 <div>
                                     <span className="font-bold text-sm">Use Wallet Balance</span>
-                                    <p className="text-xs text-muted-foreground">Available: Rs. {walletBalance.toFixed(2)}</p>
+                                    <p className="text-xs text-muted-foreground">Available: Rs. {Math.round(walletBalance)}</p>
                                 </div>
                             </div>
                             <Switch checked={useWallet} onCheckedChange={setUseWallet} disabled={!!isLoading} />
@@ -205,7 +206,7 @@ export function UpgradeForm({ ticket }: { ticket: Ticket }) {
                         </div>
                     ) : (
                         <div className="text-center py-10">
-                            <CheckCircle className="h-12 w-12 text-green-500 mx-auto mb-3" />
+                            <Bus className="h-12 w-12 text-green-500 mx-auto mb-3" />
                             <p className="font-bold">Highest Category Reached</p>
                             <p className="text-sm text-muted-foreground">You are already on the Metro Deluxe service.</p>
                         </div>
