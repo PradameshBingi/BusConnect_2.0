@@ -166,11 +166,13 @@ function CancellationContent() {
               <AlertDialogContent className="rounded-3xl">
                 <AlertDialogHeader>
                   <AlertDialogTitle className="text-xl font-headline">Cancellation Rules</AlertDialogTitle>
-                  <div className="text-sm text-muted-foreground space-y-3 pt-2">
-                    <div className="flex gap-2"><span>•</span> <span>A 10% processing fee will be deducted from the total fare.</span></div>
-                    <div className="flex gap-2"><span>•</span> <span>The remaining balance will be instantly credited to your BusConnect Wallet.</span></div>
-                    <div className="flex gap-2 text-destructive font-bold"><span>•</span> <span>Once cancelled, the ticket cannot be restored or used for travel.</span></div>
-                  </div>
+                  <AlertDialogDescription asChild>
+                    <div className="text-sm text-muted-foreground space-y-3 pt-2">
+                      <div className="flex gap-2"><span>•</span> <span>A 10% processing fee will be deducted from the total fare.</span></div>
+                      <div className="flex gap-2"><span>•</span> <span>The remaining balance will be instantly credited to your BusConnect Wallet.</span></div>
+                      <div className="flex gap-2 text-destructive font-bold"><span>•</span> <span>Once cancelled, the ticket cannot be restored or used for travel.</span></div>
+                    </div>
+                  </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter className="gap-2">
                   <AlertDialogCancel className="rounded-xl h-12">Go Back</AlertDialogCancel>

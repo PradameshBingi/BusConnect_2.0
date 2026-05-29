@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -219,15 +218,53 @@ function MethodTab({ active, onClick, icon, label }: { active: boolean; onClick:
 }
 
 function UPIDetails() {
+  const upiApps = [
+    { 
+      name: 'PhonePe', 
+      logo: 'https://api.dicebear.com/7.x/initials/svg?seed=PP&backgroundColor=5f259f&fontFamily=Arial&fontSize=45' 
+    },
+    { 
+      name: 'GPay', 
+      logo: 'https://api.dicebear.com/7.x/initials/svg?seed=GP&backgroundColor=4285f4&fontFamily=Arial&fontSize=45' 
+    },
+    { 
+      name: 'Paytm', 
+      logo: 'https://api.dicebear.com/7.x/initials/svg?seed=PT&backgroundColor=00baf2&fontFamily=Arial&fontSize=45' 
+    },
+    { 
+      name: 'Supermoney', 
+      logo: 'https://api.dicebear.com/7.x/initials/svg?seed=SM&backgroundColor=000000&fontFamily=Arial&fontSize=45' 
+    }
+  ];
+
   return (
     <div className="space-y-6 pb-4">
       <div className="flex flex-col items-center justify-center p-6 bg-slate-50 rounded-xl border border-slate-200">
         <QrCode className="h-32 w-32 text-slate-400 mb-2" />
         <p className="text-[10px] uppercase font-bold text-slate-400">Scan QR to pay</p>
       </div>
+
+      <div className="space-y-4">
+        <Label className="text-[10px] uppercase text-slate-500 font-black text-center block tracking-widest">OR Pay Through Any Application</Label>
+        <div className="grid grid-cols-4 gap-4 px-2">
+          {upiApps.map(app => (
+            <div key={app.name} className="flex flex-col items-center gap-1.5 cursor-pointer group">
+              <div className="w-12 h-12 rounded-2xl border border-slate-200 p-0.5 flex items-center justify-center bg-white group-hover:border-primary group-hover:shadow-md transition-all overflow-hidden">
+                <img 
+                   src={app.logo} 
+                   alt={app.name} 
+                   className="w-full h-full object-cover rounded-[14px]"
+                />
+              </div>
+              <span className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">{app.name}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
       <div className="space-y-2">
         <Label className="text-xs uppercase text-slate-500 font-bold">Or enter UPI ID</Label>
-        <Input placeholder="user@upi" className="w-full" />
+        <Input placeholder="user@upi" className="w-full h-12 rounded-xl" />
       </div>
     </div>
   );
