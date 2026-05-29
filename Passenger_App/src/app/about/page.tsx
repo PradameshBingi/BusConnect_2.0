@@ -1,4 +1,3 @@
-
 'use client'
 
 import Header from '@/app/components/header';
@@ -46,7 +45,7 @@ export default function AboutPage() {
           <h1 className="text-4xl font-bold tracking-tight font-headline sm:text-5xl">
             About BusConnect
           </h1>
-          <p className="text-base font-normal text-muted-foreground mt-2 pl-24">
+          <p className="text-base font-normal text-muted-foreground mt-2">
             A Conceptual Digital Ticketing Platform for TGSRTC
           </p>
         </div>
@@ -60,6 +59,17 @@ export default function AboutPage() {
           </p>
         </div>
         
+        <Separator />
+
+        <div>
+          <h2 className="text-3xl font-bold font-headline text-card-foreground">
+            Meet the Developer
+          </h2>
+          <p className="mt-4 text-lg text-muted-foreground">
+            BusConnect is the creation of <strong>Bingi Pradamesh</strong>, a visionary software developer dedicated to building high-impact digital solutions. With a deep focus on user-centric design and scalable architecture, Pradamesh conceptualized and developed this platform to demonstrate how technology can eliminate operational friction and enhance the daily commute for thousands in Hyderabad.
+          </p>
+        </div>
+
         <Separator />
 
         <div>
@@ -138,7 +148,7 @@ export default function AboutPage() {
 
         <Separator />
 
-        <div className="text-center space-y-2 pt-4">
+        <div className="text-center space-y-2 pt-4 pb-12">
           <h3 className="text-3xl font-bold">BusConnect</h3>
           <p className="text-xl">
             Conceptualized and Developed by{' '}

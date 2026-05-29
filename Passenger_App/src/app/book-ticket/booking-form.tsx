@@ -120,7 +120,7 @@ export function BookingForm() {
   };
 
   const handlePinChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const val = e.target.value.replace(/\D/g, ''); 
+    const val = e.target.value; 
     if (val.length <= 5) {
       setSecurityCode(val);
     }
@@ -146,7 +146,7 @@ export function BookingForm() {
         return;
     }
     if (!securityCode || securityCode.length !== 5) {
-      toast({ variant: 'destructive', title: 'Invalid Security Code', description: 'Please enter exactly 5 digits.' });
+      toast({ variant: 'destructive', title: 'Invalid Security Code', description: 'Please enter exactly 5 characters.' });
       return;
     }
 
@@ -293,10 +293,10 @@ export function BookingForm() {
             )}
 
             <div>
-              <Label className="text-[10px] uppercase font-black text-slate-600">Security Code (5 digits)</Label>
+              <Label className="text-[10px] uppercase font-black text-slate-600">Security Code (5 characters)</Label>
               <Input
-                placeholder="0 0 0 0 0"
-                type="tel"
+                placeholder="A B C 1 2"
+                type="text"
                 value={securityCode}
                 onChange={handlePinChange}
                 maxLength={5}
