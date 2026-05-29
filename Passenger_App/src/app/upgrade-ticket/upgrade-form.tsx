@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
@@ -8,7 +7,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
-import { Wallet, ArrowUpCircle, Loader2 } from 'lucide-react';
+import { Wallet, ArrowUpCircle, Loader2, Bus } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { SimulatedPayment } from '@/components/simulated-payment';
 import { API_ENDPOINTS } from '@/lib/api-config';
@@ -62,7 +61,7 @@ export function UpgradeForm({ ticket }: { ticket: Ticket }) {
             .filter(b => b.level > currentBusMeta.level)
             .map(upgradeBus => {
                 const newTotalFare = calculateFare(ticket.from, ticket.to, ticket.quantities, upgradeBus.name);
-                const fareDifference = newTotalFare - ticket.totalFare;
+                const fareDifference = Math.max(0, newTotalFare - ticket.totalFare);
                 let amountToPay = fareDifference;
                 let walletUsedForUpgrade = 0;
 
@@ -90,7 +89,7 @@ export function UpgradeForm({ ticket }: { ticket: Ticket }) {
 
         setIsLoading(opt.name);
         try {
-            // 1. Sync with Database First
+            // 1. Sync with Database
             const response = await fetch(`${API_ENDPOINTS.USE}/${ticket.ticketCode}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -123,12 +122,12 @@ export function UpgradeForm({ ticket }: { ticket: Ticket }) {
             const storedTickets: Ticket[] = JSON.parse(localStorage.getItem('generatedTickets') || '[]');
             const ticketIndex = storedTickets.findIndex(t => t.ticketCode === ticket.ticketCode);
             if (ticketIndex > -1) {
-                storedTickets[ticketIndex] = updatedDbTicket;
+                storedTickets[ticketIndex] = { ...updatedDbTicket, status: 'valid' }; // Ensure status remains valid after upgrade
                 localStorage.setItem('generatedTickets', JSON.stringify(storedTickets));
             }
             
             toast({ title: "Upgrade Successful!", description: `Ticket upgraded to ${opt.title}.` });
-            router.push(`/ticket?id=${ticket.ticketCode}`);
+            router.push(`/ticket/${ticket.ticketCode}`);
         } catch (error: any) {
             toast({ variant: 'destructive', title: 'Upgrade Failed', description: error.message });
             setIsLoading(null);
@@ -137,49 +136,84 @@ export function UpgradeForm({ ticket }: { ticket: Ticket }) {
 
     return (
         <>
-            <Card className="w-full max-w-md">
+            <Card className="w-full max-w-md border-t-8 border-t-accent shadow-xl">
                 <CardHeader>
-                    <CardTitle>Upgrade Your Ticket</CardTitle>
-                     <CardDescription>From {currentBusMeta.title} (Original Fare: Rs. {ticket.totalFare.toFixed(2)})</CardDescription>
+                    <div className="flex items-center gap-3 mb-2">
+                        <div className="p-2 bg-accent/10 rounded-full">
+                            <Bus className="h-6 w-6 text-accent" />
+                        </div>
+                        <CardTitle className="text-2xl font-headline uppercase tracking-tight">Upgrade Portal</CardTitle>
+                    </div>
+                    <CardDescription>
+                        Current: <span className="font-bold text-foreground">{currentBusMeta.title}</span><br/>
+                        Paid Fare: <span className="font-bold text-primary">Rs. {ticket.totalFare}</span>
+                    </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
                     <Separator />
+                    
                     {walletBalance > 0 && (
-                        <div className="flex items-center justify-between rounded-lg border p-3">
+                        <div className="flex items-center justify-between rounded-xl border p-4 bg-muted/30">
                             <div className="flex items-center gap-3">
                                 <Wallet className="h-6 w-6 text-primary" />
                                 <div>
-                                    <span className="font-medium">Use Wallet Balance</span>
-                                    <p className="text-sm text-muted-foreground">Rs. {walletBalance.toFixed(2)}</p>
+                                    <span className="font-bold text-sm">Use Wallet Balance</span>
+                                    <p className="text-xs text-muted-foreground">Available: Rs. {walletBalance.toFixed(2)}</p>
                                 </div>
                             </div>
                             <Switch checked={useWallet} onCheckedChange={setUseWallet} disabled={!!isLoading} />
                         </div>
                     )}
+
                     {upgradeOptions.length > 0 ? (
                         <div className="space-y-4">
                             {upgradeOptions.map(opt => (
-                                <div key={opt.name} className="p-4 border rounded-lg">
-                                    <div className="flex justify-between items-center mb-2">
-                                        <h4 className="text-xl font-bold text-primary">{opt.title}</h4>
-                                        <p className="font-bold text-lg">+ Rs. {opt.fareDifference.toFixed(2)}</p>
+                                <div key={opt.name} className="p-5 border-2 rounded-2xl hover:border-accent transition-colors group">
+                                    <div className="flex justify-between items-start mb-3">
+                                        <div>
+                                            <h4 className="text-lg font-black text-accent uppercase tracking-tighter">{opt.title}</h4>
+                                            <p className="text-[10px] font-bold text-muted-foreground uppercase">Next Tier Category</p>
+                                        </div>
+                                        <div className="text-right">
+                                            <p className="font-black text-xl">+ Rs. {Math.round(opt.fareDifference)}</p>
+                                            <p className="text-[9px] font-bold text-muted-foreground uppercase">Difference</p>
+                                        </div>
                                     </div>
-                                    <div className="space-y-1 text-sm">
-                                        <div className="flex justify-between"><span>New Total:</span> <span>Rs. {opt.newTotalFare.toFixed(2)}</span></div>
-                                        {useWallet && opt.walletUsedForUpgrade > 0 && <div className="flex justify-between text-green-600"><span>From Wallet:</span> <span>- Rs. {opt.walletUsedForUpgrade.toFixed(2)}</span></div>}
-                                        <div className="flex justify-between font-bold text-lg mt-2"><span>Pay:</span> <span>Rs. {opt.amountToPay.toFixed(2)}</span></div>
+                                    <div className="space-y-1.5 text-xs font-medium bg-muted/20 p-3 rounded-lg border border-dashed">
+                                        <div className="flex justify-between"><span>New Total Fare:</span> <span className="font-bold">Rs. {Math.round(opt.newTotalFare)}</span></div>
+                                        {useWallet && opt.walletUsedForUpgrade > 0 && (
+                                            <div className="flex justify-between text-green-600">
+                                                <span>From Wallet:</span> 
+                                                <span className="font-bold">- Rs. {Math.round(opt.walletUsedForUpgrade)}</span>
+                                            </div>
+                                        )}
+                                        <div className="flex justify-between text-base font-black border-t pt-2 mt-2">
+                                            <span>Payable:</span> 
+                                            <span className="text-primary">Rs. {Math.round(opt.amountToPay)}</span>
+                                        </div>
                                     </div>
-                                    <Button className="w-full mt-4" disabled={!!isLoading} onClick={() => handleUpgradeClick(opt)}>
+                                    <Button 
+                                        className="w-full mt-5 h-12 text-sm font-bold bg-accent hover:bg-accent/90 rounded-xl" 
+                                        disabled={!!isLoading} 
+                                        onClick={() => handleUpgradeClick(opt)}
+                                    >
                                         {isLoading === opt.name ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <ArrowUpCircle className="mr-2 h-4 w-4" />}
-                                        {isLoading === opt.name ? 'Processing...' : (opt.amountToPay > 0 ? `Pay Rs. ${opt.amountToPay.toFixed(2)} & Upgrade` : 'Upgrade')}
+                                        {isLoading === opt.name ? 'Upgrading...' : `Upgrade to ${opt.name.toUpperCase()}`}
                                     </Button>
                                 </div>
                             ))}
                         </div>
                     ) : (
-                        <p className="text-sm text-muted-foreground text-center">No further upgrades available.</p>
+                        <div className="text-center py-10">
+                            <CheckCircle className="h-12 w-12 text-green-500 mx-auto mb-3" />
+                            <p className="font-bold">Highest Category Reached</p>
+                            <p className="text-sm text-muted-foreground">You are already on the Metro Deluxe service.</p>
+                        </div>
                     )}
                 </CardContent>
+                <CardFooter>
+                    <Button variant="ghost" className="w-full text-muted-foreground" onClick={() => router.back()}>Cancel and Go Back</Button>
+                </CardFooter>
             </Card>
 
             {selectedUpgrade && (

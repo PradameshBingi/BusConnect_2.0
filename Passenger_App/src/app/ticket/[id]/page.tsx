@@ -49,7 +49,6 @@ export default function TicketDetailPage() {
         const data = await response.json();
         setTicket(data.ticket);
       } else {
-        // Fallback to local storage if API fails or ticket not in DB yet
         const storedTickets: TicketDetails[] = JSON.parse(localStorage.getItem('generatedTickets') || '[]');
         const foundTicket = storedTickets.find(t => t.ticketCode.toUpperCase() === ticketCode.toUpperCase());
         setTicket(foundTicket || null);
@@ -183,7 +182,7 @@ export default function TicketDetailPage() {
               </div>
               <div>
                 <p className="text-[9px] text-muted-foreground uppercase font-bold">Fare Paid</p>
-                <p className="font-bold text-primary">Rs. {totalCost.toFixed(2)}</p>
+                <p className="font-bold text-primary">Rs. {Math.round(totalCost)}</p>
               </div>
               <div>
                 <p className="text-[9px] text-muted-foreground uppercase font-bold">Bus Category</p>
@@ -211,16 +210,18 @@ export default function TicketDetailPage() {
           <CardFooter className="flex flex-col gap-3">
             {displayStatus === 'valid' && (
               <div className="grid grid-cols-2 gap-3 w-full">
-                <Button variant="outline" className="border-red-500 text-red-500 hover:bg-red-50" asChild>
+                <Button className="bg-red-600 hover:bg-red-700 h-12 font-bold text-white shadow-lg" asChild>
                   <Link href={`/ticket-cancellation?code=${ticket.ticketCode}`}>
-                    <FileX className="mr-2 h-4 w-4" /> Cancel
+                    Cancel
                   </Link>
                 </Button>
-                <Button className="bg-accent hover:bg-accent/90" asChild>
-                  <Link href={`/upgrade-ticket?id=${ticket.ticketCode}`}>
-                    <ArrowUpCircle className="mr-2 h-4 w-4" /> Upgrade
-                  </Link>
-                </Button>
+                {ticket.busType.toLowerCase() !== 'deluxe' && (
+                  <Button className="bg-accent hover:bg-accent/90 h-12 font-bold shadow-lg" asChild>
+                    <Link href={`/upgrade-ticket?id=${ticket.ticketCode}`}>
+                      <ArrowUpCircle className="mr-2 h-4 w-4" /> Upgrade
+                    </Link>
+                  </Button>
+                )}
               </div>
             )}
             <Button asChild variant="ghost" className="w-full h-11"><Link href="/booking-history">Back to History</Link></Button>
