@@ -42,7 +42,7 @@ function TicketContent() {
   const id = searchParams.get('id');
 
   const getFullBusType = (type: string) => {
-    switch (type) {
+    switch (type.toLowerCase()) {
       case 'ordinary': return 'City Ordinary';
       case 'express': return 'Metro Express';
       case 'deluxe': return 'Metro Deluxe';
@@ -121,17 +121,17 @@ function TicketContent() {
 
   return (
     <div className="flex flex-col items-center p-4 md:p-8 space-y-6">
-      <Card className={cn("w-full max-w-md border-t-8", {
+      <Card className={cn("w-full max-w-md border-t-8 shadow-xl rounded-3xl", {
           "border-t-green-600": displayStatus === 'valid',
           "border-t-slate-500": displayStatus === 'used',
           "border-t-yellow-500": displayStatus === 'expired',
           "border-t-red-600": displayStatus === 'cancelled',
       })}>
-        <CardHeader className="text-center relative">
+        <CardHeader className="text-center relative pb-2">
           <Button 
             variant="ghost" 
             size="icon" 
-            className="absolute right-4 top-4" 
+            className="absolute right-4 top-4 rounded-full" 
             onClick={() => fetchTicket(true)}
             disabled={isRefreshing}
           >
@@ -150,51 +150,53 @@ function TicketContent() {
           </div>
         </CardHeader>
         <CardContent className="space-y-6">
-            <div className="flex justify-between items-center bg-muted/30 p-4 rounded-lg">
-                <div className="text-center">
-                    <p className="text-[10px] font-bold text-muted-foreground uppercase">From</p>
-                    <p className="font-bold text-slate-900">{ticket.from}</p>
+            <div className="flex justify-between items-center bg-muted/30 p-5 rounded-2xl border">
+                <div className="text-center flex-1">
+                    <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">From</p>
+                    <p className="font-bold text-slate-900 text-lg uppercase">{ticket.from}</p>
                 </div>
-                <ArrowRight className="h-4 w-4 text-primary" />
-                <div className="text-center">
-                    <p className="text-[10px] font-bold text-muted-foreground uppercase">To</p>
-                    <p className="font-bold text-slate-900">{ticket.to}</p>
-                </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4 text-xs">
-                <div>
-                    <p className="text-[9px] text-muted-foreground uppercase font-bold">Issue Date</p>
-                    <p className="font-bold">{issueDate.toLocaleDateString()}</p>
-                </div>
-                <div>
-                    <p className="text-[9px] text-muted-foreground uppercase font-bold">Issue Time</p>
-                    <p className="font-bold">{issueDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
-                </div>
-                <div className="col-span-2">
-                    <p className="text-[9px] text-muted-foreground uppercase font-bold">Passengers</p>
-                    <p className="font-bold">{ticket.passengers}</p>
-                </div>
-                <div>
-                    <p className="text-[9px] text-muted-foreground uppercase font-bold">Fare Paid</p>
-                    <p className="font-bold text-primary">Rs. {totalCost.toFixed(2)}</p>
-                </div>
-                <div>
-                    <p className="text-[9px] text-muted-foreground uppercase font-bold">Bus Category</p>
-                    <p className="font-bold text-primary">{getFullBusType(ticket.busType)}</p>
+                <ArrowRight className="h-5 w-5 text-primary mx-3" />
+                <div className="text-center flex-1">
+                    <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">To</p>
+                    <p className="font-bold text-slate-900 text-lg uppercase">{ticket.to}</p>
                 </div>
             </div>
 
-            <div className="p-4 bg-primary/5 rounded-lg border border-primary/20 flex flex-col items-center gap-2">
-                <p className="text-[10px] uppercase text-muted-foreground font-bold tracking-tight">Security Code</p>
+            <div className="grid grid-cols-2 gap-y-5 gap-x-4 text-sm font-medium">
+                <div className="space-y-1">
+                    <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest">Issue Date</p>
+                    <p className="font-bold text-slate-800">{issueDate.toLocaleDateString('en-GB')}</p>
+                </div>
+                <div className="space-y-1 text-right">
+                    <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest">Issue Time</p>
+                    <p className="font-bold text-slate-800">{issueDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+                </div>
+                <div className="col-span-2 space-y-1 py-2 border-y border-dashed">
+                    <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest">Passengers</p>
+                    <p className="font-bold text-slate-800">{ticket.passengers}</p>
+                </div>
+                <div className="space-y-1">
+                    <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest">Fare Paid</p>
+                    <p className="font-bold text-primary text-base">Rs. {Math.round(totalCost)}.00</p>
+                </div>
+                <div className="space-y-1 text-right">
+                    <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest">Bus Category</p>
+                    <p className="font-bold text-primary text-base">{getFullBusType(ticket.busType)}</p>
+                </div>
+            </div>
+
+            <div className="p-5 bg-primary/5 rounded-2xl border border-primary/20 flex flex-col items-center gap-3">
+                <p className="text-[10px] uppercase text-muted-foreground font-black tracking-[0.2em]">Security Code</p>
                 <div className="flex items-center justify-center w-full">
-                    <p className="font-mono text-3xl font-bold tracking-[0.3em] text-primary">{ticket.securityCode}</p>
-                    <Copy className="h-4 w-4 text-muted-foreground ml-2 cursor-pointer" onClick={() => handleCopy(ticket.securityCode, 'PIN')} />
+                    <p className="font-mono text-4xl font-black tracking-[0.3em] text-primary">{ticket.securityCode}</p>
+                    <Button variant="ghost" size="icon" className="ml-2" onClick={() => handleCopy(ticket.securityCode, 'PIN')}>
+                        <Copy className="h-4 w-4 text-muted-foreground" />
+                    </Button>
                 </div>
             </div>
 
-            <div className="text-center p-4 bg-slate-900 text-white rounded-lg cursor-pointer hover:bg-slate-800 transition-colors" onClick={() => handleCopy(ticket.ticketCode, 'Code')}>
-                <p className="text-[10px] uppercase text-slate-400 mb-1 font-bold">Registration Code</p>
+            <div className="text-center p-4 bg-slate-900 text-white rounded-2xl cursor-pointer hover:bg-slate-800 transition-colors shadow-inner" onClick={() => handleCopy(ticket.ticketCode, 'Code')}>
+                <p className="text-[10px] uppercase text-slate-400 mb-1 font-black tracking-widest">Registration Code</p>
                 <p className="font-mono text-xl font-bold break-all tracking-wider">{ticket.ticketCode}</p>
             </div>
 
@@ -203,7 +205,7 @@ function TicketContent() {
             )}
         </CardContent>
         <CardFooter>
-          <Button asChild className="w-full h-11"><Link href="/">Back to Dashboard</Link></Button>
+          <Button asChild className="w-full h-14 rounded-2xl text-lg font-bold"><Link href="/">Back to Dashboard</Link></Button>
         </CardFooter>
       </Card>
     </div>

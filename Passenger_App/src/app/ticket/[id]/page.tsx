@@ -133,7 +133,7 @@ export default function TicketDetailPage() {
           "border-t-yellow-500": displayStatus === 'expired',
           "border-t-red-600": displayStatus === 'cancelled',
         })}>
-          <CardHeader className="text-center relative">
+          <CardHeader className="text-center relative pb-2">
             <Button 
               variant="ghost" 
               size="icon" 
@@ -156,38 +156,38 @@ export default function TicketDetailPage() {
             </div>
           </CardHeader>
           <CardContent className="space-y-6">
-            <div className="flex justify-between items-center bg-muted/30 p-4 rounded-2xl border">
+            <div className="flex justify-between items-center bg-muted/30 p-5 rounded-2xl border">
               <div className="text-center flex-1">
                 <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">From</p>
-                <p className="font-bold text-slate-900 uppercase">{ticket.from}</p>
+                <p className="font-bold text-slate-900 text-lg uppercase">{ticket.from}</p>
               </div>
-              <ArrowRight className="h-4 w-4 text-primary mx-2" />
+              <ArrowRight className="h-5 w-5 text-primary mx-3" />
               <div className="text-center flex-1">
                 <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">To</p>
-                <p className="font-bold text-slate-900 uppercase">{ticket.to}</p>
+                <p className="font-bold text-slate-900 text-lg uppercase">{ticket.to}</p>
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4 text-xs font-medium">
+            <div className="grid grid-cols-2 gap-y-5 gap-x-4 text-sm font-medium">
               <div className="space-y-1">
-                <p className="text-[9px] text-muted-foreground uppercase font-black tracking-widest">Issue Date</p>
+                <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest">Issue Date</p>
                 <p className="font-bold text-slate-800">{issueDate.toLocaleDateString('en-GB')}</p>
               </div>
               <div className="space-y-1 text-right">
-                <p className="text-[9px] text-muted-foreground uppercase font-black tracking-widest">Issue Time</p>
+                <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest">Issue Time</p>
                 <p className="font-bold text-slate-800">{issueDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
               </div>
-              <div className="col-span-2 space-y-1 py-1 border-y border-dashed">
-                <p className="text-[9px] text-muted-foreground uppercase font-black tracking-widest">Passengers</p>
+              <div className="col-span-2 space-y-1 py-2 border-y border-dashed">
+                <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest">Passengers</p>
                 <p className="font-bold text-slate-800">{ticket.passengers}</p>
               </div>
               <div className="space-y-1">
-                <p className="text-[9px] text-muted-foreground uppercase font-black tracking-widest">Fare Paid</p>
-                <p className="font-bold text-primary text-sm">Rs. {Math.round(totalCost)}</p>
+                <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest">Fare Paid</p>
+                <p className="font-bold text-primary text-base">Rs. {Math.round(totalCost)}.00</p>
               </div>
               <div className="space-y-1 text-right">
-                <p className="text-[9px] text-muted-foreground uppercase font-black tracking-widest">Bus Category</p>
-                <p className="font-bold text-primary text-sm">{getFullBusType(ticket.busType)}</p>
+                <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest">Bus Category</p>
+                <p className="font-bold text-primary text-base">{getFullBusType(ticket.busType)}</p>
               </div>
             </div>
 
