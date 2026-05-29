@@ -191,8 +191,8 @@ function TicketContent() {
                 <div className="flex items-center justify-center w-full gap-3">
                     <p 
                       className="font-mono text-4xl font-black tracking-[0.3em] text-primary min-w-[140px] text-center cursor-pointer active:opacity-70 transition-opacity"
-                      onClick={() => handleCopy(ticket.securityCode, 'Security PIN')}
-                      title="Tap to Copy"
+                      onClick={() => showPin && handleCopy(ticket.securityCode, 'Security PIN')}
+                      title={showPin ? "Tap to Copy" : ""}
                     >
                         {showPin ? ticket.securityCode : '•••••'}
                     </p>
