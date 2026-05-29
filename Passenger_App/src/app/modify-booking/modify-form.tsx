@@ -52,14 +52,14 @@ export function ModifyForm({ ticket, onReset }: { ticket: any, onReset: () => vo
     return calculateFare(from, to, quantities, ticket.busType);
   }, [from, to, quantities, ticket.busType]);
 
-  const fareDifference = Math.round(newTotalFare - ticket.totalFare);
+  const fareDifference = Math.round(newTotalFare - (ticket.totalFare || 0));
   const isAddition = fareDifference > 0;
   const isRefund = fareDifference < 0;
 
   const refundWithFee = useMemo(() => {
     if (!isRefund) return 0;
     const absoluteDiff = Math.abs(fareDifference);
-    // Applying 10% fee rule for refunded portions
+    // Applying 10% fee rule for refunded portions as per instructions
     const fee = Math.round(absoluteDiff * 0.10);
     return absoluteDiff - fee;
   }, [fareDifference, isRefund]);
@@ -230,24 +230,28 @@ export function ModifyForm({ ticket, onReset }: { ticket: any, onReset: () => vo
                 <span>New Total:</span> 
                 <span>Rs. {Math.round(newTotalFare)}</span>
              </div>
-             {isModified && isRefund && refundWithFee > 0 && (
+             {isModified ? (
                <div className="pt-2 border-t border-white/10 mt-2">
-                 <div className="flex justify-between text-green-400 font-bold">
-                    <span>Refund to Wallet:</span>
-                    <span>+ Rs. {Math.round(refundWithFee)}</span>
-                 </div>
-                 <p className="text-[9px] opacity-40 italic mt-1 text-center">After 10% processing fee per person removed.</p>
+                 {isRefund && refundWithFee > 0 && (
+                   <>
+                     <div className="flex justify-between text-green-400 font-bold">
+                        <span>Refund to Wallet:</span>
+                        <span>+ Rs. {Math.round(refundWithFee)}</span>
+                     </div>
+                     <p className="text-[9px] opacity-40 italic mt-1 text-center">After 10% processing fee per person removed.</p>
+                   </>
+                 )}
+                 {isAddition && fareDifference > 0 && (
+                   <div className="flex justify-between text-orange-400 font-bold">
+                      <span>Additional Payable:</span>
+                      <span>Rs. {Math.round(fareDifference)}</span>
+                   </div>
+                 )}
+                 {fareDifference === 0 && (
+                   <p className="text-xs text-blue-400 font-bold uppercase tracking-widest text-center">Details Updated (No Fare Change)</p>
+                 )}
                </div>
-             )}
-             {isModified && isAddition && fareDifference > 0 && (
-               <div className="pt-2 border-t border-white/10 mt-2">
-                 <div className="flex justify-between text-orange-400 font-bold">
-                    <span>Additional Payable:</span>
-                    <span>Rs. {Math.round(fareDifference)}</span>
-                 </div>
-               </div>
-             )}
-             {!isModified && (
+             ) : (
                <div className="pt-2 border-t border-white/10 mt-2 text-center">
                   <p className="text-xs text-blue-400 font-bold uppercase tracking-widest">No Changes Detected</p>
                </div>
@@ -256,15 +260,19 @@ export function ModifyForm({ ticket, onReset }: { ticket: any, onReset: () => vo
         </CardContent>
         <CardFooter className="flex flex-col gap-3 px-6 pb-6">
            <Button 
-             variant="ghost"
-             className="w-full h-14 text-slate-500 hover:bg-slate-100 text-lg font-bold" 
+             className="w-full h-14 bg-[#0A2B70] hover:bg-[#0A2B70]/90 text-white text-lg font-bold rounded-2xl" 
              onClick={initiateUpdate} 
              disabled={isLoading}
            >
-              {isLoading ? <Loader2 className="animate-spin mr-2" /> : <Save className="mr-2 h-5 w-5" />}
+              {isLoading ? <Loader2 className="animate-spin mr-2 h-5 w-5" /> : <Save className="mr-2 h-5 w-5" />}
               Save Modifications
            </Button>
-           <Button variant="ghost" className="w-full h-12 text-slate-500 font-bold hover:bg-slate-100" onClick={onReset}>Cancel Changes</Button>
+           <Button 
+             className="w-full h-12 bg-red-600 hover:bg-red-700 text-white font-bold rounded-2xl" 
+             onClick={onReset}
+           >
+             Cancel Changes
+           </Button>
         </CardFooter>
       </Card>
 
