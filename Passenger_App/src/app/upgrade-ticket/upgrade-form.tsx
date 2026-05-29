@@ -45,13 +45,22 @@ export function UpgradeForm({ ticket }: { ticket: Ticket }) {
     const [showPayment, setShowPayment] = useState(false);
     const [selectedUpgrade, setSelectedUpgrade] = useState<any>(null);
 
+    // Fetch Wallet Balance from Database
     useEffect(() => {
-        try {
-            const storedWallet = JSON.parse(localStorage.getItem('userWallet') || '{"balance":0}');
-            setWalletBalance(storedWallet.balance || 0);
-        } catch (e) {
-            setWalletBalance(0);
-        }
+        const fetchWallet = async () => {
+          const phone = localStorage.getItem('currentUser');
+          if (!phone) return;
+          try {
+            const res = await fetch(`/api/user?phone=${phone}`);
+            if (res.ok) {
+              const data = await res.json();
+              setWalletBalance(data.walletBalance || 0);
+            }
+          } catch (e) {
+            console.error("Failed to fetch wallet for upgrade form");
+          }
+        };
+        fetchWallet();
     }, []);
 
     const currentBusMeta = useMemo(() => {
@@ -92,6 +101,7 @@ export function UpgradeForm({ ticket }: { ticket: Ticket }) {
 
         setIsLoading(opt.name);
         try {
+            const currentUserId = localStorage.getItem('currentUser');
             const newCreatedAt = new Date().toISOString();
             
             const response = await fetch(`${API_ENDPOINTS.USE}/${ticket.ticketCode}`, {
@@ -101,8 +111,8 @@ export function UpgradeForm({ ticket }: { ticket: Ticket }) {
                     busType: opt.name,
                     totalFare: opt.newTotalFare,
                     fare: Math.round((ticket.fare || 0) + opt.amountToPay),
-                    status: 'valid', // Maintain valid status so passenger sees the countdown
-                    createdAt: newCreatedAt // Restart the timer
+                    status: 'valid',
+                    createdAt: newCreatedAt 
                 })
             });
 
@@ -112,34 +122,22 @@ export function UpgradeForm({ ticket }: { ticket: Ticket }) {
             }
             
             const result = await response.json();
-            const updatedDbTicket = result.ticket;
 
-            if (useWallet && opt.walletUsedForUpgrade > 0) {
-                const storedWallet = JSON.parse(localStorage.getItem('userWallet') || '{"balance":0, "transactions": []}');
-                storedWallet.balance -= opt.walletUsedForUpgrade;
-                storedWallet.transactions.push({
-                    type: 'debit',
-                    description: `Upgrade to ${opt.title} for ${ticket.ticketCode}`,
-                    amount: opt.walletUsedForUpgrade,
-                    date: new Date().toISOString(),
+            // Deduct from cloud wallet if used
+            if (currentUserId && opt.walletUsedForUpgrade > 0) {
+                await fetch('/api/user', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        phone: currentUserId,
+                        amount: opt.walletUsedForUpgrade,
+                        type: 'debit',
+                        description: `Upgrade to ${opt.title} for ${ticket.ticketCode}`
+                    })
                 });
-                localStorage.setItem('userWallet', JSON.stringify(storedWallet));
             }
 
-            const storedTickets: Ticket[] = JSON.parse(localStorage.getItem('generatedTickets') || '[]');
-            const ticketIndex = storedTickets.findIndex(t => t.ticketCode === ticket.ticketCode);
-            if (ticketIndex > -1) {
-                // Update local storage with the new category and restarted timer
-                storedTickets[ticketIndex] = { 
-                    ...updatedDbTicket, 
-                    status: 'valid', 
-                    createdAt: newCreatedAt 
-                };
-                localStorage.setItem('generatedTickets', JSON.stringify(storedTickets));
-            }
-            
             toast({ title: "Upgrade Successful!", description: `Ticket upgraded to ${opt.title} and timer restarted.` });
-            // Redirect back to ticket detail page (which shows the Valid preview card)
             router.push(`/ticket/${ticket.ticketCode}`);
         } catch (error: any) {
             toast({ variant: 'destructive', title: 'Upgrade Failed', description: error.message });

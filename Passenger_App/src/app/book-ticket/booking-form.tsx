@@ -69,20 +69,29 @@ export function BookingForm() {
   const [useWallet, setUseWallet] = useState(false);
   const [finalFare, setFinalFare] = useState(0);
 
+  // Fetch Wallet Balance from Database
+  useEffect(() => {
+    const fetchWallet = async () => {
+      const phone = localStorage.getItem('currentUser');
+      if (!phone) return;
+      try {
+        const res = await fetch(`/api/user?phone=${phone}`);
+        if (res.ok) {
+          const data = await res.json();
+          setWalletBalance(data.walletBalance || 0);
+        }
+      } catch (e) {
+        console.error("Failed to fetch wallet for booking form");
+      }
+    };
+    fetchWallet();
+  }, []);
+
   useEffect(() => {
     const busType = (searchParams.get('type') as any) || 'ordinary';
     const newFare = calculateFare(from, to, quantities, busType);
     setTotalFare(newFare);
   }, [from, to, quantities, searchParams]);
-
-  useEffect(() => {
-    try {
-      const storedWallet = JSON.parse(localStorage.getItem('userWallet') || '{"balance":0}');
-      setWalletBalance(storedWallet.balance || 0);
-    } catch (e) {
-      setWalletBalance(0);
-    }
-  }, []);
 
   useEffect(() => {
     if (useWallet && walletBalance > 0) {
@@ -111,7 +120,7 @@ export function BookingForm() {
   };
 
   const handlePinChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const val = e.target.value.toUpperCase();
+    const val = e.target.value.replace(/\D/g, ''); 
     if (val.length <= 5) {
       setSecurityCode(val);
     }
@@ -137,7 +146,7 @@ export function BookingForm() {
         return;
     }
     if (!securityCode || securityCode.length !== 5) {
-      toast({ variant: 'destructive', title: 'Invalid Security Code', description: 'Please enter exactly 5 characters.' });
+      toast({ variant: 'destructive', title: 'Invalid Security Code', description: 'Please enter exactly 5 digits.' });
       return;
     }
 
@@ -160,6 +169,8 @@ export function BookingForm() {
         .map(([type, count]) => `${type}: ${count}`)
         .join(', ');
 
+      const walletAmountUsed = useWallet ? Math.min(totalFare, walletBalance) : 0;
+
       const bookingData = {
         from,
         to,
@@ -168,8 +179,8 @@ export function BookingForm() {
         quantities,
         totalFare,
         fare: finalFare,
-        walletAmountUsed: useWallet ? Math.min(totalFare, walletBalance) : 0,
-        securityCode: securityCode.toUpperCase(),
+        walletAmountUsed,
+        securityCode,
         busType,
         bookedBy: currentUserId
       };
@@ -188,25 +199,21 @@ export function BookingForm() {
       const result = await response.json();
       const ticket = result.ticket;
 
-      // Deduct wallet if used
-      if (useWallet && ticket.walletAmountUsed > 0) {
-          const storedWallet = JSON.parse(localStorage.getItem('userWallet') || '{"balance":0, "transactions": []}');
-          storedWallet.balance -= ticket.walletAmountUsed;
-          storedWallet.transactions.push({
-              type: 'debit',
-              description: `Ticket booking ${ticket.ticketCode}`,
-              amount: ticket.walletAmountUsed,
-              date: new Date().toISOString(),
+      // Deduct wallet in Database if used
+      if (walletAmountUsed > 0) {
+          await fetch('/api/user', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                  phone: currentUserId,
+                  amount: walletAmountUsed,
+                  type: 'debit',
+                  description: `Ticket booking ${ticket.ticketCode}`
+              })
           });
-          localStorage.setItem('userWallet', JSON.stringify(storedWallet));
       }
 
-      // Save to local history for quick access
-      const storedTickets = JSON.parse(localStorage.getItem('generatedTickets') || '[]');
-      storedTickets.push(ticket);
-      localStorage.setItem('generatedTickets', JSON.stringify(storedTickets));
-
-      router.push(`/ticket?id=${ticket.ticketCode}`);
+      router.push(`/ticket/${ticket.ticketCode}`);
     } catch (error: any) {
       console.error("Booking Finalization Error:", error);
       toast({ 
@@ -286,14 +293,15 @@ export function BookingForm() {
             )}
 
             <div>
-              <Label className="text-[10px] uppercase font-black text-slate-600">Security Code (5 characters)</Label>
+              <Label className="text-[10px] uppercase font-black text-slate-600">Security Code (5 digits)</Label>
               <Input
-                placeholder="* * * * *"
+                placeholder="0 0 0 0 0"
+                type="tel"
                 value={securityCode}
                 onChange={handlePinChange}
                 maxLength={5}
                 required
-                className="h-14 rounded-xl text-lg font-mono tracking-[0.5em] uppercase text-center"
+                className="h-14 rounded-xl text-lg font-mono tracking-[0.5em] text-center"
               />
             </div>
 

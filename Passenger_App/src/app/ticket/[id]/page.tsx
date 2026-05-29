@@ -50,14 +50,10 @@ export default function TicketDetailPage() {
         const data = await response.json();
         setTicket(data.ticket);
       } else {
-        const storedTickets: TicketDetails[] = JSON.parse(localStorage.getItem('generatedTickets') || '[]');
-        const foundTicket = storedTickets.find(t => t.ticketCode.toUpperCase() === ticketCode.toUpperCase());
-        setTicket(foundTicket || null);
+        setTicket(null);
       }
     } catch (e) {
-      const storedTickets: TicketDetails[] = JSON.parse(localStorage.getItem('generatedTickets') || '[]');
-      const foundTicket = storedTickets.find(t => t.ticketCode.toUpperCase() === ticketCode.toUpperCase());
-      setTicket(foundTicket || null);
+      setTicket(null);
     } finally {
       setIsLoading(false);
       setIsRefreshing(false);
@@ -99,7 +95,7 @@ export default function TicketDetailPage() {
         <Header showBackButton backHref="/booking-history" title="Ticket Not Found" />
         <div className="p-8 text-center flex flex-col items-center gap-4">
           <XCircle className="h-16 w-16 text-destructive" />
-          <p className="text-xl font-bold">The requested ticket could not be found.</p>
+          <p className="text-xl font-bold">The requested ticket could not be found in system records.</p>
           <Button asChild><Link href="/booking-history">Back to History</Link></Button>
         </div>
       </>
@@ -113,7 +109,6 @@ export default function TicketDetailPage() {
         <div className="p-4 md:p-8 flex flex-col items-center space-y-6 pb-32">
           <ValidatedTicket ticket={{ ...ticket, timestamp: ticket.createdAt }} />
           
-          {/* Security Code for Conductors/Refunds */}
           <div className="w-full max-w-sm p-4 bg-primary/5 rounded-2xl border border-primary/20 flex flex-col items-center gap-2">
             <p className="text-[10px] uppercase text-muted-foreground font-black tracking-[0.2em]">Security Code</p>
             <div className="flex items-center justify-center w-full gap-3">
@@ -211,7 +206,6 @@ export default function TicketDetailPage() {
               </div>
             </div>
 
-            {/* Security Code section - Hidden for expired/cancelled */}
             {(displayStatus !== 'expired' && displayStatus !== 'cancelled') && (
               <div className="p-4 bg-primary/5 rounded-2xl border border-primary/20 flex flex-col items-center gap-2">
                 <p className="text-[10px] uppercase text-muted-foreground font-black tracking-[0.2em]">Security Code</p>

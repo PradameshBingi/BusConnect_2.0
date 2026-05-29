@@ -50,12 +50,15 @@ function CancellationContent() {
     setIsLoading(true);
     setStatus('loading');
     try {
-      const storedTickets = JSON.parse(localStorage.getItem('generatedTickets') || '[]');
-      const foundTicket = storedTickets.find((t: any) => t.ticketCode.toUpperCase() === code.toUpperCase());
+      const response = await fetch(`${API_ENDPOINTS.VERIFY}/${code.toUpperCase()}`);
+      if (!response.ok) {
+          setStatus('not_found');
+          return;
+      }
+      const data = await response.json();
+      const foundTicket = data.ticket;
 
-      if (!foundTicket) {
-        setStatus('not_found');
-      } else if (foundTicket.status === 'used' || foundTicket.status === 'expired' || foundTicket.status === 'cancelled') {
+      if (foundTicket.status !== 'valid') {
         setStatus('already_used');
       } else {
         setTicketData(foundTicket);
@@ -86,31 +89,13 @@ function CancellationContent() {
         throw new Error(data.message || "Server rejected cancellation");
       }
 
-      const storedTickets: any[] = JSON.parse(localStorage.getItem('generatedTickets') || '[]');
-      const ticketIndex = storedTickets.findIndex(t => t.ticketCode.toUpperCase() === ticketCode.toUpperCase());
+      const result = await res.json();
+      const originalFare = ticketData?.totalFare || 0;
+      const cancellationFee = Math.round(originalFare * 0.10);
+      const refundAmount = Math.max(0, originalFare - cancellationFee);
 
-      if (ticketIndex > -1) {
-        const tkt = storedTickets[ticketIndex];
-        const originalFare = tkt.totalFare || 0;
-        const cancellationFee = Math.round(originalFare * 0.10);
-        const refundAmount = Math.max(0, originalFare - cancellationFee);
-
-        storedTickets[ticketIndex].status = 'cancelled';
-        localStorage.setItem('generatedTickets', JSON.stringify(storedTickets));
-        
-        const walletData = JSON.parse(localStorage.getItem('userWallet') || '{"balance":0, "transactions":[]}');
-        walletData.balance += refundAmount;
-        walletData.transactions.push({
-            type: 'credit',
-            description: `Refund for Cancelled Ticket ${ticketCode.toUpperCase()}`,
-            amount: refundAmount,
-            date: new Date().toISOString(),
-        });
-        localStorage.setItem('userWallet', JSON.stringify(walletData));
-
-        setStatus('cancelled');
-        toast({ title: 'Ticket Cancelled', description: `Refund of Rs. ${refundAmount} credited.` });
-      }
+      setStatus('cancelled');
+      toast({ title: 'Ticket Cancelled', description: `Refund of Rs. ${refundAmount} credited to your cloud wallet.` });
     } catch (error: any) {
       toast({ variant: 'destructive', title: 'Error', description: error.message });
     } finally {
@@ -124,7 +109,7 @@ function CancellationContent() {
         return (
           <div className="text-center text-destructive flex flex-col items-center gap-2">
             <XCircle className="h-10 w-10" />
-            <p>Ticket not found in your history.</p>
+            <p>Ticket not found in system records.</p>
           </div>
         );
       case 'already_used':
@@ -140,7 +125,7 @@ function CancellationContent() {
             <CheckCircle className="h-16 w-16 mx-auto" />
             <div>
               <h3 className="text-xl font-bold">Successfully Cancelled</h3>
-              <p className="text-sm opacity-80">Refund has been added to your wallet.</p>
+              <p className="text-sm opacity-80">Refund has been added to your cloud wallet.</p>
             </div>
             <Button variant="outline" className="w-full h-12 rounded-xl font-bold" onClick={() => router.push('/wallet')}>
               <Wallet className="mr-2 h-4 w-4" /> View Wallet
@@ -169,7 +154,7 @@ function CancellationContent() {
                   <AlertDialogDescription asChild>
                     <div className="text-sm text-muted-foreground space-y-3 pt-2">
                       <div className="flex gap-2"><span>•</span> <span>A 10% processing fee will be deducted from the total fare.</span></div>
-                      <div className="flex gap-2"><span>•</span> <span>The remaining balance will be instantly credited to your BusConnect Wallet.</span></div>
+                      <div className="flex gap-2"><span>•</span> <span>The remaining balance will be instantly credited to your Wallet.</span></div>
                       <div className="flex gap-2 text-destructive font-bold"><span>•</span> <span>Once cancelled, the ticket cannot be restored or used for travel.</span></div>
                     </div>
                   </AlertDialogDescription>

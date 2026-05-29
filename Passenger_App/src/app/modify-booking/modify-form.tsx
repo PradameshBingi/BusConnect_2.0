@@ -1,7 +1,6 @@
-
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowRightLeft, Baby, PlusCircle, MinusCircle, Wallet, Loader2, Save, Edit3 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -119,6 +118,7 @@ export function ModifyForm({ ticket, onReset }: { ticket: any, onReset: () => vo
   const finalizeUpdate = async () => {
     setIsLoading(true);
     try {
+      const currentUserId = localStorage.getItem('currentUser');
       const passengerSummary = Object.entries(quantities)
         .filter(([, count]) => (count as number) > 0)
         .map(([type, count]) => `${type}: ${count}`)
@@ -138,26 +138,32 @@ export function ModifyForm({ ticket, onReset }: { ticket: any, onReset: () => vo
       });
 
       if (!response.ok) throw new Error("Server failed to update ticket details.");
-      const result = await response.json();
-      const updatedTicket = result.ticket;
 
-      if (isRefund && refundWithFee > 0) {
-          const walletData = JSON.parse(localStorage.getItem('userWallet') || '{"balance":0, "transactions": []}');
-          walletData.balance += refundWithFee;
-          walletData.transactions.push({
-              type: 'credit',
-              description: `Modification Refund for ${ticket.ticketCode}`,
-              amount: refundWithFee,
-              date: new Date().toISOString(),
-          });
-          localStorage.setItem('userWallet', JSON.stringify(walletData));
-      }
-
-      const storedTickets = JSON.parse(localStorage.getItem('generatedTickets') || '[]');
-      const idx = storedTickets.findIndex((t: any) => t.ticketCode === ticket.ticketCode);
-      if (idx > -1) {
-          storedTickets[idx] = updatedTicket;
-          localStorage.setItem('generatedTickets', JSON.stringify(storedTickets));
+      // Process Cloud Wallet updates if modified
+      if (currentUserId) {
+          if (isRefund && refundWithFee > 0) {
+              await fetch('/api/user', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                      phone: currentUserId,
+                      amount: refundWithFee,
+                      type: 'credit',
+                      description: `Modification Refund for ${ticket.ticketCode}`
+                  })
+              });
+          } else if (isAddition && fareDifference > 0) {
+              await fetch('/api/user', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                      phone: currentUserId,
+                      amount: fareDifference,
+                      type: 'debit',
+                      description: `Modification Upgrade for ${ticket.ticketCode}`
+                  })
+              });
+          }
       }
 
       toast({ 

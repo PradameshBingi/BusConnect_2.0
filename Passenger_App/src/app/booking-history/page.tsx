@@ -39,7 +39,7 @@ export default function BookingHistoryPage() {
       const data = await response.json();
       setTickets(data);
     } catch (error) {
-      toast({ variant: 'destructive', title: "Sync Error", description: "Could not fetch your booking history." });
+      toast({ variant: 'destructive', title: "Sync Error", description: "Could not fetch your booking history from the database." });
     } finally {
       setIsLoading(false);
       setIsRefreshing(false);
@@ -80,7 +80,7 @@ export default function BookingHistoryPage() {
         {isLoading ? (
           <div className="p-20 text-center"><Loader2 className="animate-spin h-10 w-10 text-primary mx-auto" /></div>
         ) : tickets.length === 0 ? (
-          <Card><CardContent className="p-10 text-center text-muted-foreground">No booking records found.</CardContent></Card>
+          <Card><CardContent className="p-10 text-center text-muted-foreground">No booking records found in database.</CardContent></Card>
         ) : (
           <div className="space-y-4">
             {tickets.map(ticket => (
