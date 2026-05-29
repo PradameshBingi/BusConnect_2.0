@@ -59,7 +59,6 @@ export function ModifyForm({ ticket, onReset }: { ticket: any, onReset: () => vo
   const refundWithFee = useMemo(() => {
     if (!isRefund) return 0;
     const absoluteDiff = Math.abs(fareDifference);
-    // Applying 10% fee rule for refunded portions as per instructions
     const fee = Math.round(absoluteDiff * 0.10);
     return absoluteDiff - fee;
   }, [fareDifference, isRefund]);
@@ -93,7 +92,7 @@ export function ModifyForm({ ticket, onReset }: { ticket: any, onReset: () => vo
     if (!isModified) {
       toast({ 
         title: "Nothing to Modify", 
-        description: "You haven't made any changes to the route or passenger count.",
+        description: "No changes detected in route or passenger count.",
         variant: "default" 
       });
       return;
@@ -142,7 +141,6 @@ export function ModifyForm({ ticket, onReset }: { ticket: any, onReset: () => vo
       const result = await response.json();
       const updatedTicket = result.ticket;
 
-      // Handle Refund
       if (isRefund && refundWithFee > 0) {
           const walletData = JSON.parse(localStorage.getItem('userWallet') || '{"balance":0, "transactions": []}');
           walletData.balance += refundWithFee;
@@ -228,7 +226,7 @@ export function ModifyForm({ ticket, onReset }: { ticket: any, onReset: () => vo
              <div className="flex justify-between text-xs opacity-60"><span>Original Total:</span> <span>Rs. {Math.round(ticket.totalFare)}</span></div>
              <div className="flex justify-between font-bold text-lg">
                 <span>New Total:</span> 
-                <span>Rs. {Math.round(newTotalFare)}</span>
+                <span>Rs. {isModified ? Math.round(newTotalFare) : 0}</span>
              </div>
              {isModified ? (
                <div className="pt-2 border-t border-white/10 mt-2">
@@ -238,7 +236,6 @@ export function ModifyForm({ ticket, onReset }: { ticket: any, onReset: () => vo
                         <span>Refund to Wallet:</span>
                         <span>+ Rs. {Math.round(refundWithFee)}</span>
                      </div>
-                     <p className="text-[9px] opacity-40 italic mt-1 text-center">After 10% processing fee per person removed.</p>
                    </>
                  )}
                  {isAddition && fareDifference > 0 && (

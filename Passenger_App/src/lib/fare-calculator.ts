@@ -5,13 +5,17 @@ type PassengerType = 'Men' | 'Child' | 'Women';
 type Quantities = { [key in PassengerType]: number };
 type BusType = 'ordinary' | 'express' | 'deluxe' | string;
 
+/**
+ * Calculates the total fare for a group of passengers on a specific route and bus type.
+ * Ensures linear scaling (Total = Rate * Quantity) as requested.
+ */
 export function calculateFare(
   from: string,
   to: string,
   quantities: Quantities,
   busType: BusType
 ): number {
-  if (!from || !to || from === to) {
+  if (!from || !to || from === to || !quantities) {
     return 0;
   }
 
@@ -22,41 +26,33 @@ export function calculateFare(
     return 0;
   }
 
-  // Simple distance-based fare calculation
+  // 1. Calculate base distance-based fare
   const distance = Math.abs(parseInt(fromLocality.routeNumber, 10) - parseInt(toLocality.routeNumber, 10));
-  const baseFare = 10 + distance * 1.5; // Base fare of 10, plus 1.5 per 'stop' difference
+  const baseFare = 10 + distance * 1.5; 
 
-  const ordinaryAdultFare = Math.round(Math.max(10, baseFare));
-  const ordinaryChildFare = Math.round(ordinaryAdultFare / 2);
+  // 2. Define category rates (Rounded first to ensure 1+1=2 scaling)
+  const ordinaryAdultRate = Math.round(Math.max(10, baseFare));
+  const ordinaryChildRate = Math.round(ordinaryAdultRate / 2);
 
-  let menFare = ordinaryAdultFare;
-  let childFare = ordinaryChildFare;
-  let womenFare = 0; // Default to 0
+  let menRate = ordinaryAdultRate;
+  let childRate = ordinaryChildRate;
+  let womenRate = 0; 
 
-  if(!quantities) return 0;
-  
-  const expressSurcharge = 5;
-  const deluxeSurcharge = 10;
-  const deluxeChildSurcharge = 5;
-
-  // Normalized comparison to prevent logic errors with capitalized input
   const type = (busType || 'ordinary').toLowerCase();
 
+  // 3. Apply Surcharges based on Bus Category
   if (type.includes('express')) {
-      menFare = ordinaryAdultFare + expressSurcharge;
-      womenFare = 0; // Free for express
-      childFare = Math.round(ordinaryChildFare + expressSurcharge / 2);
+      menRate = ordinaryAdultRate + 5;
+      childRate = Math.round(ordinaryChildRate + 2.5);
+      womenRate = 0; // Free for express
   } else if (type.includes('deluxe')) {
-      menFare = ordinaryAdultFare + deluxeSurcharge;
-      womenFare = ordinaryAdultFare + deluxeSurcharge; // Chargable for deluxe
-      childFare = ordinaryChildFare + deluxeChildSurcharge;
-  } else { // ordinary
-      menFare = ordinaryAdultFare;
-      childFare = ordinaryChildFare;
-      womenFare = 0; // Free for ordinary
+      menRate = ordinaryAdultRate + 10;
+      childRate = ordinaryChildRate + 5;
+      womenRate = ordinaryAdultRate + 10; // Chargeable for deluxe
   }
 
-  const totalFare = (quantities.Men * menFare) + (quantities.Child * childFare) + (quantities.Women * womenFare);
+  // 4. Calculate total (Linear sum of rates)
+  const totalFare = (quantities.Men * menRate) + (quantities.Child * childRate) + (quantities.Women * womenRate);
 
   return Math.round(totalFare);
 }
