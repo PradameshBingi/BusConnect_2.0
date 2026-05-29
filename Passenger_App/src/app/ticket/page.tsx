@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { CountdownTimer } from '@/app/components/countdown-timer';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ArrowRight, Copy, RefreshCw, Loader2, XCircle } from 'lucide-react';
+import { ArrowRight, Copy, RefreshCw, Loader2, XCircle, Eye, EyeOff } from 'lucide-react';
 import Header from '@/app/components/header';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
@@ -37,6 +37,7 @@ function TicketContent() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [showPin, setShowPin] = useState(false);
   const [now, setNow] = useState<number | null>(null);
   const { toast } = useToast();
   const id = searchParams.get('id');
@@ -187,11 +188,18 @@ function TicketContent() {
 
             <div className="p-5 bg-primary/5 rounded-2xl border border-primary/20 flex flex-col items-center gap-3">
                 <p className="text-[10px] uppercase text-muted-foreground font-black tracking-[0.2em]">Security Code</p>
-                <div className="flex items-center justify-center w-full">
-                    <p className="font-mono text-4xl font-black tracking-[0.3em] text-primary">{ticket.securityCode}</p>
-                    <Button variant="ghost" size="icon" className="ml-2" onClick={() => handleCopy(ticket.securityCode, 'PIN')}>
-                        <Copy className="h-4 w-4 text-muted-foreground" />
-                    </Button>
+                <div className="flex items-center justify-center w-full gap-2">
+                    <p className="font-mono text-4xl font-black tracking-[0.3em] text-primary min-w-[140px] text-center">
+                        {showPin ? ticket.securityCode : '•••••'}
+                    </p>
+                    <div className="flex flex-col gap-1 shrink-0">
+                        <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" onClick={() => setShowPin(!showPin)}>
+                            {showPin ? <EyeOff className="h-4 w-4 text-muted-foreground" /> : <Eye className="h-4 w-4 text-muted-foreground" />}
+                        </Button>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" onClick={() => handleCopy(ticket.securityCode, 'PIN')}>
+                            <Copy className="h-4 w-4 text-muted-foreground" />
+                        </Button>
+                    </div>
                 </div>
             </div>
 
