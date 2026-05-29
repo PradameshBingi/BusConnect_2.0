@@ -1,9 +1,9 @@
 
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowRightLeft, BusFront, Baby, PlusCircle, MinusCircle, CheckCircle, Wallet, Loader2, Save, Edit3 } from 'lucide-react';
+import { ArrowRightLeft, Baby, PlusCircle, MinusCircle, Wallet, Loader2, Save, Edit3 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -49,17 +49,8 @@ export function ModifyForm({ ticket, onReset }: { ticket: any, onReset: () => vo
   const { toast } = useToast();
 
   const newTotalFare = useMemo(() => {
-    // Check for any changes
-    const hasRouteChanged = from !== ticket.from || to !== ticket.to;
-    const hasQuantitiesChanged = quantities.Men !== ticket.quantities.Men || 
-                                 quantities.Child !== ticket.quantities.Child || 
-                                 quantities.Women !== ticket.quantities.Women;
-    
-    if (!hasRouteChanged && !hasQuantitiesChanged) return ticket.totalFare;
-    
-    // Calculate new fare based on potential route/quantity changes
     return calculateFare(from, to, quantities, ticket.busType);
-  }, [from, to, quantities, ticket.busType, ticket]);
+  }, [from, to, quantities, ticket.busType]);
 
   const fareDifference = Math.round(newTotalFare - ticket.totalFare);
   const isAddition = fareDifference > 0;
@@ -68,9 +59,18 @@ export function ModifyForm({ ticket, onReset }: { ticket: any, onReset: () => vo
   const refundWithFee = useMemo(() => {
     if (!isRefund) return 0;
     const absoluteDiff = Math.abs(fareDifference);
+    // Applying 10% fee rule for refunded portions
     const fee = Math.round(absoluteDiff * 0.10);
     return absoluteDiff - fee;
   }, [fareDifference, isRefund]);
+
+  const hasRouteChanged = from !== ticket.from || to !== ticket.to;
+  const hasQuantitiesChanged = 
+    quantities.Men !== ticket.quantities.Men || 
+    quantities.Child !== ticket.quantities.Child || 
+    quantities.Women !== ticket.quantities.Women;
+  
+  const isModified = hasRouteChanged || hasQuantitiesChanged;
 
   const handleSwap = () => {
     const temp = from;
@@ -90,13 +90,23 @@ export function ModifyForm({ ticket, onReset }: { ticket: any, onReset: () => vo
   };
 
   const initiateUpdate = () => {
+    if (!isModified) {
+      toast({ 
+        title: "Nothing to Modify", 
+        description: "You haven't made any changes to the route or passenger count.",
+        variant: "default" 
+      });
+      return;
+    }
+
     if (from === to) {
-        toast({ variant: 'destructive', title: 'Invalid Route', description: 'Start and Destination must differ.' });
+        toast({ variant: 'destructive', title: 'Invalid Route', description: 'Source and Destination cannot be the same.' });
         return;
     }
+    
     const totalPassengers = Object.values(quantities).reduce((sum, q) => sum + (q as number), 0);
     if (totalPassengers === 0) {
-        toast({ variant: 'destructive', title: 'No Passengers', description: 'Please keep at least one passenger.' });
+        toast({ variant: 'destructive', title: 'No Passengers', description: 'A ticket must have at least one passenger.' });
         return;
     }
 
@@ -128,10 +138,11 @@ export function ModifyForm({ ticket, onReset }: { ticket: any, onReset: () => vo
         })
       });
 
-      if (!response.ok) throw new Error("Update failed.");
+      if (!response.ok) throw new Error("Server failed to update ticket details.");
       const result = await response.json();
       const updatedTicket = result.ticket;
 
+      // Handle Refund
       if (isRefund && refundWithFee > 0) {
           const walletData = JSON.parse(localStorage.getItem('userWallet') || '{"balance":0, "transactions": []}');
           walletData.balance += refundWithFee;
@@ -152,12 +163,12 @@ export function ModifyForm({ ticket, onReset }: { ticket: any, onReset: () => vo
       }
 
       toast({ 
-          title: "Booking Modified", 
-          description: isRefund ? `Rs. ${Math.round(refundWithFee)} credited to wallet.` : "Details updated successfully." 
+          title: "Update Successful", 
+          description: isRefund ? `Rs. ${Math.round(refundWithFee)} credited to your wallet.` : "Booking details have been updated." 
       });
       router.push(`/ticket/${ticket.ticketCode}`);
     } catch (error: any) {
-      toast({ variant: 'destructive', title: 'Error', description: error.message });
+      toast({ variant: 'destructive', title: 'Update Error', description: error.message });
     } finally {
       setIsLoading(false);
     }
@@ -170,7 +181,7 @@ export function ModifyForm({ ticket, onReset }: { ticket: any, onReset: () => vo
           <CardTitle className="text-xl font-black uppercase tracking-tight flex items-center gap-3">
              <Edit3 className="h-6 w-6 text-white" /> Modify Journey
           </CardTitle>
-          <CardDescription className="text-purple-100">Ticket: {ticket.ticketCode}</CardDescription>
+          <CardDescription className="text-white/80">Updating Ticket: {ticket.ticketCode}</CardDescription>
         </CardHeader>
         <CardContent className="p-6 space-y-6">
           <div className="flex items-center gap-2">
@@ -219,7 +230,7 @@ export function ModifyForm({ ticket, onReset }: { ticket: any, onReset: () => vo
                 <span>New Total:</span> 
                 <span>Rs. {Math.round(newTotalFare)}</span>
              </div>
-             {isRefund && refundWithFee > 0 && (
+             {isModified && isRefund && refundWithFee > 0 && (
                <div className="pt-2 border-t border-white/10 mt-2">
                  <div className="flex justify-between text-green-400 font-bold">
                     <span>Refund to Wallet:</span>
@@ -228,12 +239,17 @@ export function ModifyForm({ ticket, onReset }: { ticket: any, onReset: () => vo
                  <p className="text-[9px] opacity-40 italic mt-1 text-center">After 10% processing fee per person removed.</p>
                </div>
              )}
-             {isAddition && fareDifference > 0 && (
+             {isModified && isAddition && fareDifference > 0 && (
                <div className="pt-2 border-t border-white/10 mt-2">
                  <div className="flex justify-between text-orange-400 font-bold">
                     <span>Additional Payable:</span>
                     <span>Rs. {Math.round(fareDifference)}</span>
                  </div>
+               </div>
+             )}
+             {!isModified && (
+               <div className="pt-2 border-t border-white/10 mt-2 text-center">
+                  <p className="text-xs text-blue-400 font-bold uppercase tracking-widest">No Changes Detected</p>
                </div>
              )}
           </div>

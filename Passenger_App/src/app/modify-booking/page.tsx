@@ -38,7 +38,7 @@ function ModifyBookingContent() {
     try {
       const response = await fetch(`${API_ENDPOINTS.VERIFY}/${code}`);
       if (!response.ok) {
-        if (response.status === 404) throw new Error("Ticket not found.");
+        if (response.status === 404) throw new Error("Ticket not found in system records.");
         throw new Error("Could not reach server.");
       }
       const data = await response.json();
@@ -83,7 +83,7 @@ function ModifyBookingContent() {
           <CardContent className="p-8 space-y-6">
             <form onSubmit={handleSearch} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="ticket-code" className="text-[10px] font-black uppercase tracking-widest text-slate-500">Ticket Registration Code</Label>
+                <Label htmlFor="ticket-code" className="text-[10px] font-black uppercase tracking-widest text-slate-500">Ticket No</Label>
                 <div className="relative">
                   <Input
                     id="ticket-code"
@@ -108,10 +108,10 @@ function ModifyBookingContent() {
                 <Info className="h-4 w-4" /> Instructions
               </div>
               <ul className="text-xs text-blue-700/80 space-y-2 leading-relaxed">
-                <li>• Valid Ticket only Modifiable.</li>
+                <li>• Valid Tickets only are modifiable.</li>
                 <li>• Add members: Pay the difference via Digital Payment.</li>
                 <li>• Remove members: Refund credited to wallet (10% fee per person).</li>
-                <li>• Used or Expired and cancelled tickets cannot be modified.</li>
+                <li>• Used, Expired, or Cancelled tickets cannot be modified.</li>
               </ul>
             </div>
           </CardContent>
