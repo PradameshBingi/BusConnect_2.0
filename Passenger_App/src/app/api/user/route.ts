@@ -19,7 +19,13 @@ export async function GET(request: Request) {
       user = await User.create({ phone, walletBalance: 0, transactions: [] });
     }
 
-    return NextResponse.json(user);
+    // Sort transactions by date descending (newest first) before returning
+    const userObj = user.toObject();
+    if (userObj.transactions) {
+      userObj.transactions.sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    }
+
+    return NextResponse.json(userObj);
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
