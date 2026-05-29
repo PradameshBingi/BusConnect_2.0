@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowRightLeft, BusFront, Baby, PlusCircle, MinusCircle, CheckCircle, Wallet, Loader2, Save } from 'lucide-react';
+import { ArrowRightLeft, BusFront, Baby, PlusCircle, MinusCircle, CheckCircle, Wallet, Loader2, Save, Edit3 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -115,7 +115,6 @@ export function ModifyForm({ ticket, onReset }: { ticket: any, onReset: () => vo
           passengers: passengerSummary,
           quantities,
           totalFare: newTotalFare,
-          // If addition, user paid extra cash; if refund, we credit wallet.
           fare: isAddition ? (ticket.fare + fareDifference) : ticket.fare
         })
       });
@@ -124,7 +123,6 @@ export function ModifyForm({ ticket, onReset }: { ticket: any, onReset: () => vo
       const result = await response.json();
       const updatedTicket = result.ticket;
 
-      // Handle Wallet Refund
       if (isRefund && refundWithFee > 0) {
           const walletData = JSON.parse(localStorage.getItem('userWallet') || '{"balance":0, "transactions": []}');
           walletData.balance += refundWithFee;
@@ -137,7 +135,6 @@ export function ModifyForm({ ticket, onReset }: { ticket: any, onReset: () => vo
           localStorage.setItem('userWallet', JSON.stringify(walletData));
       }
 
-      // Update History
       const storedTickets = JSON.parse(localStorage.getItem('generatedTickets') || '[]');
       const idx = storedTickets.findIndex((t: any) => t.ticketCode === ticket.ticketCode);
       if (idx > -1) {
