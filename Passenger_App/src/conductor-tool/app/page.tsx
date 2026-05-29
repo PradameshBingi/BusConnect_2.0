@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useEffect } from 'react';
@@ -8,7 +7,6 @@ export default function Home() {
   const router = useRouter();
 
   useEffect(() => {
-    //Commenteed To Hide Conductor Tool in Passenger_App
     router.replace('/dashboard');
   }, [router]);
 

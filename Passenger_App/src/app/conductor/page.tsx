@@ -49,21 +49,21 @@ export default function ConductorTerminalPage() {
       href: '/conductor/help', 
       title: 'Help & FAQs', 
       description: 'Find answers to your questions.', 
-      icon: <HelpCircle className="h-8 w-8 text-slate-500" />,
+      icon: <HelpCircle className="h-6 w-6 text-slate-500" />,
       bgColor: 'bg-slate-50'
     },
     { 
       href: '/about', 
       title: 'About This App', 
       description: 'Learn more about this project.', 
-      icon: <Info className="h-8 w-8 text-blue-500" />,
+      icon: <Info className="h-6 w-6 text-blue-500" />,
       bgColor: 'bg-blue-50'
     },
   ];
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col" suppressHydrationWarning>
-      <Header />
+      <Header variant="conductor" title="Conductor Tools" />
       
       <main className="flex-grow flex flex-col items-center pt-8 p-4 max-w-2xl mx-auto w-full">
         <h1 className="text-2xl font-bold text-slate-900 mb-6 font-headline uppercase tracking-tight">Conductor Dashboard</h1>

@@ -2,10 +2,10 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Bell, MessageSquare, Globe } from 'lucide-react';
+import { ArrowLeft, Bell, MessageSquare, Globe, Bus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
-export default function Header({ showBackButton = false, backHref, title }: { showBackButton?: boolean; backHref?: string; title?: string }) {
+export default function Header({ showBackButton = false, backHref, title, variant = 'passenger' }: { showBackButton?: boolean; backHref?: string; title?: string; variant?: 'passenger' | 'conductor' }) {
   const router = useRouter();
 
   const handleBack = () => {
@@ -31,13 +31,19 @@ export default function Header({ showBackButton = false, backHref, title }: { sh
               <span className="sr-only">Back</span>
             </Button>
           ) : (
-            <div className="bg-white p-1 rounded-sm shadow-inner shrink-0">
-              <div className="w-8 h-8 flex flex-col items-center justify-center bg-red-600 text-white rounded-sm text-[5px] font-bold leading-none">
-                <span>TSRTC</span>
-                <span>GAMYAM</span>
-                <span className="text-[4px]">Track and Active</span>
+            variant === 'conductor' ? (
+              <div className="bg-white p-1 rounded-sm shadow-inner shrink-0">
+                <div className="w-8 h-8 flex flex-col items-center justify-center bg-red-600 text-white rounded-sm text-[5px] font-bold leading-none">
+                  <span>TSRTC</span>
+                  <span>GAMYAM</span>
+                  <span className="text-[4px]">Track and Active</span>
+                </div>
               </div>
-            </div>
+            ) : (
+              <div className="bg-white/20 p-2 rounded-full shrink-0">
+                <Bus className="h-6 w-6 text-white" />
+              </div>
+            )
           )}
           <Link href="/" className="flex flex-col justify-center overflow-hidden hover:opacity-90 active:opacity-100 transition-opacity cursor-pointer">
             <h1 className="text-xl font-bold tracking-wider font-headline uppercase truncate">
