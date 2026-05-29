@@ -8,7 +8,6 @@ import { Badge } from '@/components/ui/badge';
 import { History, User, RefreshCw, ChevronRight, ArrowRight, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { API_ENDPOINTS } from '@/lib/api-config';
 import { cn } from '@/lib/utils';
 
 export const dynamic = "force-dynamic";
@@ -70,7 +69,7 @@ export default function BookingHistoryPage() {
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
             <History className="h-8 w-8 text-primary" />
-            <h1 className="text-2xl font-bold font-headline">Cloud History</h1>
+            <h1 className="text-2xl font-bold font-headline">Booking History</h1>
           </div>
           <Button variant="outline" size="sm" onClick={() => fetchCloudHistory(localStorage.getItem('currentUser') || '', false)} disabled={isRefreshing}>
             <RefreshCw className={cn("h-4 w-4 mr-2", isRefreshing && "animate-spin")} />

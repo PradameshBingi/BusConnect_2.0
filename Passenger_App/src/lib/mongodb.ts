@@ -57,6 +57,7 @@ const TicketSchema = new mongoose.Schema({
     default: 'valid' 
   },
   createdAt: { type: Date, default: Date.now },
+  updatedAt: { type: Date, default: Date.now },
   from: { type: String, required: true },
   to: { type: String, required: true },
   routeNo: String,
@@ -118,6 +119,7 @@ const FeedbackSchema = new mongoose.Schema({
   rating: { type: Number, required: true },
   category: { type: String, required: true },
   message: { type: String, required: true },
+  suggestions: { type: String },
   createdAt: { type: Date, default: Date.now }
 }, { 
   collection: 'feedbacks'

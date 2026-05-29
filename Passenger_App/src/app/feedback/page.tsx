@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Header from '@/app/components/header';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
@@ -17,6 +17,7 @@ export default function FeedbackPage() {
   const [hoverRating, setHoverRating] = useState(0);
   const [category, setCategory] = useState('');
   const [message, setMessage] = useState('');
+  const [suggestions, setSuggestions] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [phone, setPhone] = useState('');
@@ -44,7 +45,7 @@ export default function FeedbackPage() {
       const response = await fetch('/api/feedback', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone, rating, category, message })
+        body: JSON.stringify({ phone, rating, category, message, suggestions })
       });
 
       if (!response.ok) throw new Error("Submission failed");
@@ -66,7 +67,7 @@ export default function FeedbackPage() {
           <Card className="w-full max-w-md text-center p-8 rounded-3xl shadow-xl border-none">
             <CheckCircle2 className="h-20 w-20 text-primary mx-auto mb-6" />
             <h2 className="text-2xl font-black uppercase tracking-tight mb-2">Thank You!</h2>
-            <p className="text-muted-foreground mb-8">Your feedback has been recorded in our database. We appreciate your contribution to the TGSRTC project.</p>
+            <p className="text-muted-foreground mb-8">Your feedback and suggestions have been recorded in our database.</p>
             <Button className="w-full h-14 rounded-2xl font-bold" onClick={() => router.push('/')}>Back to Dashboard</Button>
           </Card>
         </div>
@@ -118,8 +119,8 @@ export default function FeedbackPage() {
                     <SelectItem value="booking">Ticket Booking</SelectItem>
                     <SelectItem value="wallet">Wallet & Refunds</SelectItem>
                     <SelectItem value="UI/UX">UI/UX Design</SelectItem>
-                    <SelectItem value="Upgradation & Modification">Upgradation & Modification</SelectItem>
-                    <SelectItem value="Report">Report of Non-Working Tabs</SelectItem>
+                    <SelectItem value="Modification">Upgradation & Modification</SelectItem>
+                    <SelectItem value="Report">Report of Issues</SelectItem>
                     <SelectItem value="other">Other</SelectItem>
                   </SelectContent>
                 </Select>
@@ -128,11 +129,21 @@ export default function FeedbackPage() {
               <div className="space-y-2">
                 <Label className="text-[10px] font-black uppercase tracking-widest text-slate-600">Your Message</Label>
                 <Textarea
-                  placeholder="Tell us what you liked or what we should fix..."
-                  className="min-h-[120px] rounded-2xl p-4 resize-none"
+                  placeholder="Tell us what you liked..."
+                  className="min-h-[100px] rounded-2xl p-4 resize-none"
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
                   required
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-[10px] font-black uppercase tracking-widest text-slate-600">Any Suggestions? (Optional)</Label>
+                <Textarea
+                  placeholder="What would make this app better for you?"
+                  className="min-h-[100px] rounded-2xl p-4 resize-none border-primary/20"
+                  value={suggestions}
+                  onChange={(e) => setSuggestions(e.target.value)}
                 />
               </div>
 

@@ -93,14 +93,22 @@ export default {
           },
         },
         'move-bus': {
-            '0%': { transform: 'translateX(-50vw)' },
-            '100%': { transform: 'translateX(30vw)' },
+            '0%': { transform: 'translateX(-100vw)' },
+            '70%': { transform: 'translateX(0)' },
+            '100%': { transform: 'translateX(0)' },
+        },
+        'dust-blow': {
+          '0%': { transform: 'scale(0) translateX(0)', opacity: '0' },
+          '70%': { transform: 'scale(0) translateX(0)', opacity: '0' },
+          '85%': { transform: 'scale(1.5) translateX(-20px)', opacity: '0.6' },
+          '100%': { transform: 'scale(2.5) translateX(-40px)', opacity: '0' },
         }
       },
       animation: {
         'accordion-down': 'accordion-down 0.2s ease-out',
         'accordion-up': 'accordion-up 0.2s ease-out',
-        'move-bus': 'move-bus 2.8s ease-in-out forwards'
+        'move-bus': 'move-bus 2.2s cubic-bezier(0.2, 0, 0.2, 1) forwards',
+        'dust-blow': 'dust-blow 2.5s ease-out forwards'
       },
     },
   },

@@ -17,16 +17,12 @@ export default function RootLayout({
 
   useEffect(() => {
     setMounted(true);
-    
-    const hasSeenSplash = sessionStorage.getItem('hasSeenSplash');
-    if (!hasSeenSplash) {
-      setShowSplash(true);
-      const timer = setTimeout(() => {
-        setShowSplash(false);
-        sessionStorage.setItem('hasSeenSplash', 'true');
-      }, 1500);
-      return () => clearTimeout(timer);
-    }
+    // Show splash on every reload (every mount of RootLayout)
+    setShowSplash(true);
+    const timer = setTimeout(() => {
+      setShowSplash(false);
+    }, 2800); // Slightly longer for the dust animation
+    return () => clearTimeout(timer);
   }, []);
 
   return (

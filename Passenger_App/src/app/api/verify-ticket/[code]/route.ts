@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import dbConnect, { getTicketModel } from '@/lib/mongodb';
+import dbConnect, { getTicketModel, getUserModel } from '@/lib/mongodb';
 
 export const dynamic = "force-dynamic";
 
@@ -34,9 +34,23 @@ export async function GET(
 
         if (now > expiryTime) {
             ticket.status = 'expired';
-            const totalPaid = ticket.totalFare || (ticket.fare + (ticket.walletAmountUsed || 0)) || 0;
+            const totalPaid = ticket.totalFare || 0;
             refundAmount = Math.max(0, totalPaid - Math.round(totalPaid * 0.10));
             await ticket.save();
+
+            // Credit cloud wallet for expired ticket
+            const User = getUserModel();
+            const user = await User.findOne({ phone: ticket.bookedBy });
+            if (user) {
+                user.walletBalance += refundAmount;
+                user.transactions.push({
+                    type: 'credit',
+                    description: `Automatic Refund (Expired): ${ticketCode}`,
+                    amount: refundAmount,
+                    date: new Date()
+                });
+                await user.save();
+            }
         }
     }
 
