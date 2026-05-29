@@ -10,7 +10,8 @@ import {
   Info, 
   ChevronRight, 
   Wallet, 
-  HelpCircle
+  HelpCircle,
+  MessageSquare
 } from 'lucide-react';
 import Header from '@/app/components/header';
 
@@ -43,6 +44,13 @@ export default function Home() {
       description: 'Manage your balance and refunds.', 
       icon: <Wallet className="h-6 w-6 text-orange-500" />,
       bgColor: 'bg-orange-50'
+    },
+    { 
+      href: '/feedback', 
+      title: 'Send Feedback', 
+      description: 'Rate our app and share suggestions.', 
+      icon: <MessageSquare className="h-6 w-6 text-emerald-600" />,
+      bgColor: 'bg-emerald-50'
     },
     { 
       href: '/help', 

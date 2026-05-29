@@ -5,7 +5,7 @@ import Link from 'next/link';
 import Header from '@/app/components/header';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { History, User, RefreshCw, ChevronRight, ArrowRight } from 'lucide-react';
+import { History, User, RefreshCw, ChevronRight, ArrowRight, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { API_ENDPOINTS } from '@/lib/api-config';
@@ -26,85 +26,32 @@ type TicketDetails = {
 
 export default function BookingHistoryPage() {
   const [tickets, setTickets] = useState<TicketDetails[]>([]);
-  const [isClient, setIsClient] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const { toast } = useToast();
 
-  const loadLocalTickets = () => {
-    const storedTickets: TicketDetails[] = JSON.parse(localStorage.getItem('generatedTickets') || '[]');
-    // Ensure newest tickets are always at the top by sorting by date
-    const sorted = [...storedTickets].sort((a, b) => 
-      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-    );
-    setTickets(sorted);
-  };
-
-  const syncStatuses = async (silent = false) => {
-    if (!silent) setIsRefreshing(true);
+  const fetchCloudHistory = async (phone: string, silent = false) => {
+    if (!silent) setIsLoading(true);
+    else setIsRefreshing(true);
+    
     try {
-      const storedTickets: TicketDetails[] = JSON.parse(localStorage.getItem('generatedTickets') || '[]');
-      let autoRefundTotal = 0;
-      const autoRefundedCodes: string[] = [];
-      
-      const updatedTickets = await Promise.all(storedTickets.map(async (t) => {
-        if (t.status === 'valid') {
-          try {
-            const res = await fetch(`${API_ENDPOINTS.VERIFY}/${t.ticketCode}`);
-            if (res.ok) {
-              const data = await res.json();
-              if (data.status === 'expired' && data.refundAmount > 0) {
-                 autoRefundTotal += data.refundAmount;
-                 autoRefundedCodes.push(t.ticketCode);
-              }
-              return { ...t, status: data.status };
-            }
-          } catch (e) {
-            console.error("Sync failed for", t.ticketCode);
-          }
-        }
-        return t;
-      }));
-
-      if (autoRefundTotal > 0) {
-          const walletData = JSON.parse(localStorage.getItem('userWallet') || '{"balance":0, "transactions":[]}');
-          walletData.balance += autoRefundTotal;
-          
-          autoRefundedCodes.forEach(code => {
-              const codeRefund = updatedTickets.find(t => t.ticketCode === code)?.totalFare || 0;
-              const calculatedRefund = Math.round(codeRefund - (codeRefund * 0.10));
-              
-              walletData.transactions.push({
-                type: 'credit',
-                description: `Auto-Refund for Expired Ticket ${code}`,
-                amount: calculatedRefund,
-                date: new Date().toISOString(),
-              });
-          });
-          
-          localStorage.setItem('userWallet', JSON.stringify(walletData));
-          toast({ 
-            title: "Auto-Refund Applied", 
-            description: `Rs. ${autoRefundTotal.toFixed(2)} refunded for expired tickets.` 
-          });
-      }
-
-      localStorage.setItem('generatedTickets', JSON.stringify(updatedTickets));
-      const sorted = [...updatedTickets].sort((a, b) => 
-        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-      );
-      setTickets(sorted);
-      if (!silent) toast({ title: "Updated", description: "Status synced with database." });
+      const response = await fetch(`/api/history?phone=${phone}`);
+      if (!response.ok) throw new Error("Failed to fetch history");
+      const data = await response.json();
+      setTickets(data);
     } catch (error) {
-      if (!silent) toast({ variant: 'destructive', title: "Sync Error", description: "Could not reach server." });
+      toast({ variant: 'destructive', title: "Sync Error", description: "Could not fetch history from cloud." });
     } finally {
+      setIsLoading(false);
       setIsRefreshing(false);
     }
   };
 
   useEffect(() => {
-    setIsClient(true);
-    loadLocalTickets();
-    setTimeout(() => syncStatuses(true), 500);
+    const user = localStorage.getItem('currentUser');
+    if (user) {
+      fetchCloudHistory(user);
+    }
   }, []);
 
   const getFullBusType = (type: string) => {
@@ -116,8 +63,6 @@ export default function BookingHistoryPage() {
     }
   };
 
-  if (!isClient) return null;
-
   return (
     <>
       <Header showBackButton={true} backHref="/" title="Booking History" />
@@ -125,15 +70,18 @@ export default function BookingHistoryPage() {
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
             <History className="h-8 w-8 text-primary" />
-            <h1 className="text-2xl font-bold font-headline">Booking History</h1>
+            <h1 className="text-2xl font-bold font-headline">Cloud History</h1>
           </div>
-          <Button variant="outline" size="sm" onClick={() => syncStatuses(false)} disabled={isRefreshing}>
+          <Button variant="outline" size="sm" onClick={() => fetchCloudHistory(localStorage.getItem('currentUser') || '', false)} disabled={isRefreshing}>
             <RefreshCw className={cn("h-4 w-4 mr-2", isRefreshing && "animate-spin")} />
             Sync
           </Button>
         </div>
-        {tickets.length === 0 ? (
-          <Card><CardContent className="p-10 text-center text-muted-foreground">No recent bookings found.</CardContent></Card>
+
+        {isLoading ? (
+          <div className="p-20 text-center"><Loader2 className="animate-spin h-10 w-10 text-primary mx-auto" /></div>
+        ) : tickets.length === 0 ? (
+          <Card><CardContent className="p-10 text-center text-muted-foreground">No cloud records found.</CardContent></Card>
         ) : (
           <div className="space-y-4">
             {tickets.map(ticket => (

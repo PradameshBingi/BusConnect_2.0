@@ -2,11 +2,6 @@ import mongoose from 'mongoose';
 
 const MONGODB_URI = "mongodb+srv://BusConnect:T15i8Mk8qFDyfVfl@cluster1.27qrhbu.mongodb.net/?appName=Cluster1";
 
-/**
- * Global is used here to maintain a cached connection across hot reloads
- * in development. This prevents connections growing exponentially
- * during API Route usage.
- */
 let cached = (global as any).mongoose;
 
 if (!cached) {
@@ -18,7 +13,6 @@ async function dbConnect() {
     return cached.conn;
   }
 
-  // During build time, don't attempt to connect to DB
   if (process.env.NEXT_PHASE === 'phase-production-build') {
     return null;
   }
@@ -29,7 +23,7 @@ async function dbConnect() {
       maxPoolSize: 10,
       serverSelectionTimeoutMS: 15000,
       socketTimeoutMS: 45000,
-      family: 4 // Use IPv4
+      family: 4 
     };
 
     mongoose.set('strictQuery', true);
@@ -54,7 +48,7 @@ async function dbConnect() {
 
 export default dbConnect;
 
-// Ticket Schema Definition - Reordered as requested
+// Ticket Schema
 const TicketSchema = new mongoose.Schema({
   ticketCode: { type: String, unique: true, required: true },
   status: { 
@@ -81,11 +75,11 @@ const TicketSchema = new mongoose.Schema({
   validatedAt: Date
 }, { 
   bufferCommands: true,
-  timestamps: true, // This adds and manages updatedAt automatically
+  timestamps: true,
   collection: 'tickets'
 });
 
-// Bus Pass Schema Definition
+// Bus Pass Schema
 const BusPassSchema = new mongoose.Schema({
   passCode: { type: String, unique: true, required: true },
   holderName: { type: String, required: true },
@@ -103,10 +97,44 @@ const BusPassSchema = new mongoose.Schema({
   collection: 'bus_passes'
 });
 
+// User Schema (For Wallet & Data Persistence)
+const UserSchema = new mongoose.Schema({
+  phone: { type: String, unique: true, required: true },
+  walletBalance: { type: Number, default: 0 },
+  transactions: [{
+    type: { type: String, enum: ['credit', 'debit'] },
+    description: String,
+    amount: Number,
+    date: { type: Date, default: Date.now }
+  }]
+}, { 
+  timestamps: true,
+  collection: 'users'
+});
+
+// Feedback Schema
+const FeedbackSchema = new mongoose.Schema({
+  phone: { type: String, required: true },
+  rating: { type: Number, required: true },
+  category: { type: String, required: true },
+  message: { type: String, required: true },
+  createdAt: { type: Date, default: Date.now }
+}, { 
+  collection: 'feedbacks'
+});
+
 export function getTicketModel() {
   return mongoose.models.Ticket || mongoose.model('Ticket', TicketSchema);
 }
 
 export function getBusPassModel() {
   return mongoose.models.BusPass || mongoose.model('BusPass', BusPassSchema);
+}
+
+export function getUserModel() {
+  return mongoose.models.User || mongoose.model('User', UserSchema);
+}
+
+export function getFeedbackModel() {
+  return mongoose.models.Feedback || mongoose.model('Feedback', FeedbackSchema);
 }

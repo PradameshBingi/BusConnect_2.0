@@ -122,13 +122,13 @@ export default function HelpPage() {
 
             <div className="flex flex-wrap justify-center gap-3">
               <Button variant="outline" className="bg-white/5 border-white/10 hover:bg-white/10 text-white rounded-xl h-12 px-6" asChild>
-                <a href="mailto:pradamesh@example.com" target="_blank" rel="noopener noreferrer">
+                <a href="mailto:pradameshbingi043@gmail.com" target="_blank" rel="noopener noreferrer">
                   <Mail className="mr-2 h-4 w-4 text-primary" />
                   Email Me
                 </a>
               </Button>
               <Button variant="outline" className="bg-white/5 border-white/10 hover:bg-white/10 text-white rounded-xl h-12 px-6" asChild>
-                <a href="https://linkedin.com/in/pradameshbingi" target="_blank" rel="noopener noreferrer">
+                <a href="https://www.linkedin.com/in/pradamesh-043-bingi" target="_blank" rel="noopener noreferrer">
                   <Linkedin className="mr-2 h-4 w-4 text-[#0077B5]" />
                   LinkedIn
                 </a>
