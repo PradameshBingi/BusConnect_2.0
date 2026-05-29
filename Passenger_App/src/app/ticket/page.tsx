@@ -186,21 +186,24 @@ function TicketContent() {
                 </div>
             </div>
 
-            <div className="p-4 bg-primary/5 rounded-2xl border border-primary/20 flex flex-col items-center gap-2">
-                <p className="text-[10px] uppercase text-muted-foreground font-black tracking-[0.2em]">Security Code</p>
-                <div className="flex items-center justify-center w-full gap-3">
-                    <p 
-                      className="font-mono text-4xl font-black tracking-[0.3em] text-primary min-w-[140px] text-center cursor-pointer active:opacity-70 transition-opacity"
-                      onClick={() => showPin && handleCopy(ticket.securityCode, 'Security PIN')}
-                      title={showPin ? "Tap to Copy" : ""}
-                    >
-                        {showPin ? ticket.securityCode : '•••••'}
-                    </p>
-                    <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full" onClick={() => setShowPin(!showPin)}>
-                        {showPin ? <EyeOff className="h-[18px] w-[18px] text-muted-foreground" /> : <Eye className="h-[18px] w-[18px] text-muted-foreground" />}
-                    </Button>
-                </div>
-            </div>
+            {/* Security Code section - Hidden for expired/cancelled */}
+            {(displayStatus !== 'expired' && displayStatus !== 'cancelled') && (
+              <div className="p-4 bg-primary/5 rounded-2xl border border-primary/20 flex flex-col items-center gap-2">
+                  <p className="text-[10px] uppercase text-muted-foreground font-black tracking-[0.2em]">Security Code</p>
+                  <div className="flex items-center justify-center w-full gap-3">
+                      <p 
+                        className="font-mono text-4xl font-black tracking-[0.3em] text-primary min-w-[140px] text-center cursor-pointer active:opacity-70 transition-opacity"
+                        onClick={() => showPin && handleCopy(ticket.securityCode, 'Security PIN')}
+                        title={showPin ? "Tap to Copy" : ""}
+                      >
+                          {showPin ? ticket.securityCode : '•••••'}
+                      </p>
+                      <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full" onClick={() => setShowPin(!showPin)}>
+                          {showPin ? <EyeOff className="h-[18px] w-[18px] text-muted-foreground" /> : <Eye className="h-[18px] w-[18px] text-muted-foreground" />}
+                      </Button>
+                  </div>
+              </div>
+            )}
 
             <div className="text-center p-4 bg-slate-900 text-white rounded-2xl cursor-pointer hover:bg-slate-800 transition-colors shadow-inner" onClick={() => handleCopy(ticket.ticketCode, 'Ticket No')}>
                 <p className="text-[10px] uppercase text-slate-400 mb-1 font-black tracking-widest">Ticket No</p>
