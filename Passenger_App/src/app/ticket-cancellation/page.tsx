@@ -1,5 +1,6 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -22,12 +23,20 @@ import {
 
 type TicketStatus = 'loading' | 'found' | 'not_found' | 'already_used' | 'cancelled' | 'idle' | 'invalid_security';
 
-export default function TicketCancellationPage() {
+function CancellationContent() {
+  const searchParams = useSearchParams();
   const [ticketCode, setTicketCode] = useState('');
   const [securityCode, setSecurityCode] = useState('');
   const [status, setStatus] = useState<TicketStatus>('idle');
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+
+  useEffect(() => {
+    const code = searchParams.get('code');
+    if (code) {
+      setTicketCode(code.toUpperCase());
+    }
+  }, [searchParams]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -42,11 +51,11 @@ export default function TicketCancellationPage() {
     setTimeout(() => {
       try {
         const storedTickets = JSON.parse(localStorage.getItem('generatedTickets') || '[]');
-        const foundTicket = storedTickets.find((t: any) => t.ticketCode === ticketCode.toUpperCase());
+        const foundTicket = storedTickets.find((t: any) => t.ticketCode.toUpperCase() === ticketCode.toUpperCase());
 
         if (!foundTicket) {
           setStatus('not_found');
-        } else if (foundTicket.securityCode !== securityCode.toUpperCase()) {
+        } else if (foundTicket.securityCode.toUpperCase() !== securityCode.toUpperCase()) {
             setStatus('invalid_security');
         } else if (foundTicket.status === 'used' || foundTicket.status === 'expired' || foundTicket.status === 'cancelled') {
           setStatus('already_used');
@@ -75,7 +84,7 @@ export default function TicketCancellationPage() {
       }
 
       const storedTickets: any[] = JSON.parse(localStorage.getItem('generatedTickets') || '[]');
-      const ticketIndex = storedTickets.findIndex(t => t.ticketCode === ticketCode.toUpperCase());
+      const ticketIndex = storedTickets.findIndex(t => t.ticketCode.toUpperCase() === ticketCode.toUpperCase());
 
       if (ticketIndex > -1) {
         const ticketToCancel = storedTickets[ticketIndex];
@@ -176,56 +185,64 @@ export default function TicketCancellationPage() {
   };
 
   return (
+    <div className="p-4 md:p-8 flex justify-center">
+      <Card className="w-full max-w-md">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 font-headline text-2xl">
+            <FileX />
+            Ticket Cancellation
+          </CardTitle>
+          <CardDescription>
+            Enter your ticket and security code to request cancellation.
+          </CardDescription>
+        </CardHeader>
+        <form onSubmit={handleSearch}>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="ticket-code">Ticket Code</Label>
+              <Input
+                id="ticket-code"
+                placeholder="TKT-XX-XXXXX"
+                value={ticketCode}
+                onChange={e => setTicketCode(e.target.value.toUpperCase())}
+                required
+                disabled={isLoading}
+                className="uppercase"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="security-code">Passenger Security Code</Label>
+              <Input
+                id="security-code"
+                placeholder="5-digit alphanumeric code"
+                value={securityCode}
+                onChange={e => setSecurityCode(e.target.value.toUpperCase())}
+                required
+                disabled={isLoading}
+                maxLength={5}
+                className="uppercase"
+              />
+            </div>
+            {status !== 'idle' && !isLoading && <div className="pt-4">{renderResult()}</div>}
+          </CardContent>
+          <CardFooter>
+            <Button type="submit" className="w-full" disabled={isLoading || status === 'found' || status === 'cancelled'}>
+              {isLoading ? <Loader2 className="animate-spin" /> : 'Find Ticket'}
+            </Button>
+          </CardFooter>
+        </form>
+      </Card>
+    </div>
+  );
+}
+
+export default function TicketCancellationPage() {
+  return (
     <>
-      <Header showBackButton={true} backHref="/select-ticket-type" title="Ticket Cancellation" />
-      <div className="p-4 md:p-8 flex justify-center">
-        <Card className="w-full max-w-md">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 font-headline text-2xl">
-              <FileX />
-              Ticket Cancellation
-            </CardTitle>
-            <CardDescription>
-              Enter your ticket and security code to request cancellation.
-            </CardDescription>
-          </CardHeader>
-          <form onSubmit={handleSearch}>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="ticket-code">Ticket Code</Label>
-                <Input
-                  id="ticket-code"
-                  placeholder="TKT-XX-XXXXX"
-                  value={ticketCode}
-                  onChange={e => setTicketCode(e.target.value)}
-                  required
-                  disabled={isLoading}
-                  className="uppercase"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="security-code">Passenger Security Code</Label>
-                <Input
-                  id="security-code"
-                  placeholder="5-digit alphanumeric code"
-                  value={securityCode}
-                  onChange={e => setSecurityCode(e.target.value)}
-                  required
-                  disabled={isLoading}
-                  maxLength={5}
-                  className="uppercase"
-                />
-              </div>
-              {status !== 'idle' && !isLoading && <div className="pt-4">{renderResult()}</div>}
-            </CardContent>
-            <CardFooter>
-              <Button type="submit" className="w-full" disabled={isLoading || status === 'found' || status === 'cancelled'}>
-                {isLoading ? <Loader2 className="animate-spin" /> : 'Find Ticket'}
-              </Button>
-            </CardFooter>
-          </form>
-        </Card>
-      </div>
+      <Header showBackButton={true} backHref="/booking-history" title="Ticket Cancellation" />
+      <Suspense fallback={<div className="p-20 text-center"><Loader2 className="animate-spin mx-auto h-10 w-10 text-primary" /></div>}>
+        <CancellationContent />
+      </Suspense>
     </>
   );
 }

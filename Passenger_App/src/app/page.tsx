@@ -62,7 +62,23 @@ export default function Home() {
 
   return (
     <div className="bg-white min-h-screen pb-32">
-      <Header />
+      <header className="bg-primary text-white p-4 flex items-center justify-between sticky top-0 z-50 shadow-sm h-16 w-full">
+        <div className="flex items-center gap-3">
+          <div className="bg-white p-1 rounded-sm shadow-inner">
+            <div className="w-8 h-8 flex flex-col items-center justify-center bg-red-600 text-white rounded-sm text-[5px] font-bold leading-none">
+              <span>TSRTC</span>
+              <span>GAMYAM</span>
+              <span className="text-[4px]">Track and Active</span>
+            </div>
+          </div>
+          <h1 className="text-xl font-bold tracking-wider font-headline uppercase">TGSRTC</h1>
+        </div>
+        <div className="flex items-center gap-4">
+          <Bell className="h-5 w-5 cursor-pointer hover:opacity-80" />
+          <MessageSquare className="h-5 w-5 cursor-pointer hover:opacity-80" />
+          <Globe className="h-5 w-5 cursor-pointer hover:opacity-80" />
+        </div>
+      </header>
 
       <main className="p-4 space-y-4 max-w-2xl mx-auto pt-6">
         {/* Service List */}
