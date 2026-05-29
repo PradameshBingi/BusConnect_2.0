@@ -24,7 +24,7 @@ export async function POST(
     const ticket = await Ticket.findOne({ ticketCode });
     if (!ticket) return NextResponse.json({ status: "invalid" }, { status: 404 });
 
-    if (ticket.status === "used") {
+    if (ticket.status === "used" && !updateData.status) {
       return NextResponse.json({ status: "already_used", message: "Ticket already validated" }, { status: 400 });
     }
 
@@ -32,18 +32,28 @@ export async function POST(
       return NextResponse.json({ status: "cancelled", message: "Ticket is cancelled" }, { status: 400 });
     }
 
+    // Standard expiry check (10 mins)
     const now = new Date();
     const createdAt = new Date(ticket.createdAt);
     const expiryTime = new Date(createdAt.getTime() + 10 * 60 * 1000);
     
-    if (now > expiryTime || ticket.status === 'expired') {
+    if (now > expiryTime && ticket.status !== 'used' && !updateData.createdAt) {
         ticket.status = 'expired';
         await ticket.save();
         return NextResponse.json({ status: "expired", message: "Ticket has expired and cannot be validated" }, { status: 400 });
     }
 
-    ticket.status = "used";
-    ticket.validatedAt = new Date();
+    // Apply updates
+    if (updateData.status) {
+      ticket.status = updateData.status;
+    } else {
+      ticket.status = "used";
+      ticket.validatedAt = new Date();
+    }
+
+    if (updateData.createdAt) {
+      ticket.createdAt = new Date(updateData.createdAt);
+    }
 
     if (updateData.busType) ticket.busType = updateData.busType;
     if (updateData.totalFare) ticket.totalFare = updateData.totalFare;

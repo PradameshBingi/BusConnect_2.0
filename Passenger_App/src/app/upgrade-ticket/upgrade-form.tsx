@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
@@ -93,17 +92,24 @@ export function UpgradeForm({ ticket }: { ticket: Ticket }) {
 
         setIsLoading(opt.name);
         try {
+            const newCreatedAt = new Date().toISOString();
+            
             const response = await fetch(`${API_ENDPOINTS.USE}/${ticket.ticketCode}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     busType: opt.name,
                     totalFare: opt.newTotalFare,
-                    fare: Math.round((ticket.fare || 0) + opt.amountToPay)
+                    fare: Math.round((ticket.fare || 0) + opt.amountToPay),
+                    status: 'valid', // Maintain valid status so passenger sees the countdown
+                    createdAt: newCreatedAt // Restart the timer
                 })
             });
 
-            if (!response.ok) throw new Error("Database update failed.");
+            if (!response.ok) {
+                const errData = await response.json().catch(() => ({}));
+                throw new Error(errData.message || "Database update failed.");
+            }
             
             const result = await response.json();
             const updatedDbTicket = result.ticket;
@@ -123,11 +129,17 @@ export function UpgradeForm({ ticket }: { ticket: Ticket }) {
             const storedTickets: Ticket[] = JSON.parse(localStorage.getItem('generatedTickets') || '[]');
             const ticketIndex = storedTickets.findIndex(t => t.ticketCode === ticket.ticketCode);
             if (ticketIndex > -1) {
-                storedTickets[ticketIndex] = { ...updatedDbTicket, status: 'valid' };
+                // Update local storage with the new category and restarted timer
+                storedTickets[ticketIndex] = { 
+                    ...updatedDbTicket, 
+                    status: 'valid', 
+                    createdAt: newCreatedAt 
+                };
                 localStorage.setItem('generatedTickets', JSON.stringify(storedTickets));
             }
             
-            toast({ title: "Upgrade Successful!", description: `Ticket upgraded to ${opt.title}.` });
+            toast({ title: "Upgrade Successful!", description: `Ticket upgraded to ${opt.title} and timer restarted.` });
+            // Redirect back to ticket detail page (which shows the Valid preview card)
             router.push(`/ticket/${ticket.ticketCode}`);
         } catch (error: any) {
             toast({ variant: 'destructive', title: 'Upgrade Failed', description: error.message });
