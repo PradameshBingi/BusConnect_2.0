@@ -102,6 +102,7 @@ const BusPassSchema = new mongoose.Schema({
 const UserSchema = new mongoose.Schema({
   phone: { type: String, unique: true, required: true },
   walletBalance: { type: Number, default: 0 },
+  sessionId: { type: String }, // For single-session tracking
   transactions: [{
     type: { type: String, enum: ['credit', 'debit'] },
     description: String,

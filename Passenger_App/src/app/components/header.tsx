@@ -1,8 +1,9 @@
 'use client';
 
+import { useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Bell, MessageSquare, Globe, Bus, User, LogOut } from 'lucide-react';
+import { ArrowLeft, Bell, MessageSquare, Globe, User, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -12,9 +13,49 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useToast } from '@/hooks/use-toast';
 
 export default function Header({ showBackButton = false, backHref, title, variant = 'passenger' }: { showBackButton?: boolean; backHref?: string; title?: string; variant?: 'passenger' | 'conductor' }) {
   const router = useRouter();
+  const { toast } = useToast();
+
+  const handleLogout = useCallback(() => {
+    localStorage.removeItem('currentUser');
+    localStorage.removeItem('sessionId');
+    router.replace('/login');
+  }, [router]);
+
+  // Session Validation Heartbeat
+  useEffect(() => {
+    const validateSession = async () => {
+      const phone = localStorage.getItem('currentUser');
+      const localSessionId = localStorage.getItem('sessionId');
+      
+      if (phone && localSessionId) {
+        try {
+          const res = await fetch(`/api/user?phone=${phone}`);
+          if (res.ok) {
+            const data = await res.json();
+            // If database session doesn't match local session, force logout
+            if (data.sessionId && data.sessionId !== localSessionId) {
+              toast({
+                variant: 'destructive',
+                title: 'Session Expired',
+                description: 'Logged in from another device. Please login again.'
+              });
+              handleLogout();
+            }
+          }
+        } catch (e) {
+          console.error("Session check failed");
+        }
+      }
+    };
+
+    validateSession();
+    const interval = setInterval(validateSession, 30000); // Check every 30 seconds
+    return () => clearInterval(interval);
+  }, [handleLogout, toast]);
 
   const handleBack = () => {
     if (backHref) {
@@ -22,11 +63,6 @@ export default function Header({ showBackButton = false, backHref, title, varian
     } else {
       router.back();
     }
-  };
-
-  const handleLogout = () => {
-    localStorage.removeItem('currentUser');
-    router.replace('/login');
   };
 
   return (
@@ -44,19 +80,13 @@ export default function Header({ showBackButton = false, backHref, title, varian
               <span className="sr-only">Back</span>
             </Button>
           ) : (
-            variant === 'conductor' ? (
-              <div className="bg-white p-1 rounded-sm shadow-inner shrink-0">
-                <div className="w-8 h-8 flex flex-col items-center justify-center bg-red-600 text-white rounded-sm text-[5px] font-bold leading-none">
-                  <span>TSRTC</span>
-                  <span>GAMYAM</span>
-                  <span className="text-[4px]">Track and Active</span>
-                </div>
+            <div className="bg-white p-1 rounded-sm shadow-inner shrink-0">
+              <div className="w-8 h-8 flex flex-col items-center justify-center bg-red-600 text-white rounded-sm text-[5px] font-bold leading-none">
+                <span>TSRTC</span>
+                <span>GAMYAM</span>
+                <span className="text-[4px]">Track and Active</span>
               </div>
-            ) : (
-              <div className="bg-white/20 p-2 rounded-full shrink-0">
-                <Bus className="h-6 w-6 text-white" />
-              </div>
-            )
+            </div>
           )}
           <Link href="/" className="flex flex-col justify-center overflow-hidden hover:opacity-90 active:opacity-100 transition-opacity cursor-pointer">
             <h1 className="text-xl font-bold tracking-wider font-headline uppercase truncate">

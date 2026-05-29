@@ -41,12 +41,32 @@ export default function LoginPage() {
     
     setIsLoading(true);
 
-    // Mock Authentication Logic for Prototype
-    setTimeout(() => {
+    // Mock Authentication Logic combined with Session Tracking
+    setTimeout(async () => {
       if (phone === '9999999999' && password === '99999') {
-        localStorage.setItem('currentUser', phone);
-        toast({ title: "Login Successful", description: "Welcome to BusConnect Dashboard." });
-        router.push('/');
+        const newSessionId = Date.now().toString();
+        
+        try {
+          // Register session in MongoDB
+          await fetch('/api/user', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              phone,
+              sessionId: newSessionId,
+              type: 'session_update'
+            })
+          });
+
+          localStorage.setItem('currentUser', phone);
+          localStorage.setItem('sessionId', newSessionId);
+          
+          toast({ title: "Login Successful", description: "Welcome to BusConnect Dashboard." });
+          router.push('/');
+        } catch (err) {
+          toast({ variant: 'destructive', title: "Login Error", description: "Failed to establish secure session." });
+          setIsLoading(false);
+        }
       } else {
         toast({ 
           variant: 'destructive', 
@@ -64,8 +84,12 @@ export default function LoginPage() {
     <div className="min-h-screen bg-primary flex flex-col items-center justify-center p-4">
       <div className="w-full max-w-md space-y-8">
         <div className="flex flex-col items-center gap-4 text-white">
-          <div className="bg-white/20 p-4 rounded-full backdrop-blur-md">
-            <Bus className="h-12 w-12" />
+          <div className="bg-white p-1 rounded-sm shadow-inner">
+            <div className="w-12 h-12 flex flex-col items-center justify-center bg-red-600 text-white rounded-sm text-[7px] font-bold leading-none">
+              <span className="mb-0.5">TSRTC</span>
+              <span className="mb-0.5">GAMYAM</span>
+              <span className="text-[5px] scale-90">Track and Active</span>
+            </div>
           </div>
           <div className="text-center">
             <h1 className="text-4xl font-bold tracking-[0.2em] font-headline">TGSRTC</h1>
