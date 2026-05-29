@@ -54,8 +54,15 @@ async function dbConnect() {
 
 export default dbConnect;
 
-// Ticket Schema Definition
+// Ticket Schema Definition - Reordered as requested
 const TicketSchema = new mongoose.Schema({
+  ticketCode: { type: String, unique: true, required: true },
+  status: { 
+    type: String, 
+    enum: ['valid', 'used', 'expired', 'cancelled'], 
+    default: 'valid' 
+  },
+  createdAt: { type: Date, default: Date.now },
   from: { type: String, required: true },
   to: { type: String, required: true },
   routeNo: String,
@@ -67,21 +74,14 @@ const TicketSchema = new mongoose.Schema({
   },
   totalFare: { type: Number, required: true },
   fare: { type: Number, required: true },
-  ticketCode: { type: String, unique: true, required: true },
-  securityCode: { type: String, required: true },
-  status: { 
-    type: String, 
-    enum: ['valid', 'used', 'expired', 'cancelled'], 
-    default: 'valid' 
-  },
-  createdAt: { type: Date, default: Date.now },
   busType: { type: String, required: true },
-  validatedAt: Date,
+  securityCode: { type: String, required: true },
+  bookedBy: { type: String, required: true },
   walletAmountUsed: { type: Number, default: 0 },
-  bookedBy: { type: String } // Added for user tracking
+  validatedAt: Date
 }, { 
   bufferCommands: true,
-  timestamps: true,
+  timestamps: true, // This adds and manages updatedAt automatically
   collection: 'tickets'
 });
 
