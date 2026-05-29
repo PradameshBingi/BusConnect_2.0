@@ -48,14 +48,21 @@ export function ModifyForm({ ticket, onReset }: { ticket: any, onReset: () => vo
   const { toast } = useToast();
 
   const newTotalFare = useMemo(() => {
+    // If nothing changed, return the original fare exactly to avoid rounding discrepancies
+    const hasChanged = from !== ticket.from || 
+                       to !== ticket.to || 
+                       quantities.Men !== ticket.quantities.Men || 
+                       quantities.Child !== ticket.quantities.Child || 
+                       quantities.Women !== ticket.quantities.Women;
+    
+    if (!hasChanged) return ticket.totalFare;
     return calculateFare(from, to, quantities, ticket.busType);
-  }, [from, to, quantities, ticket.busType]);
+  }, [from, to, quantities, ticket.busType, ticket]);
 
-  const fareDifference = newTotalFare - ticket.totalFare;
+  const fareDifference = Math.round(newTotalFare - ticket.totalFare);
   const isAddition = fareDifference > 0;
   const isRefund = fareDifference < 0;
 
-  // Specific Refund Logic: 10% deduction per person removed
   const refundWithFee = useMemo(() => {
     if (!isRefund) return 0;
     const absoluteDiff = Math.abs(fareDifference);
@@ -85,7 +92,7 @@ export function ModifyForm({ ticket, onReset }: { ticket: any, onReset: () => vo
         toast({ variant: 'destructive', title: 'Invalid Route', description: 'Start and Destination must differ.' });
         return;
     }
-    const totalPassengers = Object.values(quantities).reduce((sum, q) => sum + q, 0);
+    const totalPassengers = Object.values(quantities).reduce((sum, q) => sum + (q as number), 0);
     if (totalPassengers === 0) {
         toast({ variant: 'destructive', title: 'No Passengers', description: 'Please keep at least one passenger.' });
         return;
@@ -102,7 +109,7 @@ export function ModifyForm({ ticket, onReset }: { ticket: any, onReset: () => vo
     setIsLoading(true);
     try {
       const passengerSummary = Object.entries(quantities)
-        .filter(([, count]) => count > 0)
+        .filter(([, count]) => (count as number) > 0)
         .map(([type, count]) => `${type}: ${count}`)
         .join(', ');
 
@@ -144,7 +151,7 @@ export function ModifyForm({ ticket, onReset }: { ticket: any, onReset: () => vo
 
       toast({ 
           title: "Booking Modified", 
-          description: isRefund ? `Rs. ${refundWithFee} credited to wallet.` : "Details updated successfully." 
+          description: isRefund ? `Rs. ${Math.round(refundWithFee)} credited to wallet.` : "Details updated successfully." 
       });
       router.push(`/ticket/${ticket.ticketCode}`);
     } catch (error: any) {
@@ -157,9 +164,9 @@ export function ModifyForm({ ticket, onReset }: { ticket: any, onReset: () => vo
   return (
     <>
       <Card className="w-full max-w-md border-none shadow-2xl rounded-3xl overflow-hidden">
-        <CardHeader className="bg-purple-600 text-white p-6">
+        <CardHeader className="bg-primary text-white p-6">
           <CardTitle className="text-xl font-black uppercase tracking-tight flex items-center gap-3">
-             <Edit3 className="h-6 w-6" /> Modify Journey
+             <Edit3 className="h-6 w-6 text-white" /> Modify Journey
           </CardTitle>
           <CardDescription className="text-purple-100">Ticket: {ticket.ticketCode}</CardDescription>
         </CardHeader>
@@ -230,11 +237,16 @@ export function ModifyForm({ ticket, onReset }: { ticket: any, onReset: () => vo
           </div>
         </CardContent>
         <CardFooter className="flex flex-col gap-3 px-6 pb-6">
-           <Button className="w-full h-14 rounded-2xl bg-purple-600 hover:bg-purple-700 text-lg font-bold" onClick={initiateUpdate} disabled={isLoading}>
+           <Button 
+             variant="ghost"
+             className="w-full h-14 text-slate-500 hover:bg-slate-100 text-lg font-bold" 
+             onClick={initiateUpdate} 
+             disabled={isLoading}
+           >
               {isLoading ? <Loader2 className="animate-spin mr-2" /> : <Save className="mr-2 h-5 w-5" />}
               Save Modifications
            </Button>
-           <Button variant="ghost" className="w-full h-12 text-slate-500 font-bold" onClick={onReset}>Cancel Changes</Button>
+           <Button variant="ghost" className="w-full h-12 text-slate-500 font-bold hover:bg-slate-100" onClick={onReset}>Cancel Changes</Button>
         </CardFooter>
       </Card>
 

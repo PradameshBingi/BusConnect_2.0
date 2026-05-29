@@ -70,12 +70,12 @@ function ModifyBookingContent() {
     <div className="p-4 md:p-8 flex flex-col items-center gap-6 min-h-[calc(100vh-4rem)] bg-slate-50/50">
       {!ticket ? (
         <Card className="w-full max-w-md shadow-xl border-none rounded-3xl overflow-hidden">
-          <CardHeader className="bg-slate-900 text-white p-8">
+          <CardHeader className="bg-primary text-white p-8">
             <CardTitle className="flex items-center gap-3 font-headline text-2xl uppercase tracking-tight">
-              <Edit3 className="h-7 w-7 text-purple-500" />
+              <Edit3 className="h-7 w-7 text-white" />
               Modify Booking
             </CardTitle>
-            <CardDescription className="text-slate-400">
+            <CardDescription className="text-white/80">
               Update route or passenger count for active tickets.
             </CardDescription>
           </CardHeader>
@@ -96,7 +96,7 @@ function ModifyBookingContent() {
                   <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-300" />
                 </div>
               </div>
-              <Button type="submit" className="w-full h-14 bg-slate-900 rounded-2xl font-bold" disabled={isLoading}>
+              <Button type="submit" className="w-full h-14 bg-[#0A2B70] hover:bg-[#0A2B70]/90 rounded-2xl font-bold" disabled={isLoading}>
                 {isLoading ? <Loader2 className="animate-spin mr-2 h-5 w-5" /> : <Search className="mr-2 h-5 w-5" />}
                 Find Ticket
               </Button>
@@ -107,10 +107,10 @@ function ModifyBookingContent() {
                 <Info className="h-4 w-4" /> Instructions
               </div>
               <ul className="text-xs text-blue-700/80 space-y-2 leading-relaxed">
-                <li>• Modifiable only within the 10-minute validity window.</li>
+                <li>• Valid Ticket only Modifiable.</li>
                 <li>• Add members: Pay the difference via Digital Payment.</li>
                 <li>• Remove members: Refund credited to wallet (10% fee per person).</li>
-                <li>• Used or cancelled tickets cannot be modified.</li>
+                <li>• Used or Expired and cancelled tickets cannot be modified.</li>
               </ul>
             </div>
           </CardContent>
