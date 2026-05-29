@@ -43,7 +43,7 @@ export default function LoginPage() {
 
     // Mock Authentication Logic combined with Session Tracking
     setTimeout(async () => {
-      if (phone === '9999999999' && password === '99999') {
+      if (phone === '9999999999' && password === '78945') {
         const newSessionId = Date.now().toString();
         
         try {
