@@ -29,6 +29,27 @@ const TicketWatermark = () => (
 );
 
 export function ValidatedTicket({ ticket }: ValidatedTicketProps) {
+  // Stable Randomized Data based on Ticket Code
+  const stableData = useMemo(() => {
+    const seed = ticket.ticketCode.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    const rnd = (min: number, max: number, offset: number) => {
+      const val = Math.abs(Math.sin(seed + offset) * 10000);
+      return Math.floor(min + (val % (max - min + 1)));
+    };
+
+    const depots = ['LB Nagar Depot', 'Dilsukhnagar Depot', 'Mehdipatnam Depot', 'Uppal Depot', 'Secunderabad Depot', 'Hayathnagar Depot', 'Kukatpally Depot', 'Miyapur Depot', 'Barkatpura Depot', 'Ranigunj Depot'];
+    const servicePrefixes = ['MENA', 'MEAB', 'METR', 'CITY'];
+    
+    return {
+      depot: depots[rnd(0, depots.length - 1, 10)],
+      serviceNo: servicePrefixes[rnd(0, 3, 20)] + rnd(10, 99, 30),
+      waybill: rnd(10000000, 99999999, 40),
+      busNo: "TS11UA" + rnd(1000, 9999, 50),
+      cnd: rnd(100000, 999999, 60),
+      tripNo: rnd(1, 8, 70)
+    };
+  }, [ticket.ticketCode]);
+
   const issuedAt = useMemo(() => {
     const d = new Date(ticket.timestamp);
     return isNaN(d.getTime()) ? new Date() : d;
@@ -65,47 +86,42 @@ export function ValidatedTicket({ ticket }: ValidatedTicketProps) {
     return { menRate: mRate, childRate: cRate, womenRate: wRate };
   }, [ticket.from, ticket.to, ticket.busType]);
 
-  const serviceNumber = "MENA" + (Math.floor(Math.random() * 90) + 10);
-  const waybill = Math.floor(10000000 + Math.random() * 90000000);
-  const busNo = "TS11UA" + (Math.floor(1000 + Math.random() * 9000));
-  const cnd = Math.floor(100000 + Math.random() * 900000);
-
   return (
     <div className="w-full max-w-sm mx-auto bg-white shadow-2xl relative font-mono text-black rounded-sm overflow-hidden border border-gray-200">
-      {/* Pink Scalloped Sides (Thermal Paper Effect) */}
+      {/* Pink Scalloped Sides */}
       <div className="absolute left-0 top-0 bottom-0 w-4 bg-repeat-y z-20" style={{backgroundImage: 'linear-gradient(135deg, #ffb6c1 50%, transparent 50%), linear-gradient(-135deg, #ffb6c1 50%, transparent 50%)', backgroundSize: '8px 8px'}}></div>
       <div className="absolute right-0 top-0 bottom-0 w-4 bg-repeat-y z-20" style={{backgroundImage: 'linear-gradient(-45deg, #ffb6c1 50%, transparent 50%), linear-gradient(45deg, #ffb6c1 50%, transparent 50%)', backgroundSize: '8px 8px'}}></div>
       
-      <div className="p-10 relative z-10">
-        {/* Header Section */}
-        <div className="text-center space-y-1 mb-6">
-          <p className="font-bold text-2xl leading-tight tracking-tighter">తెలంగాణ రాష్ట్ర రోడ్డు రవాణా సంస్థ</p>
-          <p className="font-black text-lg tracking-tight">LB Nagar Depot</p>
+      <div className="p-8 relative z-10">
+        {/* Header Section - Tightened */}
+        <div className="text-center space-y-0.5 mb-3">
+          <p className="font-bold text-lg leading-tight tracking-tighter">తెలంగాణ రాష్ట్ర రోడ్డు రవాణా సంస్థ</p>
+          <p className="font-black text-sm tracking-tight">{stableData.depot}</p>
         </div>
 
-        {/* Top Metadata */}
-        <div className="flex justify-between text-[12px] font-black mb-6 px-1 border-b border-gray-100 pb-2">
-          <span>{ticket.ticketCode.replace('TKT-', '')}</span>
+        {/* Top Metadata - Tightened */}
+        <div className="flex justify-between text-[11px] font-black mb-3 px-1 border-b border-gray-100 pb-1.5">
+          <span>{ticket.ticketCode}</span>
           <span>{formattedDate} {formattedTime}</span>
         </div>
 
-        {/* Central Info Section */}
-        <div className="text-center relative py-6 mb-6">
+        {/* Central Info Section - Tightened */}
+        <div className="text-center relative py-3 mb-3">
           <TicketWatermark />
-          <p className="text-[12px] font-black mb-1 relative z-10">Service Number: {serviceNumber}</p>
-          <h2 className="text-3xl font-black uppercase tracking-tighter relative z-10 py-1">CITY {ticket.busType.toUpperCase()}</h2>
-          <p className="text-[12px] font-black relative z-10">Trip No: {Math.floor(Math.random() * 5) + 1}</p>
+          <p className="text-[11px] font-black mb-0 relative z-10">Service Number: {stableData.serviceNo}</p>
+          <h2 className="text-2xl font-black uppercase tracking-tighter relative z-10 py-0.5">CITY {ticket.busType.toUpperCase()}</h2>
+          <p className="text-[11px] font-black relative z-10">Trip No: {stableData.tripNo}</p>
         </div>
 
-        {/* Route Section */}
-        <div className="flex justify-between items-center font-black text-base px-1 mb-8">
+        {/* Route Section - Tightened */}
+        <div className="flex justify-between items-center font-black text-sm px-1 mb-5">
           <span className="uppercase">{ticket.from}</span>
-          <span className="text-[11px] text-gray-500 font-bold mx-4">TO</span>
+          <span className="text-[10px] text-gray-500 font-bold mx-2">TO</span>
           <span className="uppercase">{ticket.to}</span>
         </div>
 
-        {/* Fare Breakdown Section */}
-        <div className="space-y-1 text-[13px] font-black px-1 mb-10">
+        {/* Fare Breakdown Section - Tightened */}
+        <div className="space-y-0.5 text-[12px] font-black px-1 mb-6">
           {(ticket.quantities?.Men || 0) > 0 && (
             <p>MEN: {ticket.quantities!.Men} x {menRate.toFixed(2)} = {(ticket.quantities!.Men * menRate).toFixed(2)}</p>
           )}
@@ -115,7 +131,7 @@ export function ValidatedTicket({ ticket }: ValidatedTicketProps) {
           {(ticket.quantities?.Women || 0) > 0 && (
             <div className="flex items-center gap-2">
                 <p>WOMEN: {ticket.quantities!.Women} x {womenRate.toFixed(2)} = {(ticket.quantities!.Women * womenRate).toFixed(2)}</p>
-                {womenRate === 0 && <span className="bg-green-100 text-green-700 text-[10px] px-1.5 py-0.5 rounded font-black tracking-widest">FREE</span>}
+                {womenRate === 0 && <span className="bg-green-100 text-green-700 text-[9px] px-1 py-0.5 rounded font-black tracking-widest">FREE</span>}
             </div>
           )}
           {(!ticket.quantities) && (
@@ -124,33 +140,33 @@ export function ValidatedTicket({ ticket }: ValidatedTicketProps) {
         </div>
 
         {/* Total Divider */}
-        <div className="border-t-2 border-dashed border-gray-400 my-6"></div>
+        <div className="border-t-2 border-dashed border-gray-400 my-3"></div>
 
         {/* Total Section */}
-        <div className="text-center mb-8">
-          <h3 className="text-4xl font-black tracking-tighter">Total Rs. {ticket.totalFare.toFixed(2)}</h3>
-          <p className="text-[11px] font-black mt-2 text-gray-600">Payment Mode: DIGITAL</p>
+        <div className="text-center mb-5">
+          <h3 className="text-3xl font-black tracking-tighter">Total Rs. {Math.round(ticket.totalFare)}</h3>
+          <p className="text-[10px] font-black mt-1 text-gray-600">Payment Mode: DIGITAL</p>
         </div>
 
-        {/* System Details Section */}
-        <div className="text-[11px] font-black border-t border-dashed border-gray-300 pt-6 px-1">
-          <div className="grid grid-cols-2 gap-y-1">
-              <p>CND: {cnd}</p>
-              <p className="text-right">DRV: DS{serviceNumber}</p>
-              <p>Waybill: {waybill}</p>
-              <p className="text-right">Bus: {busNo}</p>
+        {/* System Details Section - Tighter Grid */}
+        <div className="text-[10px] font-black border-t border-dashed border-gray-300 pt-3 px-1">
+          <div className="grid grid-cols-2 gap-y-0.5">
+              <p>CND: {stableData.cnd}</p>
+              <p className="text-right">DRV: DS{stableData.serviceNo}</p>
+              <p>Waybill: {stableData.waybill}</p>
+              <p className="text-right">Bus: {stableData.busNo}</p>
               <p>ETIM No: I062300078</p>
               <p className="text-right">v1.9.29</p>
           </div>
         </div>
 
         {/* Footer Text */}
-        <div className="text-center font-black text-base space-y-1 mt-10 border-t-2 border-dashed border-gray-400 pt-6 uppercase">
+        <div className="text-center font-black text-sm space-y-0.5 mt-6 border-t-2 border-dashed border-gray-400 pt-4 uppercase">
           <p className="tracking-tight">NOT TRANSFERABLE</p>
           <p className="tracking-widest">HAPPY JOURNEY</p>
-          <div className='pt-4'>
-            <p className='text-[10px] text-gray-500 font-bold'>Help Line No</p>
-            <p className='text-base tracking-tighter'>040 69440000</p>
+          <div className='pt-2'>
+            <p className='text-[9px] text-gray-500 font-bold'>Help Line No</p>
+            <p className='text-sm tracking-tighter'>040 69440000</p>
           </div>
         </div>
       </div>
