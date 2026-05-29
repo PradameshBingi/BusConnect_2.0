@@ -40,6 +40,7 @@ export default function BookingHistoryPage() {
     try {
       const storedTickets: TicketDetails[] = JSON.parse(localStorage.getItem('generatedTickets') || '[]');
       let autoRefundTotal = 0;
+      const autoRefundedCodes: string[] = [];
       
       const updatedTickets = await Promise.all(storedTickets.map(async (t) => {
         if (t.status === 'valid') {
@@ -49,6 +50,7 @@ export default function BookingHistoryPage() {
               const data = await res.json();
               if (data.status === 'expired' && data.refundAmount > 0) {
                  autoRefundTotal += data.refundAmount;
+                 autoRefundedCodes.push(t.ticketCode);
               }
               return { ...t, status: data.status };
             }
@@ -62,16 +64,23 @@ export default function BookingHistoryPage() {
       if (autoRefundTotal > 0) {
           const walletData = JSON.parse(localStorage.getItem('userWallet') || '{"balance":0, "transactions":[]}');
           walletData.balance += autoRefundTotal;
-          walletData.transactions.push({
-            type: 'credit',
-            description: `Auto-Refund for Expired Ticket(s)`,
-            amount: autoRefundTotal,
-            date: new Date().toISOString(),
+          
+          autoRefundedCodes.forEach(code => {
+              const codeRefund = updatedTickets.find(t => t.ticketCode === code)?.totalFare || 0;
+              const calculatedRefund = Math.round(codeRefund - (codeRefund * 0.10));
+              
+              walletData.transactions.push({
+                type: 'credit',
+                description: `Auto-Refund for Expired Ticket ${code}`,
+                amount: calculatedRefund,
+                date: new Date().toISOString(),
+              });
           });
+          
           localStorage.setItem('userWallet', JSON.stringify(walletData));
           toast({ 
             title: "Auto-Refund Applied", 
-            description: `Rs. ${autoRefundTotal.toFixed(2)} refunded to wallet.` 
+            description: `Rs. ${autoRefundTotal.toFixed(2)} refunded for expired tickets.` 
           });
       }
 

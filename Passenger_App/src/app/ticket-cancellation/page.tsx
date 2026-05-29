@@ -102,14 +102,14 @@ function CancellationContent() {
         walletData.balance += refundAmount;
         walletData.transactions.push({
             type: 'credit',
-            description: `Refund for ${ticketCode.toUpperCase()} (10% Fee Deducted)`,
+            description: `Refund for Cancelled Ticket ${ticketCode.toUpperCase()}`,
             amount: refundAmount,
             date: new Date().toISOString(),
         });
         localStorage.setItem('userWallet', JSON.stringify(walletData));
 
         setStatus('cancelled');
-        toast({ title: 'Ticket Cancelled', description: `Rs. ${refundAmount} credited to wallet.` });
+        toast({ title: 'Ticket Cancelled', description: `Refund of Rs. ${refundAmount} credited.` });
       }
     } catch (error: any) {
       toast({ variant: 'destructive', title: 'Error', description: error.message });
@@ -166,11 +166,11 @@ function CancellationContent() {
               <AlertDialogContent className="rounded-3xl">
                 <AlertDialogHeader>
                   <AlertDialogTitle className="text-xl font-headline">Cancellation Rules</AlertDialogTitle>
-                  <AlertDialogDescription className="space-y-3 pt-2">
-                    <p className="flex gap-2"><span>•</span> <span>A 10% processing fee will be deducted from the total fare.</span></p>
-                    <p className="flex gap-2"><span>•</span> <span>The remaining balance will be instantly credited to your BusConnect Wallet.</span></p>
-                    <p className="flex gap-2 text-destructive font-bold"><span>•</span> <span>Once cancelled, the ticket cannot be restored or used for travel.</span></p>
-                  </AlertDialogDescription>
+                  <div className="text-sm text-muted-foreground space-y-3 pt-2">
+                    <div className="flex gap-2"><span>•</span> <span>A 10% processing fee will be deducted from the total fare.</span></div>
+                    <div className="flex gap-2"><span>•</span> <span>The remaining balance will be instantly credited to your BusConnect Wallet.</span></div>
+                    <div className="flex gap-2 text-destructive font-bold"><span>•</span> <span>Once cancelled, the ticket cannot be restored or used for travel.</span></div>
+                  </div>
                 </AlertDialogHeader>
                 <AlertDialogFooter className="gap-2">
                   <AlertDialogCancel className="rounded-xl h-12">Go Back</AlertDialogCancel>

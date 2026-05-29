@@ -203,7 +203,7 @@ export function BookingForm() {
       toast({ 
         variant: 'destructive', 
         title: 'Booking Failed', 
-        description: error.message || 'Could not communicate with the ticketing server. Please check your connection.' 
+        description: error.message || 'Could not communicate with the ticketing server.' 
       });
     } finally {
       setIsLoading(false);
