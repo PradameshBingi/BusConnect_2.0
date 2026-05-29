@@ -288,7 +288,7 @@ export function BookingForm() {
             <div>
               <Label className="text-[10px] uppercase font-black text-slate-600">Security Code (5 characters)</Label>
               <Input
-                placeholder="e.g. TSRTC"
+                placeholder="* * * * *"
                 value={securityCode}
                 onChange={handlePinChange}
                 maxLength={5}

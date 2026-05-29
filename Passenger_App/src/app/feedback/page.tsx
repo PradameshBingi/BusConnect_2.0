@@ -117,8 +117,9 @@ export default function FeedbackPage() {
                   <SelectContent>
                     <SelectItem value="booking">Ticket Booking</SelectItem>
                     <SelectItem value="wallet">Wallet & Refunds</SelectItem>
-                    <SelectItem value="ui">UI/UX Design</SelectItem>
-                    <SelectItem value="conductor">Conductor Tools</SelectItem>
+                    <SelectItem value="UI/UX">UI/UX Design</SelectItem>
+                    <SelectItem value="Upgradation & Modification">Upgradation & Modification</SelectItem>
+                    <SelectItem value="Report">Report of Non-Working Tabs</SelectItem>
                     <SelectItem value="other">Other</SelectItem>
                   </SelectContent>
                 </Select>

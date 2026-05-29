@@ -19,9 +19,11 @@ export const dynamic = "force-dynamic";
 
 export default function Home() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
+    setIsMounted(true);
     const user = localStorage.getItem('currentUser');
     if (!user) {
       router.replace('/login');
@@ -68,7 +70,7 @@ export default function Home() {
     },
   ];
 
-  if (!isLoggedIn) return null;
+  if (!isMounted || !isLoggedIn) return null;
 
   return (
     <div className="bg-white min-h-screen pb-32">

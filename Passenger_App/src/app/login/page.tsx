@@ -13,10 +13,12 @@ export default function LoginPage() {
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
 
   useEffect(() => {
+    setIsMounted(true);
     const user = localStorage.getItem('currentUser');
     if (user) {
       router.replace('/');
@@ -24,7 +26,7 @@ export default function LoginPage() {
   }, [router]);
 
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value.replace(/\D/g, ''); // Allow only digits
+    const value = e.target.value.replace(/\D/g, ''); 
     if (value.length <= 10) {
       setPhone(value);
     }
@@ -51,10 +53,12 @@ export default function LoginPage() {
           title: "Login Failed", 
           description: "Invalid phone number or password." 
         });
+        setIsLoading(false);
       }
-      setIsLoading(false);
     }, 800);
   };
+
+  if (!isMounted) return null;
 
   return (
     <div className="min-h-screen bg-primary flex flex-col items-center justify-center p-4">
@@ -89,6 +93,7 @@ export default function LoginPage() {
                     className="pl-10 h-14 rounded-xl text-lg tracking-widest"
                     maxLength={10}
                     inputMode="numeric"
+                    suppressHydrationWarning
                   />
                   <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                 </div>
@@ -104,6 +109,7 @@ export default function LoginPage() {
                     onChange={(e) => setPassword(e.target.value)} 
                     required 
                     className="pl-10 h-14 rounded-xl text-lg tracking-[0.5em]"
+                    suppressHydrationWarning
                   />
                   <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                 </div>

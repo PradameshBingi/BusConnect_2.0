@@ -136,7 +136,7 @@ export default function HelpPage() {
             </div>
 
             <div className="pt-4 border-t border-white/5">
-              <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">TSRTC Helpline: 040 69440000</p>
+              <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Thank You For Visiting.😎👍</p>
             </div>
           </CardContent>
         </Card>
