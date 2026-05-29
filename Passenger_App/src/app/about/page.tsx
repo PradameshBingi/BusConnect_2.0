@@ -14,26 +14,30 @@ export default function AboutPage() {
   ];
   
   const whatWeDoPoints = [
-    "Passenger Dashboard for booking, upgrading, cancelling tickets, and managing refunds",
-    "Conductor Dashboard for rapid ticket verification, fare adjustment, and bus-pass validation"
+    "Passenger Dashboard for booking, upgrading, modifying, and managing cloud-synced refunds",
+    "Conductor Dashboard for rapid ticket verification, fare adjustment, and bus-pass validation",
+    "High-density boarding optimization using alphanumeric codes instead of unreliable QR scans"
   ];
 
   const howItWorksPoints = [
-    "Passengers book tickets digitally and receive a short, unique ticket code instead of a QR code",
+    "Passengers book tickets digitally and receive a short, unique ticket code (e.g., TKT-01-12345)",
+    "Travel and financial data are securely stored in a cloud database (MongoDB) for multi-device access",
     "Conductors verify tickets by entering the code — no scanning or cash handling required",
-    "Ticket status automatically updates as Valid, Used, Expired, or Refunded",
-    "Bus passes are validated instantly using an alphanumeric pass code with photo verification",
-    "Refunds and fare differences are managed transparently through an in-app wallet"
+    "Ticket status automatically updates in real-time as Valid, Used, Expired, or Cancelled",
+    "Bus passes are validated instantly using alphanumeric pass codes with holder photo verification",
+    "Refunds and fare differences are managed transparently through a real-time database-backed wallet"
   ];
 
   const keyFeatures = [
-    "Smart digital ticket code system (route-based + unique passenger ID)",
-    "One-minute ticket validity window to prevent misuse",
-    "Ticket upgrade support for higher bus categories",
-    "Automatic refunds with wallet-based balance handling",
-    "Secure passenger verification using a secondary security code",
-    "Real-time conductor verification and validation tools",
-    "Fraud-resistant bus-pass validation with status and photo display"
+    "Smart digital ticket code system with route-based identification",
+    "Alphanumeric security PINs (supporting letters, numbers, and words) for robust identity check",
+    "Cloud-based data persistence (MongoDB) for absolute balance and history security",
+    "Single-session security constraint (one login per account at a time across devices)",
+    "Ticket upgrade and modification support with automated fare calculations",
+    "Automatic refunds (minus 10% fee) for cancellations and expired tickets credited to wallet",
+    "Real-time conductor verification tools with secondary PIN validation to prevent fraud",
+    "Integrated feedback portal with star ratings and suggestion capture for system improvement",
+    "Fraud-resistant bus-pass validation with real-time photo and validity status display"
   ];
 
   return (
@@ -86,7 +90,7 @@ export default function AboutPage() {
             {whatWeDoPoints.map((item, index) => <li key={index}>{item}</li>)}
           </ul>
            <p className="mt-4 text-lg text-muted-foreground">
-            The system is specifically designed to operate efficiently in real-world, crowded bus environments.
+            The system is specifically designed to operate efficiently in real-world, crowded bus environments where QR scanning often fails.
           </p>
         </div>
 
