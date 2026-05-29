@@ -29,7 +29,7 @@ export default function BookingHistoryPage() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const { toast } = useToast();
 
-  const fetchCloudHistory = async (phone: string, silent = false) => {
+  const fetchHistory = async (phone: string, silent = false) => {
     if (!silent) setIsLoading(true);
     else setIsRefreshing(true);
     
@@ -39,7 +39,7 @@ export default function BookingHistoryPage() {
       const data = await response.json();
       setTickets(data);
     } catch (error) {
-      toast({ variant: 'destructive', title: "Sync Error", description: "Could not fetch history from cloud." });
+      toast({ variant: 'destructive', title: "Sync Error", description: "Could not fetch your booking history." });
     } finally {
       setIsLoading(false);
       setIsRefreshing(false);
@@ -49,7 +49,7 @@ export default function BookingHistoryPage() {
   useEffect(() => {
     const user = localStorage.getItem('currentUser');
     if (user) {
-      fetchCloudHistory(user);
+      fetchHistory(user);
     }
   }, []);
 
@@ -71,7 +71,7 @@ export default function BookingHistoryPage() {
             <History className="h-8 w-8 text-primary" />
             <h1 className="text-2xl font-bold font-headline">Booking History</h1>
           </div>
-          <Button variant="outline" size="sm" onClick={() => fetchCloudHistory(localStorage.getItem('currentUser') || '', false)} disabled={isRefreshing}>
+          <Button variant="outline" size="sm" onClick={() => fetchHistory(localStorage.getItem('currentUser') || '', false)} disabled={isRefreshing}>
             <RefreshCw className={cn("h-4 w-4 mr-2", isRefreshing && "animate-spin")} />
             Sync
           </Button>
@@ -80,7 +80,7 @@ export default function BookingHistoryPage() {
         {isLoading ? (
           <div className="p-20 text-center"><Loader2 className="animate-spin h-10 w-10 text-primary mx-auto" /></div>
         ) : tickets.length === 0 ? (
-          <Card><CardContent className="p-10 text-center text-muted-foreground">No cloud records found.</CardContent></Card>
+          <Card><CardContent className="p-10 text-center text-muted-foreground">No booking records found.</CardContent></Card>
         ) : (
           <div className="space-y-4">
             {tickets.map(ticket => (

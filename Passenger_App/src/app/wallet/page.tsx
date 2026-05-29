@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Tag, Gift, History, ArrowDown, ArrowUp, CreditCard, Loader2 } from 'lucide-react';
+import { Tag, History, ArrowDown, ArrowUp, CreditCard, Loader2 } from 'lucide-react';
 import Header from '@/app/components/header';
 import { useToast } from "@/hooks/use-toast";
 import { cn } from '@/lib/utils';
@@ -28,8 +28,6 @@ type WalletData = {
 export default function WalletPage() {
   const [wallet, setWallet] = useState<WalletData>({ walletBalance: 0, transactions: [] });
   const [loading, setLoading] = useState(true);
-  const [refundCode, setRefundCode] = useState('');
-  const [securityCode, setSecurityCode] = useState('');
   const [addAmount, setAddAmount] = useState('');
   const [showPayment, setShowPayment] = useState(false);
   const [phone, setPhone] = useState('');
@@ -45,7 +43,7 @@ export default function WalletPage() {
         transactions: (data.transactions || []).sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime())
       });
     } catch (error) {
-      toast({ variant: 'destructive', title: 'Error', description: 'Could not load your cloud wallet.' });
+      toast({ variant: 'destructive', title: 'Error', description: 'Could not load your wallet history.' });
     } finally {
       setLoading(false);
     }
@@ -62,11 +60,6 @@ export default function WalletPage() {
   const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value.replace(/\D/g, '');
     if (val.length <= 4) setAddAmount(val);
-  };
-
-  const handlePinChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const val = e.target.value.toUpperCase();
-    if (val.length <= 5) setSecurityCode(val);
   };
 
   const finalizeAddMoney = async () => {
@@ -92,9 +85,9 @@ export default function WalletPage() {
       }));
       fetchWallet(phone); // Refresh transactions
       setAddAmount('');
-      toast({ title: 'Success!', description: `Rs. ${amount} added to your cloud wallet.` });
+      toast({ title: 'Success!', description: `Rs. ${amount} added to your wallet.` });
     } catch (error) {
-      toast({ variant: 'destructive', title: 'Error', description: 'Failed to update cloud balance.' });
+      toast({ variant: 'destructive', title: 'Error', description: 'Failed to update balance.' });
     }
   };
 
@@ -111,7 +104,7 @@ export default function WalletPage() {
                 <Tag className="h-7 w-7" />
                 Current Balance
               </CardTitle>
-              <CardDescription className="text-white/80">Cloud-Synced Balance</CardDescription>
+              <CardDescription className="text-white/80">Real-time Wallet Balance</CardDescription>
             </CardHeader>
             <CardContent className="p-8 bg-slate-900 text-white">
               <p className="text-5xl font-black">Rs. {wallet.walletBalance.toFixed(2)}</p>
@@ -125,7 +118,7 @@ export default function WalletPage() {
                 <CreditCard className="h-6 w-6 text-primary" />
                 Add Funds
               </CardTitle>
-              <CardDescription>Securely recharge your cloud balance.</CardDescription>
+              <CardDescription>Securely recharge your wallet balance.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
@@ -147,7 +140,7 @@ export default function WalletPage() {
           
           <div className="space-y-4">
               <h3 className="text-sm font-black uppercase tracking-widest text-slate-400 flex items-center gap-2 px-1">
-                  <History className="h-4 w-4" /> Cloud History
+                  <History className="h-4 w-4" /> Wallet History
               </h3>
               {wallet.transactions.length > 0 ? (
                 <div className="space-y-3">
@@ -174,7 +167,7 @@ export default function WalletPage() {
                 </div>
               ) : (
                 <Card className="border-dashed border-2 p-12 text-center text-muted-foreground rounded-3xl">
-                   <p className="font-medium">No cloud transactions found.</p>
+                   <p className="font-medium">No wallet transactions found.</p>
                 </Card>
               )}
           </div>

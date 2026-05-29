@@ -99,9 +99,9 @@ export default {
         },
         'dust-blow': {
           '0%': { transform: 'scale(0) translateX(0)', opacity: '0' },
-          '70%': { transform: 'scale(0) translateX(0)', opacity: '0' },
-          '85%': { transform: 'scale(1.5) translateX(-20px)', opacity: '0.6' },
-          '100%': { transform: 'scale(2.5) translateX(-40px)', opacity: '0' },
+          '65%': { transform: 'scale(0) translateX(0)', opacity: '0' },
+          '80%': { transform: 'scale(2) translateX(-30px)', opacity: '0.8' },
+          '100%': { transform: 'scale(3.5) translateX(-60px)', opacity: '0' },
         }
       },
       animation: {
