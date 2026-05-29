@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useEffect, useState, Suspense } from 'react';
@@ -39,16 +38,22 @@ function UpgradeTicketContent() {
     }
     try {
         const storedTickets: Ticket[] = JSON.parse(localStorage.getItem('generatedTickets') || '[]');
-        const foundTicket = storedTickets.find(t => t.ticketCode === id);
+        const foundTicket = storedTickets.find(t => t.ticketCode.toUpperCase() === id.toUpperCase());
 
         if (!foundTicket) {
-            setError('Ticket not found.');
-        } else if (foundTicket.status !== 'valid' || new Date().getTime() > new Date(foundTicket.createdAt).getTime() + 60 * 1000) {
-            setError('This ticket is no longer valid for an upgrade as it has expired or been used.');
-        } else if (foundTicket.busType === 'deluxe') {
-            setError('This ticket is already the highest tier and cannot be upgraded.');
+            setError('Ticket not found in your booking history.');
         } else {
-            setTicket(foundTicket);
+            const now = new Date().getTime();
+            const createdAt = new Date(foundTicket.createdAt).getTime();
+            const isExpired = now > createdAt + (10 * 60 * 1000); // 10 minute validity
+
+            if (foundTicket.status !== 'valid' || isExpired) {
+                setError('This ticket is no longer valid for an upgrade as it has expired, been used, or was cancelled.');
+            } else if (foundTicket.busType === 'deluxe') {
+                setError('This ticket is already the highest tier (Metro Deluxe) and cannot be upgraded.');
+            } else {
+                setTicket(foundTicket);
+            }
         }
     } catch (e) {
         setError('Could not retrieve ticket data.');
@@ -75,13 +80,13 @@ function UpgradeTicketContent() {
 
   if (error) {
     return (
-        <Card className="w-full max-w-md">
+        <Card className="w-full max-w-md border-t-8 border-t-destructive shadow-lg">
             <CardHeader>
-                <CardTitle>Upgrade Unavailable</CardTitle>
-                <CardDescription>This ticket cannot be upgraded.</CardDescription>
+                <CardTitle className="text-xl font-bold font-headline text-destructive">Upgrade Unavailable</CardTitle>
+                <CardDescription>We cannot process this upgrade request.</CardDescription>
             </CardHeader>
             <CardContent>
-                <p className="text-destructive">{error}</p>
+                <p className="text-sm font-medium text-slate-600 leading-relaxed">{error}</p>
             </CardContent>
         </Card>
     );
@@ -94,8 +99,8 @@ export default function UpgradeTicketPage() {
   return (
     <>
       <Header showBackButton={true} backHref="/booking-history" title="Upgrade Ticket" />
-      <div className="flex flex-col items-center justify-center p-4 md:p-8">
-        <Suspense fallback={<div>Loading...</div>}>
+      <div className="flex flex-col items-center justify-center p-4 md:p-8 min-h-[calc(100vh-4rem)] bg-slate-50/50">
+        <Suspense fallback={<div className="text-center p-20 text-muted-foreground">Loading upgrade portal...</div>}>
             <UpgradeTicketContent />
         </Suspense>
       </div>
