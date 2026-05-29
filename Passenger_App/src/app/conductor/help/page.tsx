@@ -5,8 +5,9 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import Header from '@/app/components/header';
-import { HelpCircle, User, Briefcase, Zap, Ticket, ShieldCheck } from "lucide-react";
+import { HelpCircle, User, Briefcase, Zap, Ticket, ShieldCheck, Mail, Linkedin } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 
 const passengerFaqs = [
   {
@@ -119,6 +120,35 @@ export default function ConductorHelpPage() {
                 </AccordionItem>
               ))}
             </Accordion>
+          </CardContent>
+        </Card>
+
+        {/* Developer Contact Card */}
+        <Card className="border-none shadow-xl rounded-3xl overflow-hidden bg-slate-900 text-white">
+          <CardContent className="p-8 text-center space-y-6">
+            <div className="space-y-1">
+              <p className="text-[10px] uppercase font-black tracking-[0.3em] text-slate-400">System Creator & Developer</p>
+              <h2 className="text-3xl font-black tracking-tighter">BINGI PRADAMESH</h2>
+            </div>
+            
+            <p className="text-sm text-slate-400 leading-relaxed max-w-xs mx-auto">
+              For system-level inquiries, professional networking, or technical discussions regarding the BusConnect prototype.
+            </p>
+
+            <div className="flex flex-wrap justify-center gap-3">
+              <Button variant="outline" className="bg-white/5 border-white/10 hover:bg-white/10 text-white rounded-xl h-12 px-6" asChild>
+                <a href="mailto:pradamesh@example.com" target="_blank" rel="noopener noreferrer">
+                  <Mail className="mr-2 h-4 w-4 text-[#00B893]" />
+                  Email Developer
+                </a>
+              </Button>
+              <Button variant="outline" className="bg-white/5 border-white/10 hover:bg-white/10 text-white rounded-xl h-12 px-6" asChild>
+                <a href="https://linkedin.com/in/pradameshbingi" target="_blank" rel="noopener noreferrer">
+                  <Linkedin className="mr-2 h-4 w-4 text-[#0077B5]" />
+                  LinkedIn
+                </a>
+              </Button>
+            </div>
           </CardContent>
         </Card>
 
