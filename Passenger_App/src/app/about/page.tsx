@@ -63,17 +63,6 @@ export default function AboutPage() {
 
         <div>
           <h2 className="text-3xl font-bold font-headline text-card-foreground">
-            Meet the Developer
-          </h2>
-          <p className="mt-4 text-lg text-muted-foreground">
-            BusConnect is the creation of <strong>Bingi Pradamesh</strong>, a visionary software developer dedicated to building high-impact digital solutions. With a deep focus on user-centric design and scalable architecture, Pradamesh conceptualized and developed this platform to demonstrate how technology can eliminate operational friction and enhance the daily commute for thousands in Hyderabad.
-          </p>
-        </div>
-
-        <Separator />
-
-        <div>
-          <h2 className="text-3xl font-bold font-headline text-card-foreground">
             Why We Built This
           </h2>
           <p className="mt-4 text-lg text-muted-foreground">
