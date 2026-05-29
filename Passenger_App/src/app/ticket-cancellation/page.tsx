@@ -11,6 +11,7 @@ import { FileX, Loader2, CheckCircle, XCircle, Wallet, Lock } from 'lucide-react
 import Header from '@/app/components/header';
 import { useToast } from "@/hooks/use-toast";
 import { API_ENDPOINTS } from '@/lib/api-config';
+import { cn } from '@/lib/utils';
 import {
   AlertDialog,
   AlertDialogAction,
