@@ -23,8 +23,20 @@ export default function LoginPage() {
     }
   }, [router]);
 
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value.replace(/\D/g, ''); // Allow only digits
+    if (value.length <= 10) {
+      setPhone(value);
+    }
+  };
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (phone.length !== 10) {
+      toast({ variant: 'destructive', title: "Invalid Phone", description: "Please enter exactly 10 digits." });
+      return;
+    }
+    
     setIsLoading(true);
 
     // Mock Authentication Logic for Prototype
@@ -70,11 +82,13 @@ export default function LoginPage() {
                   <Input 
                     id="phone" 
                     type="tel" 
-                    placeholder="9999999999" 
+                    placeholder="Mobile Number" 
                     value={phone} 
-                    onChange={(e) => setPhone(e.target.value)} 
+                    onChange={handlePhoneChange} 
                     required 
-                    className="pl-10 h-12 rounded-xl"
+                    className="pl-10 h-14 rounded-xl text-lg tracking-widest"
+                    maxLength={10}
+                    inputMode="numeric"
                   />
                   <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                 </div>
@@ -89,23 +103,16 @@ export default function LoginPage() {
                     value={password} 
                     onChange={(e) => setPassword(e.target.value)} 
                     required 
-                    className="pl-10 h-12 rounded-xl"
+                    className="pl-10 h-14 rounded-xl text-lg tracking-[0.5em]"
                   />
                   <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                 </div>
               </div>
             </CardContent>
-            <CardFooter className="flex flex-col gap-4">
+            <CardFooter className="pt-4">
               <Button type="submit" className="w-full h-14 text-lg font-bold bg-[#0A2B70] hover:bg-[#0A2B70]/90 rounded-2xl" disabled={isLoading}>
                 {isLoading ? <Loader2 className="animate-spin mr-2" /> : "Login"}
               </Button>
-              <div className="bg-slate-50 border border-slate-100 p-4 rounded-2xl w-full">
-                <p className="text-[10px] font-black uppercase text-slate-400 mb-1 text-center">Prototype Credentials</p>
-                <div className="flex justify-between text-xs font-mono text-slate-600 px-2">
-                  <span>PH: 9999999999</span>
-                  <span>PWD: 99999</span>
-                </div>
-              </div>
             </CardFooter>
           </form>
         </Card>

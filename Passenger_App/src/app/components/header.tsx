@@ -2,8 +2,16 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Bell, MessageSquare, Globe, Bus } from 'lucide-react';
+import { ArrowLeft, Bell, MessageSquare, Globe, Bus, User, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export default function Header({ showBackButton = false, backHref, title, variant = 'passenger' }: { showBackButton?: boolean; backHref?: string; title?: string; variant?: 'passenger' | 'conductor' }) {
   const router = useRouter();
@@ -14,6 +22,11 @@ export default function Header({ showBackButton = false, backHref, title, varian
     } else {
       router.back();
     }
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('currentUser');
+    router.replace('/login');
   };
 
   return (
@@ -54,9 +67,24 @@ export default function Header({ showBackButton = false, backHref, title, varian
         </div>
 
         <div className="flex items-center gap-4">
-          <Bell className="h-5 w-5 cursor-pointer hover:opacity-80" />
-          <MessageSquare className="h-5 w-5 cursor-pointer hover:opacity-80" />
-          <Globe className="h-5 w-5 cursor-pointer hover:opacity-80" />
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-10 w-10 rounded-full text-white hover:bg-white/10">
+                <User className="h-5 w-5" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48 rounded-xl">
+              <DropdownMenuLabel>My Account</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={handleLogout} className="text-red-600 focus:text-red-600 cursor-pointer">
+                <LogOut className="mr-2 h-4 w-4" />
+                <span>Logout</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          <Bell className="h-5 w-5 cursor-pointer hover:opacity-80 hidden md:block" />
+          <MessageSquare className="h-5 w-5 cursor-pointer hover:opacity-80 hidden md:block" />
+          <Globe className="h-5 w-5 cursor-pointer hover:opacity-80 hidden md:block" />
         </div>
       </div>
     </header>

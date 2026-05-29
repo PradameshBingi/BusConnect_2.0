@@ -3,7 +3,7 @@ export const dynamic = 'force-dynamic';
 
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { ArrowRightLeft, BusFront, Baby, PlusCircle, MinusCircle, Ticket, Wallet, Loader2 } from 'lucide-react';
+import { ArrowRightLeft, BusFront, Baby, Ticket, Wallet, Loader2 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -110,6 +110,13 @@ export function BookingForm() {
     });
   };
 
+  const handlePinChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value.toUpperCase();
+    if (val.length <= 5) {
+      setSecurityCode(val);
+    }
+  };
+
   const initiateBooking = (e: React.FormEvent) => {
     e.preventDefault();
     if (!from || !to) {
@@ -130,7 +137,7 @@ export function BookingForm() {
         return;
     }
     if (!securityCode || securityCode.length !== 5) {
-      toast({ variant: 'destructive', title: 'Invalid Security Code', description: 'Please enter a 5-digit code.' });
+      toast({ variant: 'destructive', title: 'Invalid Security Code', description: 'Please enter exactly 5 characters.' });
       return;
     }
 
@@ -214,20 +221,20 @@ export function BookingForm() {
 
   return (
     <>
-      <Card className="w-full max-w-md">
-        <CardHeader className="bg-primary text-primary-foreground text-center p-6 rounded-t-lg">
-          <div className="flex items-center justify-center gap-2">
-              <BusFront className="h-7 w-7" />
-              <CardTitle className="font-headline text-2xl">Book Digital Ticket</CardTitle>
+      <Card className="w-full max-w-md shadow-2xl rounded-3xl overflow-hidden border-none">
+        <CardHeader className="bg-primary text-primary-foreground text-center p-8">
+          <div className="flex flex-col items-center gap-2">
+              <BusFront className="h-10 w-10" />
+              <CardTitle className="font-headline text-2xl uppercase tracking-widest">Generate Ticket</CardTitle>
           </div>
         </CardHeader>
         <form onSubmit={initiateBooking}>
-          <CardContent className="space-y-6 pt-6">
+          <CardContent className="space-y-6 pt-8 px-6">
             <div className="flex items-center gap-2">
               <div className="flex-1 space-y-1">
-                <label className="text-sm font-medium">From</label>
+                <Label className="text-[10px] uppercase font-black text-slate-600">From</Label>
                 <Select value={from} onValueChange={setFrom} required>
-                  <SelectTrigger><SelectValue placeholder="From" /></SelectTrigger>
+                  <SelectTrigger className="h-12 rounded-xl"><SelectValue placeholder="From" /></SelectTrigger>
                   <SelectContent>
                     {hyderabadLocalities.map((loc) => (
                       <SelectItem key={loc.name} value={loc.name}>{loc.name}</SelectItem>
@@ -235,13 +242,13 @@ export function BookingForm() {
                   </SelectContent>
                 </Select>
               </div>
-              <Button type="button" variant="ghost" size="icon" className="mt-6" onClick={handleSwap}>
+              <Button type="button" variant="ghost" size="icon" className="mt-5 rounded-full" onClick={handleSwap}>
                 <ArrowRightLeft className="h-4 w-4" />
               </Button>
               <div className="flex-1 space-y-1">
-                <label className="text-sm font-medium">To</label>
+                <Label className="text-[10px] uppercase font-black text-slate-600">To</Label>
                 <Select value={to} onValueChange={setTo} required>
-                  <SelectTrigger><SelectValue placeholder="To" /></SelectTrigger>
+                  <SelectTrigger className="h-12 rounded-xl"><SelectValue placeholder="To" /></SelectTrigger>
                   <SelectContent>
                     {hyderabadLocalities.map((loc) => (
                        <SelectItem key={loc.name} value={loc.name}>{loc.name}</SelectItem>
@@ -251,26 +258,26 @@ export function BookingForm() {
               </div>
             </div>
 
-            <div className="space-y-2">
-                <Label>Passengers</Label>
+            <div className="space-y-3">
+                <Label className="text-[10px] uppercase font-black text-slate-600">Passengers</Label>
                 {passengerMeta.map(({ type, icon }) => (
-                  <div key={type} className="flex items-center justify-between rounded-lg border p-3">
-                    <div className="flex items-center gap-2">{icon}<span className="text-sm">{type}</span></div>
-                    <div className="flex items-center gap-3">
-                      <Button type="button" variant="outline" size="icon" className="h-7 w-7" onClick={() => handleQuantityChange(type, -1)}>-</Button>
-                      <span className="font-bold">{quantities[type]}</span>
-                      <Button type="button" variant="outline" size="icon" className="h-7 w-7" onClick={() => handleQuantityChange(type, 1)}>+</Button>
+                  <div key={type} className="flex items-center justify-between rounded-2xl border p-4 bg-slate-50/50">
+                    <div className="flex items-center gap-3 text-slate-700">{icon}<span className="text-sm font-bold">{type}</span></div>
+                    <div className="flex items-center gap-4">
+                      <Button type="button" variant="outline" size="icon" className="h-8 w-8 rounded-full border-2" onClick={() => handleQuantityChange(type, -1)}>-</Button>
+                      <span className="font-black text-lg w-4 text-center">{quantities[type]}</span>
+                      <Button type="button" variant="outline" size="icon" className="h-8 w-8 rounded-full border-2" onClick={() => handleQuantityChange(type, 1)}>+</Button>
                     </div>
                   </div>
                 ))}
             </div>
             
             {walletBalance > 0 && (
-              <div className="flex items-center justify-between rounded-lg border p-3">
-                  <div className="flex items-center gap-2">
-                      <Wallet className="h-5 w-5 text-primary" />
+              <div className="flex items-center justify-between rounded-2xl border p-4 bg-primary/5 border-primary/20">
+                  <div className="flex items-center gap-3">
+                      <Wallet className="h-6 w-6 text-primary" />
                       <div className="text-xs">
-                          <p className="font-bold">Use Wallet</p>
+                          <p className="font-bold text-slate-800">Use Wallet</p>
                           <p className="text-muted-foreground">Bal: Rs. {walletBalance.toFixed(2)}</p>
                       </div>
                   </div>
@@ -279,24 +286,25 @@ export function BookingForm() {
             )}
 
             <div>
-              <Label>Security Code (5 chars)</Label>
+              <Label className="text-[10px] uppercase font-black text-slate-600">Security Code (5 characters)</Label>
               <Input
-                placeholder="ABC12"
+                placeholder="e.g. TSRTC"
                 value={securityCode}
-                onChange={(e) => setSecurityCode(e.target.value.toUpperCase())}
+                onChange={handlePinChange}
                 maxLength={5}
                 required
+                className="h-14 rounded-xl text-lg font-mono tracking-[0.5em] uppercase text-center"
               />
             </div>
 
-             <div className="flex justify-between items-center rounded-lg bg-muted p-3">
-                <span className="font-bold">Total Fare:</span>
-                <span className="text-2xl font-bold">Rs. {finalFare}</span>
+             <div className="flex justify-between items-center rounded-2xl bg-slate-900 text-white p-5 shadow-inner">
+                <span className="font-bold opacity-60">Total Fare:</span>
+                <span className="text-3xl font-black">Rs. {finalFare}</span>
               </div>
           </CardContent>
-          <CardFooter>
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <><Ticket className="mr-2 h-4 w-4" /> Generate Ticket</>}
+          <CardFooter className="p-6">
+            <Button type="submit" className="w-full h-14 text-lg font-bold rounded-2xl" disabled={isLoading}>
+              {isLoading ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <><Ticket className="mr-2 h-5 w-5" /> Confirm & Generate</>}
             </Button>
           </CardFooter>
         </form>

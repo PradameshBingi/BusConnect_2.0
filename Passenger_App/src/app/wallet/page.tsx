@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -64,6 +63,18 @@ export default function WalletPage() {
       toast({ variant: 'destructive', title: 'Error', description: 'Could not load your wallet data.' });
     }
   }, [toast]);
+
+  const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value.replace(/\D/g, '');
+    setAddAmount(val);
+  };
+
+  const handlePinChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value.toUpperCase();
+    if (val.length <= 5) {
+      setSecurityCode(val);
+    }
+  };
 
   const handleRedeem = (e: React.FormEvent) => {
     e.preventDefault();
@@ -207,127 +218,127 @@ export default function WalletPage() {
   return (
     <>
       <Header showBackButton={true} backHref="/" title="My Wallet" />
-      <div className="p-4 md:p-8">
+      <div className="p-4 md:p-8 pb-32">
         <div className="max-w-md mx-auto space-y-8">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-primary">
-                <Tag className="h-6 w-6" />
-                Wallet Balance
+          <Card className="rounded-3xl shadow-xl border-none overflow-hidden">
+            <CardHeader className="bg-primary text-white p-8">
+              <CardTitle className="flex items-center gap-3 text-2xl font-black uppercase tracking-tight">
+                <Tag className="h-7 w-7" />
+                Current Balance
               </CardTitle>
-              <CardDescription>Your current redeemable balance.</CardDescription>
+              <CardDescription className="text-white/80">Available for tickets and upgrades.</CardDescription>
             </CardHeader>
-            <CardContent>
-              <p className="text-4xl font-bold text-primary">Rs. {wallet.balance.toFixed(2)}</p>
-              <p className="text-xs text-muted-foreground mt-2">Maximum wallet limit: Rs. 5000.00</p>
+            <CardContent className="p-8 bg-slate-900 text-white">
+              <p className="text-5xl font-black">Rs. {wallet.balance.toFixed(2)}</p>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mt-4">Wallet Limit: Rs. 5000.00</p>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="rounded-3xl shadow-lg border-slate-100">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
+              <CardTitle className="flex items-center gap-2 text-xl font-bold">
                 <CreditCard className="h-6 w-6 text-primary" />
-                Add Money to Wallet
+                Add Funds
               </CardTitle>
               <CardDescription>
-                Add balance using Digital Payment (Min Rs. 50, Max Rs. 2000).
+                Recharge your wallet via Digital Payment.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="add-amount">Amount (Rs.)</Label>
+                  <Label htmlFor="add-amount" className="text-[10px] font-black uppercase text-slate-500">Amount (Rs.)</Label>
                   <Input
                     id="add-amount"
-                    type="number"
-                    placeholder="e.g., 100"
+                    type="tel"
+                    placeholder="Min: 50, Max: 2000"
                     value={addAmount}
-                    onChange={e => setAddAmount(e.target.value)}
+                    onChange={handleAmountChange}
+                    className="h-14 rounded-xl text-lg font-bold px-5"
+                    maxLength={4}
                   />
-                  <div className="space-y-1 mt-2">
-                    <p className="text-[10px] text-muted-foreground italic">• Minimum addition: Rs. 50</p>
-                    <p className="text-[10px] text-muted-foreground italic">• Maximum addition: Rs. 2000 per transaction</p>
-                    <p className="text-[10px] text-muted-foreground italic">• Total wallet cap: Rs. 5000</p>
+                  <div className="grid grid-cols-3 gap-2 mt-4">
+                     {[100, 200, 500].map(amt => (
+                       <Button key={amt} variant="outline" className="rounded-xl font-bold h-11" onClick={() => setAddAmount(amt.toString())}>+ Rs.{amt}</Button>
+                     ))}
                   </div>
                 </div>
             </CardContent>
             <CardFooter>
-                <Button className='w-full' onClick={initiateAddMoney}>Add Funds</Button>
+                <Button className='w-full h-14 rounded-2xl text-lg font-bold' onClick={initiateAddMoney}>Add Money Now</Button>
             </CardFooter>
           </Card>
 
-          <Card>
+          <Card className="rounded-3xl shadow-lg border-slate-100">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
+              <CardTitle className="flex items-center gap-2 text-xl font-bold">
                 <Gift className="h-6 w-6 text-primary" />
-                Redeem a Code
+                Redeem Refund Code
               </CardTitle>
               <CardDescription>
-                Enter the refund and ticket security codes to add funds.
+                Convert conductor-issued codes into wallet balance.
               </CardDescription>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleRedeem} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="refund-code">Refund Code</Label>
+                  <Label htmlFor="refund-code" className="text-[10px] font-black uppercase text-slate-500">Refund Code</Label>
                   <Input
                     id="refund-code"
-                    placeholder="e.g., REF-XXXXX"
+                    placeholder="REF-XXXXX"
                     value={refundCode}
                     onChange={e => setRefundCode(e.target.value.toUpperCase())}
-                    className="uppercase"
+                    className="uppercase h-14 rounded-xl font-mono tracking-widest"
                   />
                 </div>
                  <div className="space-y-2">
-                  <Label htmlFor="security-code">Passenger Security Code</Label>
+                  <Label htmlFor="security-code" className="text-[10px] font-black uppercase text-slate-500">Security PIN</Label>
                   <Input
                     id="security-code"
-                    placeholder="Original 5-digit ticket code"
+                    placeholder="Original 5-digit PIN"
                     value={securityCode}
-                    onChange={e => setSecurityCode(e.target.value.toUpperCase())}
-                    className="uppercase"
+                    onChange={handlePinChange}
+                    className="uppercase h-14 rounded-xl font-mono tracking-[0.5em] text-center"
                     maxLength={5}
                   />
                 </div>
-                <Button type="submit" className="w-full">Redeem</Button>
+                <Button type="submit" className="w-full h-14 rounded-2xl text-lg font-bold">Redeem Balance</Button>
               </form>
             </CardContent>
           </Card>
           
-          <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                    <History className="h-6 w-6 text-primary" />
-                    Transaction History
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                 {wallet.transactions.length > 0 ? (
-                    <ul className="space-y-3">
-                    {wallet.transactions.map((tx, index) => (
-                        <li key={index} className="flex justify-between items-start text-sm p-3 bg-muted/50 rounded-lg">
-                        <div className="flex items-center gap-3">
-                           {tx.type === 'credit' ? <ArrowDown className="h-5 w-5 text-green-500"/> : <ArrowUp className="h-5 w-5 text-red-500"/>}
-                            <div>
-                                <p className="font-semibold">{tx.description}</p>
-                                <p className="text-xs text-muted-foreground">{new Date(tx.date).toLocaleString()}</p>
+          <div className="space-y-4">
+              <h3 className="text-sm font-black uppercase tracking-widest text-slate-400 flex items-center gap-2 px-1">
+                  <History className="h-4 w-4" /> Transaction History
+              </h3>
+              {wallet.transactions.length > 0 ? (
+                <div className="space-y-3">
+                {wallet.transactions.map((tx, index) => (
+                    <Card key={index} className="border-none shadow-sm rounded-2xl overflow-hidden">
+                        <CardContent className="p-4 flex justify-between items-center">
+                            <div className="flex items-center gap-3">
+                                <div className={cn("p-2 rounded-xl", tx.type === 'credit' ? "bg-green-50" : "bg-red-50")}>
+                                    {tx.type === 'credit' ? <ArrowDown className="h-5 w-5 text-green-600"/> : <ArrowUp className="h-5 w-5 text-red-600"/>}
+                                </div>
+                                <div>
+                                    <p className="font-bold text-slate-800 text-sm">{tx.description}</p>
+                                    <p className="text-[10px] text-muted-foreground uppercase font-bold">{new Date(tx.date).toLocaleDateString()} at {new Date(tx.date).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</p>
+                                </div>
                             </div>
-                        </div>
-                        <div className="text-right">
-                            <p className={cn("font-semibold", {
-                                "text-green-600": tx.type === 'credit',
-                                "text-red-600": tx.type === 'debit',
-                            })}>
-                            {tx.type === 'credit' ? '+' : '-'} Rs. {tx.amount.toFixed(2)}
-                            </p>
-                        </div>
-                        </li>
-                    ))}
-                    </ul>
-                 ) : (
-                    <p className="text-sm text-muted-foreground text-center">No transactions yet.</p>
-                 )}
-              </CardContent>
-            </Card>
+                            <div className="text-right">
+                                <p className={cn("font-black text-base", tx.type === 'credit' ? "text-green-600" : "text-red-600")}>
+                                {tx.type === 'credit' ? '+' : '-'} Rs. {Math.round(tx.amount)}
+                                </p>
+                            </div>
+                        </CardContent>
+                    </Card>
+                ))}
+                </div>
+              ) : (
+                <Card className="border-dashed border-2 p-12 text-center text-muted-foreground rounded-3xl">
+                   <p className="font-medium">No transactions found.</p>
+                </Card>
+              )}
+          </div>
         </div>
       </div>
 
