@@ -121,12 +121,13 @@ export default function TicketDetailPage() {
   const isCurrentlyExpired = ticket.status === 'valid' && now !== null && (now > expiryTimestamp);
   const displayStatus = isCurrentlyExpired ? 'expired' : ticket.status;
   const totalCost = ticket.totalFare || (ticket.fare + (ticket.walletAmountUsed || 0));
+  const isHighestTier = ticket.busType.toLowerCase() === 'deluxe';
 
   return (
     <>
       <Header showBackButton backHref="/booking-history" title="Ticket Details" />
       <div className="flex flex-col items-center p-4 md:p-8 space-y-6 pb-32">
-        <Card className={cn("w-full max-w-md border-t-8 shadow-xl", {
+        <Card className={cn("w-full max-w-md border-t-8 shadow-xl rounded-3xl", {
           "border-t-green-600": displayStatus === 'valid',
           "border-t-slate-500": displayStatus === 'used',
           "border-t-yellow-500": displayStatus === 'expired',
@@ -136,7 +137,7 @@ export default function TicketDetailPage() {
             <Button 
               variant="ghost" 
               size="icon" 
-              className="absolute right-4 top-4" 
+              className="absolute right-4 top-4 rounded-full" 
               onClick={() => fetchTicket(true)}
               disabled={isRefreshing}
             >
@@ -155,51 +156,53 @@ export default function TicketDetailPage() {
             </div>
           </CardHeader>
           <CardContent className="space-y-6">
-            <div className="flex justify-between items-center bg-muted/30 p-4 rounded-lg">
+            <div className="flex justify-between items-center bg-muted/30 p-4 rounded-2xl border">
               <div className="text-center flex-1">
-                <p className="text-[10px] font-bold text-muted-foreground uppercase">From</p>
-                <p className="font-bold text-slate-900">{ticket.from}</p>
+                <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">From</p>
+                <p className="font-bold text-slate-900 uppercase">{ticket.from}</p>
               </div>
               <ArrowRight className="h-4 w-4 text-primary mx-2" />
               <div className="text-center flex-1">
-                <p className="text-[10px] font-bold text-muted-foreground uppercase">To</p>
-                <p className="font-bold text-slate-900">{ticket.to}</p>
+                <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">To</p>
+                <p className="font-bold text-slate-900 uppercase">{ticket.to}</p>
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4 text-xs">
-              <div>
-                <p className="text-[9px] text-muted-foreground uppercase font-bold">Issue Date</p>
-                <p className="font-bold">{issueDate.toLocaleDateString('en-GB')}</p>
+            <div className="grid grid-cols-2 gap-4 text-xs font-medium">
+              <div className="space-y-1">
+                <p className="text-[9px] text-muted-foreground uppercase font-black tracking-widest">Issue Date</p>
+                <p className="font-bold text-slate-800">{issueDate.toLocaleDateString('en-GB')}</p>
               </div>
-              <div>
-                <p className="text-[9px] text-muted-foreground uppercase font-bold">Issue Time</p>
-                <p className="font-bold">{issueDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+              <div className="space-y-1 text-right">
+                <p className="text-[9px] text-muted-foreground uppercase font-black tracking-widest">Issue Time</p>
+                <p className="font-bold text-slate-800">{issueDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
               </div>
-              <div className="col-span-2">
-                <p className="text-[9px] text-muted-foreground uppercase font-bold">Passengers</p>
-                <p className="font-bold">{ticket.passengers}</p>
+              <div className="col-span-2 space-y-1 py-1 border-y border-dashed">
+                <p className="text-[9px] text-muted-foreground uppercase font-black tracking-widest">Passengers</p>
+                <p className="font-bold text-slate-800">{ticket.passengers}</p>
               </div>
-              <div>
-                <p className="text-[9px] text-muted-foreground uppercase font-bold">Fare Paid</p>
-                <p className="font-bold text-primary">Rs. {Math.round(totalCost)}</p>
+              <div className="space-y-1">
+                <p className="text-[9px] text-muted-foreground uppercase font-black tracking-widest">Fare Paid</p>
+                <p className="font-bold text-primary text-sm">Rs. {Math.round(totalCost)}</p>
               </div>
-              <div>
-                <p className="text-[9px] text-muted-foreground uppercase font-bold">Bus Category</p>
-                <p className="font-bold text-primary">{getFullBusType(ticket.busType)}</p>
+              <div className="space-y-1 text-right">
+                <p className="text-[9px] text-muted-foreground uppercase font-black tracking-widest">Bus Category</p>
+                <p className="font-bold text-primary text-sm">{getFullBusType(ticket.busType)}</p>
               </div>
             </div>
 
-            <div className="p-4 bg-primary/5 rounded-lg border border-primary/20 flex flex-col items-center gap-2">
-              <p className="text-[10px] uppercase text-muted-foreground font-bold tracking-tight">Security Code</p>
+            <div className="p-5 bg-primary/5 rounded-2xl border border-primary/20 flex flex-col items-center gap-3">
+              <p className="text-[10px] uppercase text-muted-foreground font-black tracking-[0.2em]">Security Code</p>
               <div className="flex items-center justify-center w-full">
-                <p className="font-mono text-3xl font-bold tracking-[0.3em] text-primary">{ticket.securityCode}</p>
-                <Copy className="h-4 w-4 text-muted-foreground ml-2 cursor-pointer" onClick={() => handleCopy(ticket.securityCode, 'PIN')} />
+                <p className="font-mono text-4xl font-black tracking-[0.3em] text-primary">{ticket.securityCode}</p>
+                <Button variant="ghost" size="icon" className="ml-2" onClick={() => handleCopy(ticket.securityCode, 'PIN')}>
+                    <Copy className="h-4 w-4 text-muted-foreground" />
+                </Button>
               </div>
             </div>
 
-            <div className="text-center p-4 bg-slate-900 text-white rounded-lg cursor-pointer hover:bg-slate-800 transition-colors" onClick={() => handleCopy(ticket.ticketCode, 'Code')}>
-              <p className="text-[10px] uppercase text-slate-400 mb-1 font-bold">Registration Code</p>
+            <div className="text-center p-4 bg-slate-900 text-white rounded-2xl cursor-pointer hover:bg-slate-800 transition-colors shadow-inner" onClick={() => handleCopy(ticket.ticketCode, 'Code')}>
+              <p className="text-[10px] uppercase text-slate-400 mb-1 font-black tracking-widest">Registration Code</p>
               <p className="font-mono text-xl font-bold break-all tracking-wider">{ticket.ticketCode}</p>
             </div>
 
@@ -207,16 +210,16 @@ export default function TicketDetailPage() {
               <CountdownTimer expiryTimestamp={expiryTimestamp} />
             )}
           </CardContent>
-          <CardFooter className="flex flex-col gap-3">
+          <CardFooter className="flex flex-col gap-3 p-6 pt-0">
             {displayStatus === 'valid' && (
-              <div className="grid grid-cols-2 gap-3 w-full">
-                <Button className="bg-red-600 hover:bg-red-700 h-12 font-bold text-white shadow-lg border-none" asChild>
+              <div className={cn("grid gap-3 w-full", isHighestTier ? "grid-cols-1" : "grid-cols-2")}>
+                <Button className="bg-red-600 hover:bg-red-700 h-14 font-black text-white shadow-lg border-none rounded-2xl uppercase tracking-widest text-xs" asChild>
                   <Link href={`/ticket-cancellation?code=${ticket.ticketCode}`}>
-                    Cancel
+                    Cancel Ticket
                   </Link>
                 </Button>
-                {ticket.busType.toLowerCase() !== 'deluxe' && (
-                  <Button className="bg-accent hover:bg-accent/90 h-12 font-bold shadow-lg" asChild>
+                {!isHighestTier && (
+                  <Button className="bg-accent hover:bg-accent/90 h-14 font-black shadow-lg rounded-2xl uppercase tracking-widest text-xs" asChild>
                     <Link href={`/upgrade-ticket?id=${ticket.ticketCode}`}>
                       <ArrowUpCircle className="mr-2 h-4 w-4" /> Upgrade
                     </Link>
@@ -224,7 +227,7 @@ export default function TicketDetailPage() {
                 )}
               </div>
             )}
-            <Button asChild variant="ghost" className="w-full h-11"><Link href="/booking-history">Back to History</Link></Button>
+            <Button asChild variant="ghost" className="w-full h-12 rounded-xl text-slate-500 font-bold"><Link href="/booking-history">Back to History</Link></Button>
           </CardFooter>
         </Card>
       </div>
