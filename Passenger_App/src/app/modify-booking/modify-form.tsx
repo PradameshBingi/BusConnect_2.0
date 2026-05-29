@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
@@ -48,14 +49,15 @@ export function ModifyForm({ ticket, onReset }: { ticket: any, onReset: () => vo
   const { toast } = useToast();
 
   const newTotalFare = useMemo(() => {
-    // If nothing changed, return the original fare exactly to avoid rounding discrepancies
-    const hasChanged = from !== ticket.from || 
-                       to !== ticket.to || 
-                       quantities.Men !== ticket.quantities.Men || 
-                       quantities.Child !== ticket.quantities.Child || 
-                       quantities.Women !== ticket.quantities.Women;
+    // Check for any changes
+    const hasRouteChanged = from !== ticket.from || to !== ticket.to;
+    const hasQuantitiesChanged = quantities.Men !== ticket.quantities.Men || 
+                                 quantities.Child !== ticket.quantities.Child || 
+                                 quantities.Women !== ticket.quantities.Women;
     
-    if (!hasChanged) return ticket.totalFare;
+    if (!hasRouteChanged && !hasQuantitiesChanged) return ticket.totalFare;
+    
+    // Calculate new fare based on potential route/quantity changes
     return calculateFare(from, to, quantities, ticket.busType);
   }, [from, to, quantities, ticket.busType, ticket]);
 
@@ -217,7 +219,7 @@ export function ModifyForm({ ticket, onReset }: { ticket: any, onReset: () => vo
                 <span>New Total:</span> 
                 <span>Rs. {Math.round(newTotalFare)}</span>
              </div>
-             {isRefund && (
+             {isRefund && refundWithFee > 0 && (
                <div className="pt-2 border-t border-white/10 mt-2">
                  <div className="flex justify-between text-green-400 font-bold">
                     <span>Refund to Wallet:</span>
@@ -226,7 +228,7 @@ export function ModifyForm({ ticket, onReset }: { ticket: any, onReset: () => vo
                  <p className="text-[9px] opacity-40 italic mt-1 text-center">After 10% processing fee per person removed.</p>
                </div>
              )}
-             {isAddition && (
+             {isAddition && fareDifference > 0 && (
                <div className="pt-2 border-t border-white/10 mt-2">
                  <div className="flex justify-between text-orange-400 font-bold">
                     <span>Additional Payable:</span>

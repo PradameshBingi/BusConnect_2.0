@@ -3,7 +3,7 @@ import { hyderabadLocalities } from '@/lib/locations';
 
 type PassengerType = 'Men' | 'Child' | 'Women';
 type Quantities = { [key in PassengerType]: number };
-type BusType = 'ordinary' | 'express' | 'deluxe';
+type BusType = 'ordinary' | 'express' | 'deluxe' | string;
 
 export function calculateFare(
   from: string,
@@ -39,15 +39,20 @@ export function calculateFare(
   const deluxeSurcharge = 10;
   const deluxeChildSurcharge = 5;
 
-  if (busType === 'express') {
-      menFare += expressSurcharge;
+  // Normalized comparison to prevent logic errors with capitalized input
+  const type = (busType || 'ordinary').toLowerCase();
+
+  if (type.includes('express')) {
+      menFare = ordinaryAdultFare + expressSurcharge;
       womenFare = 0; // Free for express
       childFare = Math.round(ordinaryChildFare + expressSurcharge / 2);
-  } else if (busType === 'deluxe') {
-      menFare += deluxeSurcharge;
+  } else if (type.includes('deluxe')) {
+      menFare = ordinaryAdultFare + deluxeSurcharge;
       womenFare = ordinaryAdultFare + deluxeSurcharge; // Chargable for deluxe
       childFare = ordinaryChildFare + deluxeChildSurcharge;
   } else { // ordinary
+      menFare = ordinaryAdultFare;
+      childFare = ordinaryChildFare;
       womenFare = 0; // Free for ordinary
   }
 
