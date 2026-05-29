@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { CountdownTimer } from '@/app/components/countdown-timer';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ArrowRight, Copy, RefreshCw, Loader2, XCircle, Eye, EyeOff } from 'lucide-react';
+import { ArrowRight, RefreshCw, Loader2, XCircle, Eye, EyeOff } from 'lucide-react';
 import Header from '@/app/components/header';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
@@ -186,25 +186,24 @@ function TicketContent() {
                 </div>
             </div>
 
-            <div className="p-5 bg-primary/5 rounded-2xl border border-primary/20 flex flex-col items-center gap-3">
+            <div className="p-4 bg-primary/5 rounded-2xl border border-primary/20 flex flex-col items-center gap-2">
                 <p className="text-[10px] uppercase text-muted-foreground font-black tracking-[0.2em]">Security Code</p>
-                <div className="flex items-center justify-center w-full gap-2">
-                    <p className="font-mono text-4xl font-black tracking-[0.3em] text-primary min-w-[140px] text-center">
+                <div className="flex items-center justify-center w-full gap-3">
+                    <p 
+                      className="font-mono text-4xl font-black tracking-[0.3em] text-primary min-w-[140px] text-center cursor-pointer active:opacity-70 transition-opacity"
+                      onClick={() => handleCopy(ticket.securityCode, 'Security PIN')}
+                      title="Tap to Copy"
+                    >
                         {showPin ? ticket.securityCode : '•••••'}
                     </p>
-                    <div className="flex flex-col gap-1 shrink-0">
-                        <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" onClick={() => setShowPin(!showPin)}>
-                            {showPin ? <EyeOff className="h-4 w-4 text-muted-foreground" /> : <Eye className="h-4 w-4 text-muted-foreground" />}
-                        </Button>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" onClick={() => handleCopy(ticket.securityCode, 'PIN')}>
-                            <Copy className="h-4 w-4 text-muted-foreground" />
-                        </Button>
-                    </div>
+                    <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full" onClick={() => setShowPin(!showPin)}>
+                        {showPin ? <EyeOff className="h-[18px] w-[18px] text-muted-foreground" /> : <Eye className="h-[18px] w-[18px] text-muted-foreground" />}
+                    </Button>
                 </div>
             </div>
 
-            <div className="text-center p-4 bg-slate-900 text-white rounded-2xl cursor-pointer hover:bg-slate-800 transition-colors shadow-inner" onClick={() => handleCopy(ticket.ticketCode, 'Code')}>
-                <p className="text-[10px] uppercase text-slate-400 mb-1 font-black tracking-widest">Registration Code</p>
+            <div className="text-center p-4 bg-slate-900 text-white rounded-2xl cursor-pointer hover:bg-slate-800 transition-colors shadow-inner" onClick={() => handleCopy(ticket.ticketCode, 'Ticket No')}>
+                <p className="text-[10px] uppercase text-slate-400 mb-1 font-black tracking-widest">Ticket No</p>
                 <p className="font-mono text-xl font-bold break-all tracking-wider">{ticket.ticketCode}</p>
             </div>
 
