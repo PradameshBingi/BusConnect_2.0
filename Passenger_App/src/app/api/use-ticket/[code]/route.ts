@@ -24,11 +24,11 @@ export async function POST(
     const ticket = await Ticket.findOne({ ticketCode });
     if (!ticket) return NextResponse.json({ status: "invalid" }, { status: 404 });
 
-    if (ticket.status === "used" && !updateData.status) {
+    if (ticket.status === "used" && !updateData.status && !updateData.totalFare) {
       return NextResponse.json({ status: "already_used", message: "Ticket already validated" }, { status: 400 });
     }
 
-    if (ticket.status === "cancelled") {
+    if (ticket.status === "cancelled" && !updateData.status) {
       return NextResponse.json({ status: "cancelled", message: "Ticket is cancelled" }, { status: 400 });
     }
 
@@ -37,16 +37,16 @@ export async function POST(
     const createdAt = new Date(ticket.createdAt);
     const expiryTime = new Date(createdAt.getTime() + 10 * 60 * 1000);
     
-    if (now > expiryTime && ticket.status !== 'used' && !updateData.createdAt) {
+    if (now > expiryTime && ticket.status !== 'used' && !updateData.createdAt && !updateData.totalFare) {
         ticket.status = 'expired';
         await ticket.save();
-        return NextResponse.json({ status: "expired", message: "Ticket has expired and cannot be validated" }, { status: 400 });
+        return NextResponse.json({ status: "expired", message: "Ticket has expired" }, { status: 400 });
     }
 
     // Apply updates
     if (updateData.status) {
       ticket.status = updateData.status;
-    } else {
+    } else if (!updateData.from) { // Only mark as used if not a generic metadata update
       ticket.status = "used";
       ticket.validatedAt = new Date();
     }
@@ -55,9 +55,14 @@ export async function POST(
       ticket.createdAt = new Date(updateData.createdAt);
     }
 
+    // Generic Update Fields
     if (updateData.busType) ticket.busType = updateData.busType;
-    if (updateData.totalFare) ticket.totalFare = updateData.totalFare;
-    if (updateData.fare) ticket.fare = updateData.fare;
+    if (updateData.totalFare !== undefined) ticket.totalFare = updateData.totalFare;
+    if (updateData.fare !== undefined) ticket.fare = updateData.fare;
+    if (updateData.from) ticket.from = updateData.from;
+    if (updateData.to) ticket.to = updateData.to;
+    if (updateData.passengers) ticket.passengers = updateData.passengers;
+    if (updateData.quantities) ticket.quantities = updateData.quantities;
 
     await ticket.save();
     return NextResponse.json({ status: "updated", ticket: ticket.toObject() });

@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { Card } from '@/components/ui/card';
-import { Route, History, ChevronRight } from 'lucide-react';
+import { Route, History, ChevronRight, Edit3 } from 'lucide-react';
 import Header from '@/app/components/header';
 
 const serviceLinks = [
@@ -10,6 +10,11 @@ const serviceLinks = [
     href: '/select-bus-type', 
     title: 'Select Route', 
     icon: <Route className="h-7 w-7 text-blue-600" /> 
+  },
+  { 
+    href: '/modify-booking', 
+    title: 'Modify Booking', 
+    icon: <Edit3 className="h-7 w-7 text-purple-600" /> 
   },
   { 
     href: '/booking-history', 
