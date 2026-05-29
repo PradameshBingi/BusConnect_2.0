@@ -83,7 +83,7 @@ function ModifyBookingContent() {
           <CardContent className="p-8 space-y-6">
             <form onSubmit={handleSearch} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="ticket-code" className="text-[10px] font-black uppercase tracking-widest text-slate-500">Ticket No</Label>
+                <Label htmlFor="ticket-code" className="text-[10px] font-black uppercase tracking-widest text-slate-600">Ticket No</Label>
                 <div className="relative">
                   <Input
                     id="ticket-code"

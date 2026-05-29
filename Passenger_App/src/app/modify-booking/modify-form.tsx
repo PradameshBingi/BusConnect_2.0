@@ -93,7 +93,7 @@ export function ModifyForm({ ticket, onReset }: { ticket: any, onReset: () => vo
       toast({ 
         title: "Nothing to Modify", 
         description: "No changes detected in route or passenger count.",
-        variant: "default" 
+        variant: "destructive" 
       });
       return;
     }
@@ -184,7 +184,7 @@ export function ModifyForm({ ticket, onReset }: { ticket: any, onReset: () => vo
         <CardContent className="p-6 space-y-6">
           <div className="flex items-center gap-2">
             <div className="flex-1 space-y-1">
-              <Label className="text-[10px] font-black text-slate-400 uppercase">From</Label>
+              <Label className="text-[10px] font-black text-slate-600 uppercase">From</Label>
               <Select value={from} onValueChange={setFrom}>
                 <SelectTrigger className="h-12 rounded-xl"><SelectValue /></SelectTrigger>
                 <SelectContent>
@@ -196,7 +196,7 @@ export function ModifyForm({ ticket, onReset }: { ticket: any, onReset: () => vo
               <ArrowRightLeft className="h-4 w-4" />
             </Button>
             <div className="flex-1 space-y-1">
-              <Label className="text-[10px] font-black text-slate-400 uppercase">To</Label>
+              <Label className="text-[10px] font-black text-slate-600 uppercase">To</Label>
               <Select value={to} onValueChange={setTo}>
                 <SelectTrigger className="h-12 rounded-xl"><SelectValue /></SelectTrigger>
                 <SelectContent>
@@ -207,7 +207,7 @@ export function ModifyForm({ ticket, onReset }: { ticket: any, onReset: () => vo
           </div>
 
           <div className="space-y-3">
-            <Label className="text-[10px] font-black text-slate-400 uppercase">Passengers</Label>
+            <Label className="text-[10px] font-black text-slate-600 uppercase">Passengers</Label>
             {passengerMeta.map(({ type, icon }) => (
               <div key={type} className="flex items-center justify-between rounded-2xl border p-4 bg-slate-50/50">
                 <div className="flex items-center gap-3 text-slate-700">{icon}<span className="text-sm font-bold">{type}</span></div>
