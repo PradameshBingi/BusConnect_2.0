@@ -2,7 +2,7 @@
 
 import Header from '../../components/header';
 import { Separator } from '@/components/ui/separator';
-import { Info } from 'lucide-react';
+import { Info, Terminal } from 'lucide-react';
 
 export default function ConductorAboutPage() {
   return (
@@ -10,6 +10,7 @@ export default function ConductorAboutPage() {
       <Header showBackButton={true} backHref="/dashboard" title="About System" />
       <div className="bg-white max-w-4xl mx-auto p-6 md:p-10 space-y-10 shadow-sm min-h-screen">
         <div className="text-center">
+          <Terminal className="h-12 w-12 text-[#0A2B70] mx-auto mb-4" />
           <h1 className="text-4xl font-black tracking-tight font-headline uppercase text-[#0A2B70]">
             System Information
           </h1>
@@ -29,13 +30,25 @@ export default function ConductorAboutPage() {
         
         <Separator />
 
+        <div className="space-y-4">
+            <h2 className="text-xl font-bold font-headline uppercase">Operational Integrity</h2>
+            <ul className="list-disc list-inside space-y-3 text-slate-600">
+                <li>Real-time ticket status tracking (Valid/Used/Expired/Cancelled)</li>
+                <li>Distance-based fare difference calculation for upgrades</li>
+                <li>Digital bus pass database lookup with holder photo verification</li>
+                <li>Encrypted security PIN validation for every transaction</li>
+            </ul>
+        </div>
+
+        <Separator />
+
         <div className="bg-amber-50 p-6 rounded-2xl text-amber-900 border border-amber-200">
            <h2 className="text-xl font-bold font-headline flex items-center gap-3">
               <Info className="h-6 w-6" />
               Staff Notice
             </h2>
            <p className="mt-2 text-sm font-medium">
-            This terminal records every validation session. Ensure you verify the passenger's 5-digit Security PIN for every ticket to prevent screenshot duplication fraud.
+            This terminal records every validation session. Ensure you verify the passenger's 5-digit Security PIN for every ticket to prevent screenshot duplication fraud. Any discrepancies should be reported to the depot supervisor.
           </p>
         </div>
 

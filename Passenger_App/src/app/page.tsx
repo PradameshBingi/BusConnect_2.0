@@ -48,6 +48,13 @@ export default function Home() {
       bgColor: 'bg-orange-50'
     },
     { 
+         href: '/conductor', 
+         title: 'Conductor Tool', 
+         description: 'Verify tickets and check fares.', 
+         icon: <conductor className="h-6 w-6 text-red-500" />,
+         bgColor: 'bg-red-50'
+       },
+    { 
       href: '/feedback', 
       title: 'Send Feedback', 
       description: 'Rate our app and share suggestions.', 

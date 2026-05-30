@@ -49,7 +49,7 @@ export default function ConductorLoginPage() {
       <div className="w-full max-w-md space-y-8">
         <div className="flex flex-col items-center gap-4 text-white">
           <div className="bg-white p-1 rounded-sm shadow-inner border border-white/20">
-            <div className="w-16 h-16 flex flex-col items-center justify-center bg-red-600 text-white rounded-sm text-[9px] font-bold leading-none">
+            <div className="w-16 h-16 flex flex-col items-center justify-center bg-red-600 text-white rounded-sm text-[9px] font-bold leading-none border-2 border-white">
               <span className="mb-0.5">TSRTC</span>
               <span className="mb-0.5">GAMYAM</span>
               <span className="text-[6px] scale-90">Track and Active</span>
@@ -110,7 +110,7 @@ export default function ConductorLoginPage() {
         </Card>
 
         <p className="text-center text-white/60 text-[10px] mt-8 uppercase tracking-widest font-bold">
-          Confidential Terminal • TGSRTC Hyderabad
+          © 2024 TGSRTC Hyderabad • Confidential Terminal
         </p>
       </div>
     </div>
