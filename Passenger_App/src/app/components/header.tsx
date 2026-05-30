@@ -80,19 +80,20 @@ export default function Header({ showBackButton = false, backHref, title, varian
               <span className="sr-only">Back</span>
             </Button>
           ) : (
-            <div className="bg-white p-1 rounded-sm shadow-inner shrink-0">
+            <div className="bg-white p-1 rounded-sm shadow-inner shrink-0 border border-white/20">
               <div className="w-8 h-8 flex flex-col items-center justify-center bg-red-600 text-white rounded-sm text-[5px] font-bold leading-none">
-                <span>TSRTC</span>
-                <span>GAMYAM</span>
-                <span className="text-[4px]">Track and Active</span>
+                <span className="mb-0.5">TSRTC</span>
+                <span className="mb-0.5">GAMYAM</span>
+                <span className="text-[4px] scale-90">Track and Active</span>
               </div>
             </div>
           )}
           <Link href="/" className="flex flex-col justify-center overflow-hidden hover:opacity-90 active:opacity-100 transition-opacity cursor-pointer">
             <h1 className="text-xl font-bold tracking-wider font-headline uppercase truncate">
-              {title || 'TGSRTC'}
+              {variant === 'conductor' ? 'TGSRTC' : (title || 'TGSRTC')}
             </h1>
-            {!title && <span className="text-[8px] opacity-80 font-bold uppercase tracking-widest leading-none">Hyderabad</span>}
+            {variant === 'conductor' && <span className="text-[8px] opacity-80 font-bold uppercase tracking-widest leading-none">Conductor Tools</span>}
+            {!title && variant !== 'conductor' && <span className="text-[8px] opacity-80 font-bold uppercase tracking-widest leading-none">Hyderabad</span>}
           </Link>
         </div>
 
@@ -104,9 +105,9 @@ export default function Header({ showBackButton = false, backHref, title, varian
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-48 rounded-xl">
-              <DropdownMenuLabel>My Account</DropdownMenuLabel>
+              <DropdownMenuLabel>Account</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={handleLogout} className="text-red-600 focus:text-red-600 cursor-pointer">
+              <DropdownMenuItem onClick={handleLogout} className="text-red-600 focus:text-red-600 cursor-pointer font-bold">
                 <LogOut className="mr-2 h-4 w-4" />
                 <span>Logout</span>
               </DropdownMenuItem>
