@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useToast } from '@/hooks/use-toast';
 
-export default function Header({ showBackButton = false, backHref, title, variant = 'passenger' }: { showBackButton?: boolean; backHref?: string; title?: string; variant?: 'passenger' | 'conductor' }) {
+export default function Header({ showBackButton = false, backHref, title }: { showBackButton?: boolean; backHref?: string; title?: string }) {
   const router = useRouter();
   const { toast } = useToast();
 
@@ -36,7 +36,6 @@ export default function Header({ showBackButton = false, backHref, title, varian
           const res = await fetch(`/api/user?phone=${phone}`);
           if (res.ok) {
             const data = await res.json();
-            // If database session doesn't match local session, force logout
             if (data.sessionId && data.sessionId !== localSessionId) {
               toast({
                 variant: 'destructive',
@@ -53,7 +52,7 @@ export default function Header({ showBackButton = false, backHref, title, varian
     };
 
     validateSession();
-    const interval = setInterval(validateSession, 30000); // Check every 30 seconds
+    const interval = setInterval(validateSession, 30000);
     return () => clearInterval(interval);
   }, [handleLogout, toast]);
 
@@ -88,12 +87,11 @@ export default function Header({ showBackButton = false, backHref, title, varian
               </div>
             </div>
           )}
-          <Link href="/" className="flex flex-col justify-center overflow-hidden hover:opacity-90 active:opacity-100 transition-opacity cursor-pointer">
+          <Link href="/" className="flex flex-col justify-center overflow-hidden hover:opacity-90 transition-opacity cursor-pointer">
             <h1 className="text-xl font-bold tracking-wider font-headline uppercase truncate">
-              {variant === 'conductor' ? 'TGSRTC' : (title || 'TGSRTC')}
+              {title || 'TGSRTC'}
             </h1>
-            {variant === 'conductor' && <span className="text-[8px] opacity-80 font-bold uppercase tracking-widest leading-none">Conductor Tools</span>}
-            {!title && variant !== 'conductor' && <span className="text-[8px] opacity-80 font-bold uppercase tracking-widest leading-none">Hyderabad</span>}
+            {!title && <span className="text-[8px] opacity-80 font-bold uppercase tracking-widest leading-none">Hyderabad</span>}
           </Link>
         </div>
 

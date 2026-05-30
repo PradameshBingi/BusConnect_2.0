@@ -1,11 +1,25 @@
 'use client';
 
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Ticket, BookUser, ChevronRight, Database, BarChart3, HelpCircle, Info, Bell, MessageSquare, Globe } from 'lucide-react';
+import { Ticket, BookUser, ChevronRight, Database, BarChart3, HelpCircle, Info } from 'lucide-react';
+import Header from '../../components/header';
 
 export default function ConductorDashboardPage() {
+  const router = useRouter();
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+    const session = localStorage.getItem('conductorSession');
+    if (!session) {
+      router.replace('/login');
+    }
+  }, [router]);
+
   const serviceLinks = [
     {
       href: '/ticket',
@@ -38,39 +52,24 @@ export default function ConductorDashboardPage() {
     { 
       href: '/help', 
       title: 'Help & FAQs', 
-      description: 'Find answers to your questions.', 
+      description: 'Conductor operational manual.', 
       icon: <HelpCircle className="h-8 w-8 text-slate-500" />,
       bgColor: 'bg-slate-50'
     },
     { 
       href: '/about', 
-      title: 'About This App', 
-      description: 'Learn more about this project.', 
+      title: 'About System', 
+      description: 'Learn more about the platform.', 
       icon: <Info className="h-8 w-8 text-blue-500" />,
       bgColor: 'bg-blue-50'
     },
   ];
 
+  if (!isMounted) return null;
+
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col">
-      {/* Red Logo Header */}
-      <header className="bg-[#16a34a] text-white p-4 flex items-center justify-between sticky top-0 z-50 shadow-sm h-16">
-        <div className="flex items-center gap-3">
-          <div className="bg-white p-1 rounded-sm shadow-inner">
-            <div className="w-8 h-8 flex flex-col items-center justify-center bg-red-600 text-white rounded-sm text-[5px] font-bold leading-none">
-              <span>TSRTC</span>
-              <span>GAMYAM</span>
-              <span className="text-[4px]">Track and Active</span>
-            </div>
-          </div>
-          <h1 className="text-xl font-bold tracking-wider font-headline uppercase">TGSRTC</h1>
-        </div>
-        <div className="flex items-center gap-4">
-          <Bell className="h-5 w-5" />
-          <MessageSquare className="h-5 w-5" />
-          <Globe className="h-5 w-5" />
-        </div>
-      </header>
+      <Header />
       
       <main className="flex-grow flex flex-col items-center pt-8 p-4 max-w-2xl mx-auto w-full">
         <h1 className="text-2xl font-bold text-slate-900 mb-6 font-headline uppercase tracking-tight">Conductor Dashboard</h1>
