@@ -34,7 +34,7 @@ export default function Header({ showBackButton = false, backHref, title }: { sh
             <ArrowLeft className="h-6 w-6" />
           </Button>
         ) : (
-          <div className="bg-white p-1 rounded-sm shadow-inner shrink-0 border border-white/40">
+          <div className="bg-white p-1 rounded-sm shadow-inner shrink-0 border border-white/20">
             <div className="w-8 h-8 flex flex-col items-center justify-center bg-red-600 text-white rounded-sm text-[5px] font-bold leading-none">
               <span className="mb-0.5">TSRTC</span>
               <span className="mb-0.5">GAMYAM</span>
