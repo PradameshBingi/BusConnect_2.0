@@ -48,7 +48,7 @@ export default function ConductorLoginPage() {
     <div className="min-h-screen bg-[#16a34a] flex flex-col items-center justify-center p-4">
       <div className="w-full max-w-md space-y-8">
         <div className="flex flex-col items-center gap-4 text-white">
-          <div className="bg-white p-1 rounded-sm shadow-inner">
+          <div className="bg-white p-1 rounded-sm shadow-inner border border-white/20">
             <div className="w-16 h-16 flex flex-col items-center justify-center bg-red-600 text-white rounded-sm text-[9px] font-bold leading-none">
               <span className="mb-0.5">TSRTC</span>
               <span className="mb-0.5">GAMYAM</span>
@@ -56,7 +56,7 @@ export default function ConductorLoginPage() {
             </div>
           </div>
           <div className="text-center">
-            <h1 className="text-4xl font-bold tracking-[0.2em] font-headline">TGSRTC</h1>
+            <h1 className="text-4xl font-bold tracking-[0.2em] font-headline uppercase">TGSRTC</h1>
             <p className="text-white/80 font-medium tracking-tight mt-1 uppercase text-xs">Conductor Terminal Access</p>
           </div>
         </div>

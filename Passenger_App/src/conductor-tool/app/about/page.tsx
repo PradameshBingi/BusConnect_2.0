@@ -7,7 +7,7 @@ import { Info } from 'lucide-react';
 export default function ConductorAboutPage() {
   return (
     <div className="min-h-screen bg-slate-50">
-      <Header />
+      <Header showBackButton={true} backHref="/dashboard" title="About System" />
       <div className="bg-white max-w-4xl mx-auto p-6 md:p-10 space-y-10 shadow-sm min-h-screen">
         <div className="text-center">
           <h1 className="text-4xl font-black tracking-tight font-headline uppercase text-[#0A2B70]">

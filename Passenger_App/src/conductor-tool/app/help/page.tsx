@@ -27,7 +27,7 @@ const conductorFaqs = [
 export default function ConductorHelpPage() {
   return (
     <div className="min-h-screen bg-slate-50">
-      <Header />
+      <Header showBackButton={true} backHref="/dashboard" title="Help & FAQs" />
       <div className="p-4 md:p-8 max-w-3xl mx-auto space-y-6 pb-32">
         <div className="flex items-center gap-3">
           <HelpCircle className="h-8 w-8 text-[#16a34a]" />
