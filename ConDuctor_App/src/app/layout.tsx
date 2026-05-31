@@ -16,7 +16,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         </main>
         <footer className="fixed bottom-0 left-0 right-0 bg-slate-50/80 backdrop-blur-md border-t py-6 z-50 shadow-[0_-4px_15px_rgba(0,0,0,0.05)]">
           <div className="container mx-auto text-center px-4">
-            <p className="text-[10px] text-slate-400 uppercase tracking-[0.3em] font-black mb-1">Powered</p>
+            <p className="text-[10px] text-slate-400 uppercase tracking-[0.3em] font-black mb-1">Powered By</p>
             <p className="font-black text-2xl tracking-tighter text-[#0A2B70] uppercase">BINGI PRADAMESH</p>
           </div>
         </footer>

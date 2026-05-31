@@ -130,7 +130,7 @@ export default function BusPassPage() {
             <CardContent>
               <form onSubmit={handleVerification} className="grid gap-4">
                 <div className="grid gap-2">
-                  <Label htmlFor="pass-code">Bus Pass Code</Label>
+                  <Label htmlFor="pass-code">Bus Pass No</Label>
                   <Input
                     id="pass-code"
                     placeholder="e.g., TK98765400"

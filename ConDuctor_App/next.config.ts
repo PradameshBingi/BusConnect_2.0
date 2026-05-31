@@ -1,6 +1,10 @@
 import type { NextConfig } from "next";
+import path from "path";
 
 const nextConfig: NextConfig = {
+  // FIXED: Moved out of "experimental" to the top level for modern Next.js versions
+  outputFileTracingRoot: path.resolve(__dirname),
+
   // Standard Next.js mode (not static export) to support dynamic API routes and MongoDB
   images: {
     unoptimized: true,
@@ -12,11 +16,11 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: 'https',
-        hostname: 'images.unsplash.com',
+        hostname: '://unsplash.com',
       },
       {
         protocol: 'https',
-        hostname: 'api.dicebear.com',
+        hostname: '://dicebear.com',
       },
     ],
   },
