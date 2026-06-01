@@ -35,7 +35,7 @@ export async function POST(
       return NextResponse.json({ status: "cancelled", message: "Ticket is cancelled" }, { status: 400 });
     }
 
-    // Auto-expire check
+    // Auto-expire check (10 min window)
     const now = new Date();
     const createdAt = new Date(ticket.createdAt);
     const expiryTime = new Date(createdAt.getTime() + 10 * 60 * 1000);
@@ -49,24 +49,28 @@ export async function POST(
     // Handle Category Downgrade Refund
     let refundAmount = 0;
     if (actualBusType && actualBusType !== ticket.busType) {
+        // Recalculate fare for the ACTUAL bus type boarded
         const newFare = calculateFare(ticket.from, ticket.to, ticket.quantities, actualBusType);
         const oldFare = ticket.totalFare;
         
         if (newFare < oldFare) {
             refundAmount = oldFare - newFare;
             
-            // Credit refund to user's wallet
+            // Credit refund back to passenger wallet
             if (ticket.bookedBy) {
                 const User = getUserModel();
                 await User.findOneAndUpdate(
                     { phone: ticket.bookedBy },
                     { $inc: { wallet: refundAmount } }
                 );
+                console.log(`✅ Refund of Rs. ${refundAmount} credited to wallet for: ${ticket.bookedBy}`);
             }
         }
         
+        // UPDATE ticket with ACTUAL boarding details for the Pink Receipt
         ticket.busType = actualBusType;
         ticket.totalFare = newFare;
+        ticket.fare = newFare; // Also update base fare to ensure consistency
     }
 
     ticket.status = "used";

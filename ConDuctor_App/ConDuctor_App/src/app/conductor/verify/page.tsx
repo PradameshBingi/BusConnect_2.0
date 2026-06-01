@@ -1,11 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Search, CheckCircle, XCircle, Loader2, ArrowRight, Eye, EyeOff, RefreshCcw } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Command, CommandInput, CommandEmpty, CommandGroup, CommandItem, CommandList } from '@/components/ui/command';
+import { Search, CheckCircle, XCircle, Loader2, ArrowRight, Eye, EyeOff, RefreshCcw, ChevronDown } from 'lucide-react';
 import Header from '@/app/components/header';
 import { useToast } from "@/hooks/use-toast";
 import { API_ENDPOINTS } from '@/lib/api-config';
@@ -14,11 +16,16 @@ import { ValidatedTicket } from '@/app/components/validated-ticket';
 import { Separator } from '@/components/ui/separator';
 import AuthGuard from '@/app/components/AuthGuard';
 import { Badge } from '@/components/ui/badge';
+import { routes } from '@/lib/routes';
 
 export const dynamic = "force-dynamic";
 
 export default function VerifyTicketPage() {
-    const [ticketCode, setTicketCode] = useState('');
+    const [routeNo, setRouteNo] = useState('01');
+    const [ticketDigits, setTicketDigits] = useState('');
+    const [isRouteSelectorOpen, setRouteSelectorOpen] = useState(false);
+    const [searchQuery, setSearchQuery] = useState('');
+    
     const [ticket, setTicket] = useState<any>(null);
     const [isLoading, setIsLoading] = useState(false);
     const [status, setStatus] = useState<'idle' | 'found' | 'not_found'>('idle');
@@ -27,8 +34,21 @@ export default function VerifyTicketPage() {
     const [actualBusType, setActualBusType] = useState<string>('');
     const { toast } = useToast();
 
-    const handleVerification = async (e: React.FormEvent) => {
-        e.preventDefault();
+    const filteredRoutes = useMemo(() => {
+        return routes.filter(r => 
+            r.routeName.toLowerCase().includes(searchQuery.toLowerCase()) || 
+            r.routeNo.includes(searchQuery)
+        );
+    }, [searchQuery]);
+
+    const handleVerification = async (e?: React.FormEvent) => {
+        if (e) e.preventDefault();
+        if (ticketDigits.length !== 5) {
+            toast({ variant: 'destructive', title: 'Invalid Code', description: 'Please enter exactly 5 digits.' });
+            return;
+        }
+
+        const fullCode = `TKT-${routeNo}-${ticketDigits}`;
         setIsLoading(true);
         setStatus('idle');
         setShowPin(false);
@@ -36,7 +56,7 @@ export default function VerifyTicketPage() {
         setTicket(null);
         
         try {
-            const response = await fetch(`${API_ENDPOINTS.VERIFY}/${ticketCode.trim().toUpperCase()}`);
+            const response = await fetch(`${API_ENDPOINTS.VERIFY}/${fullCode.toUpperCase()}`);
             if (!response.ok) {
                 if (response.status === 404) {
                     setStatus('not_found');
@@ -75,7 +95,7 @@ export default function VerifyTicketPage() {
             const updatedTicket = result.ticket;
             
             if (result.refunded) {
-                toast({ title: "Refund Issued", description: `Rs. ${result.refunded} refunded to passenger wallet.` });
+                toast({ title: "Refund Issued", description: `Rs. ${result.refunded} credited to passenger wallet.` });
             }
 
             // Record verification for local stats
@@ -106,25 +126,43 @@ export default function VerifyTicketPage() {
         <Header showBackButton={true} backHref="/conductor/ticket" title="Verify Ticket" />
         
         <main className="flex flex-col items-center p-4 space-y-6 pb-32">
-          {/* SEARCH CARD - PERSISTENT */}
+          {/* SEARCH CARD - STRUCTURED INPUT */}
           <Card className="w-full max-w-md shadow-sm border-slate-200">
             <CardHeader className="pb-3">
                 <CardTitle className="font-headline text-xl uppercase">Verify Ticket Code</CardTitle>
-                <CardDescription>Enter alphanumeric code for boarding check</CardDescription>
+                <CardDescription>Enter code for boarding check</CardDescription>
             </CardHeader>
             <CardContent>
-              <form onSubmit={handleVerification} className="flex gap-2">
+              <div className="flex items-center gap-2">
+                <div className="bg-slate-100 h-12 px-3 flex items-center rounded-xl font-mono font-bold text-slate-500">
+                    TKT-
+                </div>
+                
+                <Button 
+                    variant="outline" 
+                    className="h-12 w-16 border-2 border-slate-200 rounded-xl font-bold text-lg"
+                    onClick={() => setRouteSelectorOpen(true)}
+                >
+                    {routeNo}
+                </Button>
+
+                <div className="text-slate-400 font-bold">-</div>
+
                 <Input 
-                  placeholder="TKT-XX-XXXXX" 
-                  value={ticketCode} 
-                  onChange={(e) => setTicketCode(e.target.value)} 
-                  required 
-                  className="uppercase font-mono text-lg h-12 tracking-widest" 
+                  placeholder="XXXXX" 
+                  value={ticketDigits} 
+                  onChange={(e) => setTicketDigits(e.target.value.replace(/\D/g, '').slice(0, 5))} 
+                  className="font-mono text-lg h-12 tracking-[0.2em] rounded-xl border-2 border-slate-200 focus:border-[#00B893] text-center" 
                 />
-                <Button type="submit" disabled={isLoading} className="h-12 w-16 bg-[#00B893] hover:bg-[#009e7c]">
+                
+                <Button 
+                    onClick={() => handleVerification()} 
+                    disabled={isLoading || ticketDigits.length !== 5} 
+                    className="h-12 w-16 bg-[#00B893] hover:bg-[#009e7c] rounded-xl shrink-0"
+                >
                     {isLoading ? <Loader2 className="animate-spin h-5 w-5" /> : <Search className="h-5 w-5" />}
                 </Button>
-              </form>
+              </div>
             </CardContent>
           </Card>
           
@@ -132,14 +170,14 @@ export default function VerifyTicketPage() {
               <Card className="w-full max-w-md p-6 text-center text-destructive border-destructive/20 bg-white animate-in fade-in zoom-in duration-300">
                   <XCircle className="mx-auto mb-2 h-12 w-12" />
                   <h3 className="font-bold text-lg">Ticket Not Found</h3>
-                  <p className="text-sm text-slate-500">The provided code does not exist in our system.</p>
+                  <p className="text-sm text-slate-500">The code TKT-{routeNo}-{ticketDigits} does not exist.</p>
               </Card>
           )}
 
           {status === 'found' && ticket && (
             <div className="w-full max-w-md space-y-6">
               {justValidated ? (
-                  /* FINAL PINK TICKET */
+                  /* FINAL PINK TICKET - Adjusted fare reflected here */
                   <div className="animate-in slide-in-from-bottom-4 duration-500">
                       <ValidatedTicket ticket={{
                         ...ticket, 
@@ -148,7 +186,7 @@ export default function VerifyTicketPage() {
                       <Button 
                           variant="outline" 
                           className="w-full mt-6 h-14 bg-white border-slate-200 text-slate-500 font-black rounded-2xl uppercase tracking-widest" 
-                          onClick={() => {setStatus('idle'); setTicketCode(''); setTicket(null); setJustValidated(false);}}
+                          onClick={() => {setStatus('idle'); setTicketDigits(''); setTicket(null); setJustValidated(false);}}
                       >
                           Done - Verify Next
                       </Button>
@@ -163,7 +201,7 @@ export default function VerifyTicketPage() {
                           )}>
                               TICKET {ticket.status}
                           </h1>
-                          <p className="mt-2 text-xs font-bold text-slate-400 uppercase">Boarding Denied</p>
+                          <p className="mt-2 text-[10px] font-black text-slate-400 uppercase tracking-widest">Boarding Denied</p>
                       </CardHeader>
                   </Card>
               ) : (
@@ -172,14 +210,14 @@ export default function VerifyTicketPage() {
                       <CardHeader className="text-center pb-2 pt-8 relative">
                           <RefreshCcw 
                             className="absolute right-6 top-8 h-6 w-6 text-slate-300 cursor-pointer hover:text-[#00B893] transition-colors" 
-                            onClick={() => {setTicket(null); setStatus('idle'); setTicketCode('');}}
+                            onClick={() => {setTicket(null); setStatus('idle'); setTicketDigits('');}}
                           />
                           <h2 className="text-3xl font-black text-slate-900 tracking-[0.1em] uppercase mb-3">JOURNEY DETAILS</h2>
-                          <Badge className="bg-[#00B893] text-white px-6 py-1 rounded-full font-bold uppercase tracking-wider">Valid</Badge>
+                          <Badge className="bg-[#00B893] text-white px-6 py-1 rounded-full font-bold uppercase tracking-wider">Valid Ticket</Badge>
                       </CardHeader>
 
                       <CardContent className="space-y-6 px-8 pt-6">
-                          {/* ROUTE BOXES */}
+                          {/* ROUTE BOXES - HIGH FIDELITY */}
                           <div className="flex justify-between items-center p-6 bg-slate-50 rounded-3xl border border-slate-100 shadow-inner">
                               <div className="text-center flex-1">
                                   <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">FROM</p>
@@ -196,23 +234,14 @@ export default function VerifyTicketPage() {
 
                           <div className="grid grid-cols-2 gap-y-4 px-2">
                                <div className="space-y-0.5">
-                                  <p className="text-[10px] font-black text-slate-400 uppercase">ISSUE DATE</p>
+                                  <p className="text-[10px] font-black text-slate-400 uppercase">PASSENGERS</p>
                                   <p className="font-black text-slate-800 text-sm">
-                                      {new Date(ticket.createdAt).toLocaleDateString('en-GB')}
+                                      {ticket.passengers || `${ticket.quantities?.Men}M, ${ticket.quantities?.Women}W, ${ticket.quantities?.Child}C`}
                                   </p>
                                </div>
                                <div className="space-y-0.5 text-right">
-                                  <p className="text-[10px] font-black text-slate-400 uppercase">ISSUE TIME</p>
-                                  <p className="font-black text-slate-800 text-sm">
-                                      {new Date(ticket.createdAt).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}
-                                  </p>
-                               </div>
-                               <Separator className="col-span-2 bg-slate-100 border-dashed" />
-                               <div className="col-span-2 space-y-0.5">
-                                  <p className="text-[10px] font-black text-slate-400 uppercase">PASSENGERS</p>
-                                  <p className="font-black text-slate-800 text-sm">
-                                      Men: {ticket.quantities?.Men || 0}, Child: {ticket.quantities?.Child || 0}, Women: {ticket.quantities?.Women || 0}
-                                  </p>
+                                  <p className="text-[10px] font-black text-slate-400 uppercase">BOOKED BUS</p>
+                                  <p className="font-black text-[#0A2B70] text-sm uppercase">{ticket.busType}</p>
                                </div>
                                <Separator className="col-span-2 bg-slate-100 border-dashed" />
                                <div className="space-y-0.5">
@@ -220,27 +249,27 @@ export default function VerifyTicketPage() {
                                   <p className="font-black text-[#00B893] text-xl">Rs. {ticket.totalFare.toFixed(2)}</p>
                                </div>
                                <div className="space-y-0.5 text-right">
-                                  <p className="text-[10px] font-black text-slate-400 uppercase">BUS CATEGORY</p>
-                                  <p className="font-black text-[#00B893] text-sm uppercase">{ticket.busType}</p>
+                                  <p className="text-[10px] font-black text-slate-400 uppercase">WALLET REFUND?</p>
+                                  <p className="font-black text-slate-500 text-sm italic">Automatic</p>
                                </div>
                           </div>
 
                           {/* CATEGORY SELECTOR FOR AUTO-REFUND */}
-                          <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                               <p className="text-[9px] font-black text-slate-400 uppercase mb-2 text-center tracking-widest">ACTUAL BOARDING CATEGORY</p>
+                          <div className="bg-slate-50 p-5 rounded-2xl border border-slate-100">
+                               <p className="text-[9px] font-black text-slate-400 uppercase mb-3 text-center tracking-widest">ACTUAL BOARDING CATEGORY</p>
                                <Select value={actualBusType} onValueChange={setActualBusType}>
-                                  <SelectTrigger className="bg-white rounded-xl border-slate-200 h-10 font-bold uppercase text-xs">
+                                  <SelectTrigger className="bg-white rounded-xl border-slate-200 h-12 font-black uppercase text-xs tracking-widest">
                                       <SelectValue />
                                   </SelectTrigger>
                                   <SelectContent>
-                                      <SelectItem value="ordinary">City Ordinary</SelectItem>
-                                      <SelectItem value="express">Metro Express</SelectItem>
-                                      <SelectItem value="deluxe">Metro Deluxe</SelectItem>
+                                      <SelectItem value="ordinary" className="font-bold">CITY ORDINARY</SelectItem>
+                                      <SelectItem value="express" className="font-bold">METRO EXPRESS</SelectItem>
+                                      <SelectItem value="deluxe" className="font-bold">METRO DELUXE</SelectItem>
                                   </SelectContent>
                                </Select>
                           </div>
 
-                          {/* SECURITY PIN */}
+                          {/* SECURITY PIN SECTION */}
                           <div className="bg-[#F0FDF4] p-8 rounded-3xl border border-[#DCFCE7] flex flex-col items-center">
                               <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4">SECURITY CODE</p>
                               <div className="flex flex-col items-center gap-4">
@@ -249,7 +278,7 @@ export default function VerifyTicketPage() {
                                           {ticket.securityCode}
                                       </p>
                                   ) : (
-                                      <div className="flex gap-4">
+                                      <div className="flex gap-4 py-4">
                                           {[1,2,3,4,5].map(i => <div key={i} className="w-4 h-4 rounded-full bg-[#00B893]"></div>)}
                                       </div>
                                   )}
@@ -273,7 +302,7 @@ export default function VerifyTicketPage() {
                           </div>
                           <Button 
                               onClick={handleValidate} 
-                              className="w-full h-20 bg-[#00B893] hover:bg-[#009e7c] text-xl font-black uppercase tracking-widest rounded-none shadow-2xl" 
+                              className="w-full h-24 bg-[#00B893] hover:bg-[#009e7c] text-xl font-black uppercase tracking-[0.1em] rounded-none shadow-2xl" 
                               disabled={isLoading}
                           >
                               {isLoading ? <Loader2 className="animate-spin mr-3 h-7 w-7" /> : <CheckCircle className="mr-3 h-7 w-7" />}
@@ -285,6 +314,44 @@ export default function VerifyTicketPage() {
             </div>
           )}
         </main>
+
+        {/* ROUTE SELECTOR DIALOG */}
+        <Dialog open={isRouteSelectorOpen} onOpenChange={setRouteSelectorOpen}>
+            <DialogContent className="max-w-md rounded-3xl p-0 overflow-hidden border-none">
+                <DialogHeader className="bg-[#00B893] text-white p-6">
+                    <DialogTitle className="font-headline uppercase tracking-tight text-xl">Select Bus Route</DialogTitle>
+                    <DialogDescription className="text-emerald-50">Search for a route number or location name.</DialogDescription>
+                </DialogHeader>
+                <Command className="rounded-none">
+                    <CommandInput 
+                        placeholder="Search routes (e.g. 01 or Mehdipatnam)..." 
+                        onValueChange={setSearchQuery} 
+                        className="h-14 font-medium"
+                    />
+                    <CommandList className="max-h-[300px]">
+                        <CommandEmpty>No routes found.</CommandEmpty>
+                        <CommandGroup>
+                            {filteredRoutes.map((route) => (
+                                <CommandItem
+                                    key={route.routeNo}
+                                    onSelect={() => {
+                                        setRouteNo(route.routeNo);
+                                        setRouteSelectorOpen(false);
+                                        setSearchQuery('');
+                                    }}
+                                    className="flex items-center gap-4 p-4 cursor-pointer hover:bg-slate-50 border-b border-slate-50 last:border-none"
+                                >
+                                    <div className="w-10 h-10 bg-[#0A2B70] text-white rounded-lg flex items-center justify-center font-bold">
+                                        {route.routeNo}
+                                    </div>
+                                    <span className="font-black text-slate-800 uppercase text-xs">{route.routeName}</span>
+                                </CommandItem>
+                            ))}
+                        </CommandGroup>
+                    </CommandList>
+                </Command>
+            </DialogContent>
+        </Dialog>
       </div>
     </AuthGuard>
   );
