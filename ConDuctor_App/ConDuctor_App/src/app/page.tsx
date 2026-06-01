@@ -10,19 +10,19 @@ import AuthGuard from '@/components/AuthGuard';
 export default function ConductorDashboardPage() {
   const serviceLinks = [
     {
-      href: '/ticket',
+      href: '/conductor/ticket',
       title: 'Ticket Tools',
       description: 'Verify codes and handle upgrades.',
       icon: <Ticket className="h-8 w-8 text-[#00B893]" />,
     },
     {
-      href: '/bus-pass',
+      href: '/conductor/bus-pass',
       title: 'Bus Pass Verification',
       description: 'Validate student and citizen passes.',
       icon: <BookUser className="h-8 w-8 text-[#0A2B70]" />,
     },
     {
-      href: '/stats',
+      href: '/conductor/stats',
       title: 'Verification Insights',
       description: 'Real-time analytics for your session.',
       icon: <BarChart3 className="h-8 w-8 text-indigo-600" />,

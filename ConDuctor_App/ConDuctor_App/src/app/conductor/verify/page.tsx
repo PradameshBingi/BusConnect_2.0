@@ -180,7 +180,7 @@ export default function VerifyTicketPage() {
           {status === 'found' && ticket && (
             <div className="w-full max-w-md space-y-6">
               {justValidated ? (
-                  /* FINAL PINK TICKET - Adjusted values reflected here */
+                  /* FINAL PINK TICKET */
                   <div className="animate-in slide-in-from-bottom-4 duration-500">
                       <ValidatedTicket ticket={{
                         ...ticket, 
@@ -219,7 +219,7 @@ export default function VerifyTicketPage() {
                       </CardHeader>
 
                       <CardContent className="space-y-6 px-8 pt-6">
-                          {/* BOXED ROUTES */}
+                          {/* BOXED ROUTES matching reference image */}
                           <div className="flex justify-between items-center p-6 bg-slate-50 rounded-3xl border border-slate-100 shadow-inner">
                               <div className="text-center flex-1">
                                   <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">FROM</p>
@@ -273,7 +273,7 @@ export default function VerifyTicketPage() {
 
                           {/* SECURITY PIN SECTION */}
                           <div className="bg-[#F0FDF4] p-8 rounded-3xl border border-[#DCFCE7] flex flex-col items-center">
-                              <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4">SECURITY CODE</p>
+                              <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4">SECURITY PIN</p>
                               <div className="flex flex-col items-center gap-4">
                                   {showPin ? (
                                       <p className="text-5xl font-mono font-black text-[#0A2B70] tracking-[0.3em]">
