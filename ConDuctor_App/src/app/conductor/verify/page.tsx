@@ -11,6 +11,7 @@ import { API_ENDPOINTS } from '@/lib/api-config';
 import { cn } from '@/lib/utils';
 import { ValidatedTicket } from '@/app/components/validated-ticket';
 import { Separator } from '@/components/ui/separator';
+import AuthGuard from '@/app/components/AuthGuard';
 
 export const dynamic = "force-dynamic";
 
@@ -89,6 +90,7 @@ export default function VerifyTicketPage() {
     };
 
   return (
+    <AuthGuard>  
     <>
       <Header showBackButton={true} backHref="/conductor/ticket" title="Verify Ticket" />
       <div className="flex flex-col items-center bg-slate-50 p-4 min-h-screen space-y-4">
@@ -222,5 +224,6 @@ export default function VerifyTicketPage() {
         )}
       </div>
     </>
+    </AuthGuard>
   );
 }

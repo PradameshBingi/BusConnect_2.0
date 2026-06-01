@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Ticket, Bus, ChevronRight, BarChart } from 'lucide-react';
 import Header from '@/app/components/header';
+import AuthGuard from '@/app/components/AuthGuard';
 
 export default function ConductorTicketPage() {
   /**
@@ -36,6 +37,7 @@ export default function ConductorTicketPage() {
   ];
 
   return (
+    <AuthGuard>
     <>
       <Header showBackButton={true} backHref="/conductor/dashboard" title="Ticket Tools" />
       <div className="p-4 md:p-8">
@@ -62,5 +64,6 @@ export default function ConductorTicketPage() {
         </div>
       </div>
     </>
+    </AuthGuard>
   );
 }

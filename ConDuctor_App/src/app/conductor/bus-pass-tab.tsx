@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Search, CheckCircle, XCircle, Clock, Loader2, ArrowRight, User } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
+import AuthGuard from '@/app/components/AuthGuard';
 
 export default function BusPassTab() {
     const [passCode, setPassCode] = useState('');
@@ -57,6 +58,7 @@ export default function BusPassTab() {
     };
 
     return (
+        <AuthGuard>
         <div className="space-y-6">
             <Card className="border-none shadow-lg overflow-hidden rounded-3xl">
                 <CardHeader className="bg-[#E11D48] text-white p-6">
@@ -157,6 +159,6 @@ export default function BusPassTab() {
                     <Button variant="outline" className="mt-6 w-full h-12 rounded-xl" onClick={() => setStatus('idle')}>Search Again</Button>
                 </Card>
             )}
-        </div>
+        </div> </AuthGuard>
     );
 }

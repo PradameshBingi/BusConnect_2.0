@@ -8,6 +8,7 @@ import Header from '@/app/components/header';
 import { HelpCircle, User, Briefcase, Zap, Mail, Linkedin } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import AuthGuard from '@/app/components/AuthGuard';
 
 
 const conductorFaqs = [
@@ -57,7 +58,7 @@ const howItWorksSteps = [
 ];
 
 export default function HelpPage() {
-  return (
+  return ( <AuthGuard>
     <>
       <Header showBackButton={true} backHref="/" title="Help & FAQs" />
       <div className="p-4 md:p-8 max-w-3xl mx-auto space-y-8">
@@ -143,6 +144,6 @@ export default function HelpPage() {
                   </CardContent>
           </Card>
       </div>
-    </>
+    </> </AuthGuard>
   );
 }

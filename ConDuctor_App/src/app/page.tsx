@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import AuthGuard from '@/app/components/AuthGuard';
 import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -71,7 +72,7 @@ export default function ConductorDashboardPage() {
     },
   ];
 
-  return (
+  return ( <AuthGuard>
     <div className="min-h-screen bg-slate-50 flex flex-col">
       {/* Reference 2: TGSRTC Sticky Custom Header (Replaced standard bg-primary with explicit fallback classes) */}
       <header className="bg-primary text-white p-4 flex items-center justify-between sticky top-0 z-50 shadow-sm h-16 w-full">
@@ -156,6 +157,6 @@ export default function ConductorDashboardPage() {
           </div>
         </div>
       </main>
-    </div>
+    </div> </AuthGuard>
   );
 }

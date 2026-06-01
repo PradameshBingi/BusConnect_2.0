@@ -1,6 +1,7 @@
 
 'use client';
 
+import AuthGuard from '@/app/components/AuthGuard';
 import { useState, useEffect } from 'react';
 import Header from '@/app/components/header';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -161,6 +162,7 @@ export default function ConductorStatsPage() {
   const hasData = stats && (stats.totalTickets > 0 || stats.verifiedTickets > 0 || stats.totalPassesVerified > 0);
 
   return (
+    <AuthGuard>
     <div className="min-h-screen bg-slate-50 flex flex-col">
       <Header showBackButton={true} backHref="/conductor/dashboard" title="Verification Insights" />
       <div className="p-4 md:p-8 max-w-5xl mx-auto space-y-8 pb-32 flex-grow">
@@ -382,6 +384,6 @@ export default function ConductorStatsPage() {
           </Card>
         )}
       </div>
-    </div>
+    </div> </AuthGuard>
   );
 }

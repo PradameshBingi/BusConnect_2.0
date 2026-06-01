@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { API_ENDPOINTS } from '@/lib/api-config';
 import { cn } from '@/lib/utils';
 import { ValidatedTicket } from '@/app/components/validated-ticket';
+import AuthGuard from '@/app/components/AuthGuard';
 
 export default function VerifyTab() {
     const [ticketCode, setTicketCode] = useState('');
@@ -85,6 +86,7 @@ export default function VerifyTab() {
     };
 
     return (
+        <AuthGuard>
         <div className="space-y-6">
             <Card className="border-none shadow-lg overflow-hidden rounded-3xl">
                 <CardHeader className="bg-slate-900 text-white p-6">
@@ -209,6 +211,6 @@ export default function VerifyTab() {
                     </Button>
                 </div>
             )}
-        </div>
+        </div> </AuthGuard>
     );
 }

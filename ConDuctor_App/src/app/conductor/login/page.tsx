@@ -109,8 +109,8 @@ export default function LoginPage() {
                 <div className="relative">
                   <Input 
                     id="phone" 
-                    type="tel" 
-                    placeholder="Mobile Number" 
+                    type="password" 
+                    placeholder="ID Number" 
                     value={phone} 
                     onChange={handlePhoneChange} 
                     required 
