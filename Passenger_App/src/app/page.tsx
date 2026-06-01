@@ -40,6 +40,13 @@ export default function Home() {
       icon: <Ticket className="h-6 w-6 text-purple-600" />,
       bgColor: 'bg-purple-50'
     },
+    // { 
+    //      href: '/conductor', 
+    //      title: 'Conductor Tool', 
+    //      description: 'Verify tickets and check fares.', 
+    //      icon: <User className="h-6 w-6 text-red-500" />,
+    //      bgColor: 'bg-red-50'
+    // },
     { 
       href: '/wallet', 
       title: 'My Wallet', 

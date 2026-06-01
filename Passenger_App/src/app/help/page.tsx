@@ -5,7 +5,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import Header from '@/app/components/header';
-import { HelpCircle, User, Zap, Edit3, ShieldCheck, Linkedin, Mail, Globe } from "lucide-react";
+import { HelpCircle, User, Zap, Edit3, ShieldCheck, Linkedin , Mail, Globe } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 

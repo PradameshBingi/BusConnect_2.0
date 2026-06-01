@@ -61,7 +61,7 @@ export default function LoginPage() {
           localStorage.setItem('currentUser', phone);
           localStorage.setItem('sessionId', newSessionId);
           
-          toast({ title: "Login Successful", description: "Welcome to BusConnect Dashboard." });
+          toast({ title: "Login Successful", description: "Welcome to BusConnect Passenger Dashboard." });
           router.push('/');
         } catch (err) {
           toast({ variant: 'destructive', title: "Login Error", description: "Failed to establish secure session." });
