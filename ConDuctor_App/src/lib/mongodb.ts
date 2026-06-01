@@ -51,7 +51,7 @@ const TicketSchema = new mongoose.Schema({
   to: { type: String, required: true },
   routeNo: String,
   passengers: String,
-  bookedBy: String, // Added to track passenger mobile for refunds
+  bookedBy: String,
   quantities: {
     Men: { type: Number, default: 0 },
     Child: { type: Number, default: 0 },
@@ -88,6 +88,29 @@ const UserSchema = new mongoose.Schema({
 
 export function getUserModel() {
   return mongoose.models.User || mongoose.model('User', UserSchema);
+}
+
+// Conductor Schema for Session Management
+const ConductorSchema = new mongoose.Schema({
+  conductorId: { type: String, unique: true, required: true },
+  sessionId: String,
+  lastActive: { type: Date, default: Date.now }
+}, { timestamps: true, collection: 'conductors' });
+
+export function getConductorModel() {
+  return mongoose.models.Conductor || mongoose.model('Conductor', ConductorSchema);
+}
+
+// Conductor Log Schema for Verification Stats
+const ConductorLogSchema = new mongoose.Schema({
+  conductorId: { type: String, required: true },
+  type: { type: String, enum: ['ticket', 'pass'], required: true },
+  data: mongoose.Schema.Types.Mixed,
+  timestamp: { type: Date, default: Date.now }
+}, { timestamps: true, collection: 'conductor_logs' });
+
+export function getConductorLogModel() {
+  return mongoose.models.ConductorLog || mongoose.model('ConductorLog', ConductorLogSchema);
 }
 
 // Bus Pass Schema

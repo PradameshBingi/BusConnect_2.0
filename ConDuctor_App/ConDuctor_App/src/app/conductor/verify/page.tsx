@@ -1,7 +1,6 @@
-
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -99,17 +98,27 @@ export default function VerifyTicketPage() {
                 toast({ title: "Refund Issued", description: `Rs. ${result.refunded} credited to passenger wallet.` });
             }
 
-            // Record verification for local stats
-            const vStats = JSON.parse(localStorage.getItem('conductorVerificationStats') || '[]');
-            vStats.push({
-                ticketCode: updatedTicket.ticketCode,
-                verifiedAt: new Date().toISOString(),
-                from: updatedTicket.from,
-                to: updatedTicket.to,
-                busType: updatedTicket.busType,
-                totalFare: updatedTicket.totalFare
-            });
-            localStorage.setItem('conductorVerificationStats', JSON.stringify(vStats));
+            // Sync Log to MongoDB
+            const conductorId = localStorage.getItem('conductorUser');
+            if (conductorId) {
+                await fetch('/api/conductor-logs', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        conductorId,
+                        type: 'ticket',
+                        data: {
+                            ticketCode: updatedTicket.ticketCode,
+                            from: updatedTicket.from,
+                            to: updatedTicket.to,
+                            busType: actualBusType,
+                            totalFare: updatedTicket.totalFare,
+                            passengers: updatedTicket.passengers,
+                            quantities: updatedTicket.quantities
+                        }
+                    })
+                });
+            }
             
             setTicket(updatedTicket);
             setJustValidated(true);
@@ -127,7 +136,6 @@ export default function VerifyTicketPage() {
         <Header showBackButton={true} backHref="/conductor/ticket" title="Verify Ticket" />
         
         <main className="flex flex-col items-center p-4 space-y-6 pb-32">
-          {/* PERSISTENT STRUCTURED SEARCH CARD */}
           <Card className="w-full max-w-md shadow-sm border-slate-200">
             <CardHeader className="pb-3">
                 <CardTitle className="font-headline text-xl uppercase">Verify Ticket Code</CardTitle>
@@ -139,7 +147,6 @@ export default function VerifyTicketPage() {
                     TKT-
                 </div>
                 
-                {/* Searchable Route Selector */}
                 <Button 
                     variant="outline" 
                     className="h-12 w-16 border-2 border-slate-200 rounded-xl font-bold text-lg"
@@ -150,7 +157,6 @@ export default function VerifyTicketPage() {
 
                 <div className="text-slate-400 font-bold">-</div>
 
-                {/* Dedicated Rectangular Code Box */}
                 <Input 
                   placeholder="XXXXX" 
                   value={ticketDigits} 
@@ -180,7 +186,6 @@ export default function VerifyTicketPage() {
           {status === 'found' && ticket && (
             <div className="w-full max-w-md space-y-6">
               {justValidated ? (
-                  /* FINAL PINK TICKET */
                   <div className="animate-in slide-in-from-bottom-4 duration-500">
                       <ValidatedTicket ticket={{
                         ...ticket, 
@@ -207,7 +212,6 @@ export default function VerifyTicketPage() {
                       </CardHeader>
                   </Card>
               ) : (
-                  /* HIGH FIDELITY JOURNEY DETAILS PREVIEW CARD */
                   <Card className="overflow-hidden shadow-2xl bg-white border-none rounded-[2rem] border-t-8 border-t-[#00B893] animate-in slide-in-from-bottom-4 duration-500">
                       <CardHeader className="text-center pb-2 pt-8 relative">
                           <RefreshCcw 
@@ -219,7 +223,6 @@ export default function VerifyTicketPage() {
                       </CardHeader>
 
                       <CardContent className="space-y-6 px-8 pt-6">
-                          {/* BOXED ROUTES matching reference image */}
                           <div className="flex justify-between items-center p-6 bg-slate-50 rounded-3xl border border-slate-100 shadow-inner">
                               <div className="text-center flex-1">
                                   <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">FROM</p>
@@ -256,7 +259,6 @@ export default function VerifyTicketPage() {
                                </div>
                           </div>
 
-                          {/* CATEGORY SELECTOR FOR FARE ADJUSTMENT & REFUND */}
                           <div className="bg-slate-50 p-5 rounded-2xl border border-slate-100">
                                <p className="text-[9px] font-black text-slate-400 uppercase mb-3 text-center tracking-widest">ACTUAL BOARDING CATEGORY</p>
                                <Select value={actualBusType} onValueChange={setActualBusType}>
@@ -271,7 +273,6 @@ export default function VerifyTicketPage() {
                                </Select>
                           </div>
 
-                          {/* SECURITY PIN SECTION */}
                           <div className="bg-[#F0FDF4] p-8 rounded-3xl border border-[#DCFCE7] flex flex-col items-center">
                               <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4">SECURITY PIN</p>
                               <div className="flex flex-col items-center gap-4">
@@ -317,7 +318,6 @@ export default function VerifyTicketPage() {
           )}
         </main>
 
-        {/* SEARCHABLE ROUTE SELECTOR DIALOG */}
         <Dialog open={isRouteSelectorOpen} onOpenChange={setRouteSelectorOpen}>
             <DialogContent className="max-w-md rounded-3xl p-0 overflow-hidden border-none">
                 <DialogHeader className="bg-[#00B893] text-white p-6">
