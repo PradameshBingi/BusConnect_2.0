@@ -81,8 +81,6 @@ export default function VerifyTicketPage() {
         setIsLoading(true);
 
         try {
-            // We pass actualBusType to the API. 
-            // The API handles fare recalculation and wallet refund if actual < booked.
             const response = await fetch(`${API_ENDPOINTS.USE}/${ticket.ticketCode}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -129,7 +127,7 @@ export default function VerifyTicketPage() {
         <Header showBackButton={true} backHref="/conductor/ticket" title="Verify Ticket" />
         
         <main className="flex flex-col items-center p-4 space-y-6 pb-32">
-          {/* STRUCTURED SEARCH CARD */}
+          {/* PERSISTENT STRUCTURED SEARCH CARD */}
           <Card className="w-full max-w-md shadow-sm border-slate-200">
             <CardHeader className="pb-3">
                 <CardTitle className="font-headline text-xl uppercase">Verify Ticket Code</CardTitle>
@@ -152,7 +150,7 @@ export default function VerifyTicketPage() {
 
                 <div className="text-slate-400 font-bold">-</div>
 
-                {/* Dedicated Code Box */}
+                {/* Dedicated Rectangular Code Box */}
                 <Input 
                   placeholder="XXXXX" 
                   value={ticketDigits} 
@@ -258,7 +256,7 @@ export default function VerifyTicketPage() {
                                </div>
                           </div>
 
-                          {/* CATEGORY SELECTOR FOR FARE ADJUSTMENT */}
+                          {/* CATEGORY SELECTOR FOR FARE ADJUSTMENT & REFUND */}
                           <div className="bg-slate-50 p-5 rounded-2xl border border-slate-100">
                                <p className="text-[9px] font-black text-slate-400 uppercase mb-3 text-center tracking-widest">ACTUAL BOARDING CATEGORY</p>
                                <Select value={actualBusType} onValueChange={setActualBusType}>
