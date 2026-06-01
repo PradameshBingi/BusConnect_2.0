@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
-import dbConnect, { getTicketModel } from '@/lib/mongodb';
+import dbConnect, { getTicketModel, getUserModel } from '@/lib/mongodb';
+import { calculateFare } from '@/lib/fare-calculator';
 
 export const dynamic = "force-dynamic";
 
@@ -19,13 +20,8 @@ export async function POST(
     const { code } = await params;
     const ticketCode = code.toUpperCase();
     
-    let updateData: any = {};
-    try {
-      const text = await request.text();
-      updateData = text ? JSON.parse(text) : {};
-    } catch (e) {
-      updateData = {};
-    }
+    const body = await request.json().catch(() => ({}));
+    const actualBusType = body.actualBusType;
     
     const Ticket = getTicketModel();
     const ticket = await Ticket.findOne({ ticketCode });
@@ -39,30 +35,49 @@ export async function POST(
       return NextResponse.json({ status: "cancelled", message: "Ticket is cancelled" }, { status: 400 });
     }
 
-    // Re-implemented Auto-expire check during the validation process
-    if (ticket.status === 'valid') {
-        const now = new Date();
-        const createdAt = new Date(ticket.createdAt);
-        const expiryTime = new Date(createdAt.getTime() + 10 * 60 * 1000);
+    // Auto-expire check
+    const now = new Date();
+    const createdAt = new Date(ticket.createdAt);
+    const expiryTime = new Date(createdAt.getTime() + 10 * 60 * 1000);
 
-        if (now > expiryTime) {
-            ticket.status = 'expired';
-            await ticket.save();
-            return NextResponse.json({ status: "expired", message: "Ticket has expired and cannot be validated" }, { status: 400 });
+    if (now > expiryTime && ticket.status === 'valid') {
+        ticket.status = 'expired';
+        await ticket.save();
+        return NextResponse.json({ status: "expired", message: "Ticket has expired" }, { status: 400 });
+    }
+
+    // Handle Category Downgrade Refund
+    let refundAmount = 0;
+    if (actualBusType && actualBusType !== ticket.busType) {
+        const newFare = calculateFare(ticket.from, ticket.to, ticket.quantities, actualBusType);
+        const oldFare = ticket.totalFare;
+        
+        if (newFare < oldFare) {
+            refundAmount = oldFare - newFare;
+            
+            // Credit refund to user's wallet
+            if (ticket.bookedBy) {
+                const User = getUserModel();
+                await User.findOneAndUpdate(
+                    { phone: ticket.bookedBy },
+                    { $inc: { wallet: refundAmount } }
+                );
+            }
         }
-    } else if (ticket.status === 'expired') {
-        return NextResponse.json({ status: "expired", message: "Ticket has already expired" }, { status: 400 });
+        
+        ticket.busType = actualBusType;
+        ticket.totalFare = newFare;
     }
 
     ticket.status = "used";
     ticket.validatedAt = new Date();
-
-    if (updateData.busType) ticket.busType = updateData.busType;
-    if (updateData.totalFare) ticket.totalFare = updateData.totalFare;
-    if (updateData.fare) ticket.fare = updateData.fare;
-
     await ticket.save();
-    return NextResponse.json({ status: "updated", ticket: ticket.toObject() });
+
+    return NextResponse.json({ 
+        status: "updated", 
+        ticket: ticket.toObject(),
+        refunded: refundAmount > 0 ? refundAmount : null
+    });
 
   } catch (err: any) {
     console.error("❌ API /use-ticket Error:", err);

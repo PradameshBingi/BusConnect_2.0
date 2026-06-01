@@ -45,12 +45,13 @@ async function dbConnect() {
 
 export default dbConnect;
 
-// Ticket Schema (Stored in 'tickets' collection)
+// Ticket Schema
 const TicketSchema = new mongoose.Schema({
   from: { type: String, required: true },
   to: { type: String, required: true },
   routeNo: String,
   passengers: String,
+  bookedBy: String, // Added to track passenger mobile for refunds
   quantities: {
     Men: { type: Number, default: 0 },
     Child: { type: Number, default: 0 },
@@ -78,7 +79,18 @@ export function getTicketModel() {
   return mongoose.models.Ticket || mongoose.model('Ticket', TicketSchema);
 }
 
-// Bus Pass Schema (Stored in 'bus_passes' collection)
+// User Schema for Wallet Refunds
+const UserSchema = new mongoose.Schema({
+  phone: { type: String, unique: true, required: true },
+  wallet: { type: Number, default: 0 },
+  sessionId: String
+}, { timestamps: true, collection: 'users' });
+
+export function getUserModel() {
+  return mongoose.models.User || mongoose.model('User', UserSchema);
+}
+
+// Bus Pass Schema
 const BusPassSchema = new mongoose.Schema({
   passCode: { type: String, unique: true, required: true },
   name: String,
@@ -93,7 +105,7 @@ const BusPassSchema = new mongoose.Schema({
 }, { 
   timestamps: true,
   collection: 'bus_passes',
-  strict: false // Flexible schema for manual Atlas updates
+  strict: false
 });
 
 export function getBusPassModel() {
