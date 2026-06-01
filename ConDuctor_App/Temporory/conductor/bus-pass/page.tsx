@@ -11,7 +11,6 @@ import { Separator } from '@/components/ui/separator';
 import { Search, CheckCircle, XCircle, Clock, Loader2, ArrowRight, User } from 'lucide-react';
 import Header from '@/app/components/header';
 import { useToast } from "@/hooks/use-toast";
-import AuthGuard from '@/app/components/AuthGuard';
 
 type VerificationStatus = 'idle' | 'loading' | 'not_found' | 'expired' | 'valid';
 
@@ -118,7 +117,6 @@ export default function BusPassPage() {
     };
 
   return (
-    <AuthGuard>
     <div className="min-h-screen bg-slate-50 flex flex-col">
       <Header showBackButton={true} backHref="/conductor/dashboard" title="Verify Bus Pass" />
       
@@ -132,7 +130,7 @@ export default function BusPassPage() {
             <CardContent>
               <form onSubmit={handleVerification} className="grid gap-4">
                 <div className="grid gap-2">
-                  <Label htmlFor="pass-code">Bus Pass Code</Label>
+                  <Label htmlFor="pass-code">Bus Pass No</Label>
                   <Input
                     id="pass-code"
                     placeholder="e.g., TK98765400"
@@ -269,6 +267,5 @@ export default function BusPassPage() {
         )}
       </div>
     </div>
-    </AuthGuard>
   );
 }

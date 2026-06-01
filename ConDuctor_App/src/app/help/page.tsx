@@ -5,43 +5,10 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import Header from '@/app/components/header';
-import { HelpCircle, User, Briefcase, Zap } from "lucide-react";
+import { HelpCircle, User, Briefcase, Zap, Mail, Linkedin } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 
-const passengerFaqs = [
-  {
-    question: "How do I book a ticket?",
-    answer: "Navigate to 'Book Bus Tickets' from the home screen, select your bus type, choose your starting point and destination, add passengers, and generate your ticket. You can also use your wallet balance for payment."
-  },
-  {
-    question: "How is the fare calculated?",
-    answer: "Fares are based on distance. Women travel free on City Ordinary and Metro Express buses under the Maha Lakshmi scheme. Surcharges apply for men and children on premium services (Metro Express and Metro Deluxe), and for women on Metro Deluxe buses."
-  },
-  {
-    question: "How do I cancel my ticket?",
-    answer: "Go to your 'Booking History'. If a ticket is still valid (within 1 minute of booking), you'll see a 'Cancel Ticket' button. A 10% cancellation fee on the original fare is applied, and any amount you paid is credited automatically to your wallet."
-  },
-  {
-    question: "What happens if my ticket expires?",
-    answer: "If your ticket expires (after the 1-minute cancellation window), it can no longer be used for travel. However, the amount you paid, minus a 10% processing fee, will be automatically credited to your wallet since the ticket was not used."
-  },
-  {
-    question: "How do I upgrade my ticket?",
-    answer: "If you have a valid ticket and wish to travel on a higher-tier bus, you can upgrade it in 'Booking History'. The system calculates the fare difference, which you can pay digitally. Your ticket is updated instantly."
-  },
-  {
-    question: "What if I have no mobile network while boarding?",
-    answer: "Your ticket details are stored locally in your browser. Simply open your 'Booking History' to show the conductor your Ticket Code and Security PIN. An active internet connection is not required for verification once the ticket is booked."
-  },
-  {
-    question: "Is the digital payment secure?",
-    answer: "Yes. BusConnect uses a secure, simulated payment gateway that mimics industry-standard encryption. Your transactions are safe, and your sensitive data is never stored in plain text."
-  },
-  {
-    question: "Can I book a ticket for someone else?",
-    answer: "Yes! You can book a ticket on your device and share the 10-digit Ticket Code and 5-digit Security PIN with the person travelling. The conductor will use these codes to verify their journey."
-  },
-];
 
 const conductorFaqs = [
   {
@@ -96,7 +63,7 @@ export default function HelpPage() {
       <div className="p-4 md:p-8 max-w-3xl mx-auto space-y-8">
         <div className="flex items-center gap-3 mb-2">
           <HelpCircle className="h-8 w-8 text-primary" />
-          <h1 className="text-2xl font-bold font-headline">Help & FAQs</h1>
+          <h1 className="text-2xl font-bold font-headline">Conductor Support</h1>
         </div>
 
         {/* How It Works Section */}
@@ -125,29 +92,8 @@ export default function HelpPage() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 font-headline">
-              <User className="h-6 w-6" />
-              For Passengers
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Accordion type="single" collapsible className="w-full">
-              {passengerFaqs.map((faq, index) => (
-                <AccordionItem value={`p-item-${index}`} key={index}>
-                  <AccordionTrigger className="text-left font-semibold font-body">{faq.question}</AccordionTrigger>
-                  <AccordionContent className="text-muted-foreground font-body">
-                    {faq.answer}
-                  </AccordionContent>
-                </AccordionItem>
-              ))}
-            </Accordion>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 font-headline">
               <Briefcase className="h-6 w-6" />
-              For Conductors
+              Frequently Asked Questions
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -163,6 +109,39 @@ export default function HelpPage() {
             </Accordion>
           </CardContent>
         </Card>
+
+         {/* Developer Contact Card */}
+                <Card className="border-none shadow-xl rounded-3xl overflow-hidden bg-slate-900 text-white">
+                  <CardContent className="p-8 text-center space-y-6">
+                    <div className="space-y-1">
+                      <p className="text-[10px] uppercase font-black tracking-[0.3em] text-slate-400">Conceptualized & Developed by</p>
+                      <h2 className="text-3xl font-black tracking-tighter">BINGI PRADAMESH</h2>
+                    </div>
+                    
+                    <p className="text-sm text-slate-400 leading-relaxed max-w-xs mx-auto">
+                      Have questions about this prototype or technical inquiries? Reach out via professional channels.
+                    </p>
+        
+                    <div className="flex flex-wrap justify-center gap-3">
+                      <Button variant="outline" className="bg-white/5 border-white/10 hover:bg-white/10 text-white rounded-xl h-12 px-6" asChild>
+                        <a href="mailto:pradameshbingi043@gmail.com" target="_blank" rel="noopener noreferrer">
+                          <Mail className="mr-2 h-4 w-4 text-primary" />
+                          Email Me
+                        </a>
+                      </Button>
+                      <Button variant="outline" className="bg-white/5 border-white/10 hover:bg-white/10 text-white rounded-xl h-12 px-6" asChild>
+                        <a href="https://www.linkedin.com/in/pradamesh-043-bingi" target="_blank" rel="noopener noreferrer">
+                          <Linkedin className="mr-2 h-4 w-4 text-[#0077B5]" />
+                          LinkedIn
+                        </a>
+                      </Button>
+                    </div>
+        
+                    <div className="pt-4 border-t border-white/5">
+                      <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Thank You For Visiting.😎👍</p>
+                    </div>
+                  </CardContent>
+          </Card>
       </div>
     </>
   );

@@ -1,8 +1,6 @@
 'use client';
 
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button'; // Imported Button to fix compilation errors
 import { 
@@ -15,22 +13,10 @@ import {
   Info,       // Added missing icon
   Bell,       // Added missing icon
   MessageSquare, // Added missing icon
-  Globe,         //Adding missing icon
-  User ,        // Added user icon
-  LogOut
+  Globe       // Added missing icon
 } from 'lucide-react';
 
 export default function ConductorDashboardPage() {
-
-  const router = useRouter();
-  const [showProfileMenu, setShowProfileMenu] = useState(false);
-  useEffect(() => {
-    const user = localStorage.getItem('currentUser');
-    if (!user) {
-      router.replace('/conductor/login');
-    }
-  }, [router]);
-
   const serviceLinks = [
     {
       href: '/conductor/ticket',
@@ -50,12 +36,12 @@ export default function ConductorDashboardPage() {
       description: 'Real-time analytics for tickets and bus passes.',
       icon: <BarChart3 className="h-8 w-8 text-indigo-600" />,
     },
-    // {
-    //   href: '/conductor/pass-data',
-    //   title: 'Sample Bus Pass Data',
-    //   description: 'View pass codes for testing verification.',
-    //   icon: <Database className="h-8 w-8 text-amber-500" />,
-    // },
+    {
+      href: '/conductor/pass-data',
+      title: 'Sample Bus Pass Data',
+      description: 'View pass codes for testing verification.',
+      icon: <Database className="h-8 w-8 text-amber-500" />,
+    },
     // Reference 1: Integrated Help & About Links safely mapped into layout styling
     { 
       href: '/help', 
@@ -86,40 +72,10 @@ export default function ConductorDashboardPage() {
           <h1 className="text-xl font-bold tracking-wider font-headline uppercase">TGSRTC</h1>
         </div>
         <div className="flex items-center gap-4">
-        {/*For User  Icon to logout*/}  
-        <div className="relative">
-  <User
-    className="h-5 w-5 cursor-pointer hover:opacity-80"
-    onClick={() => setShowProfileMenu(!showProfileMenu)}
-  />
-
-  {showProfileMenu && (
-    <div className="absolute right-0 top-8 w-64 bg-white rounded-2xl shadow-lg border overflow-hidden z-50">
-      <div className="px-4 py-3 bg-gray-100">
-        <h3 className="text-xl font-semibold text-gray-900">
-          Account
-        </h3>
-      </div>
-
-      <button
-        onClick={() => {
-          localStorage.removeItem('currentUser');
-          localStorage.removeItem('sessionId');
-          router.push('/conductor/login');
-        }}
-        className="w-full flex items-center gap-3 px-4 py-4 text-red-500 hover:bg-red-50 transition-colors"
-      >
-        <LogOut className="h-5 w-5" />
-        <span className="font-semibold text-lg">Logout</span>
-      </button>
-    </div>
-  )}
-</div> {/*for user icon to logout*/}
-
           <Bell className="h-5 w-5 cursor-pointer hover:opacity-80" />
           <MessageSquare className="h-5 w-5 cursor-pointer hover:opacity-80" />
-          <Globe className="h-5 w-5 cursor-pointer hover:opacity-80" />    
-</div>
+          <Globe className="h-5 w-5 cursor-pointer hover:opacity-80" />
+        </div>
       </header>
       
       <main className="flex-grow flex flex-col items-center pt-8 p-4 w-full">

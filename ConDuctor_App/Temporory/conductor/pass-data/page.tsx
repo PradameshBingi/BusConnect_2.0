@@ -5,10 +5,9 @@ import { Badge } from '@/components/ui/badge';
 import { busPasses } from '@/lib/bus-passes';
 import { Database, User } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import AuthGuard from '@/app/components/AuthGuard';
 
 export default function SamplePassDataPage() {
-  return ( <AuthGuard>
+  return (
     <>
       <Header showBackButton={true} backHref="/conductor/dashboard" title="Sample Bus Pass Data" />
       <div className="p-4 md:p-8 max-w-2xl mx-auto">
@@ -51,6 +50,6 @@ export default function SamplePassDataPage() {
           )})}
         </div>
       </div>
-    </> <AuthGuard>
+    </>
   );
 }

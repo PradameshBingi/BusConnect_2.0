@@ -13,7 +13,6 @@ import { API_ENDPOINTS } from '@/lib/api-config';
 import { cn } from '@/lib/utils';
 import Header from '@/app/components/header';
 import { ValidatedTicket } from '@/app/components/validated-ticket';
-import AuthGuard from '@/app/components/AuthGuard';
 
 type BusType = 'ordinary' | 'express' | 'deluxe';
 type Quantities = { Men: number; Child: number; Women: number; };
@@ -251,7 +250,6 @@ export default function FareCheckPage() {
   }
 
   return (
-    <AuthGuard>
     <div className="min-h-screen bg-slate-50 flex flex-col">
       <Header showBackButton={true} backHref="/conductor/ticket" title="Verify Boarding Category" />
       <div className="p-4 md:p-8 flex flex-col items-center gap-8 flex-grow bg-muted/30">
@@ -304,6 +302,5 @@ export default function FareCheckPage() {
         )}
       </div>
     </div>
-    </AuthGuard>
   );
 }
