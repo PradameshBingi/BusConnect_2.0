@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useMemo } from 'react';
@@ -7,14 +8,14 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Command, CommandInput, CommandEmpty, CommandGroup, CommandItem, CommandList } from '@/components/ui/command';
-import { Search, CheckCircle, XCircle, Loader2, ArrowRight, Eye, EyeOff, RefreshCcw, ChevronDown } from 'lucide-react';
+import { Search, CheckCircle, XCircle, Loader2, ArrowRight, Eye, EyeOff, RefreshCcw } from 'lucide-react';
 import Header from '@/app/components/header';
 import { useToast } from "@/hooks/use-toast";
 import { API_ENDPOINTS } from '@/lib/api-config';
 import { cn } from '@/lib/utils';
 import { ValidatedTicket } from '@/app/components/validated-ticket';
 import { Separator } from '@/components/ui/separator';
-import AuthGuard from '@/app/components/AuthGuard';
+import AuthGuard from '@/components/AuthGuard';
 import { Badge } from '@/components/ui/badge';
 import { routes } from '@/lib/routes';
 
@@ -80,6 +81,8 @@ export default function VerifyTicketPage() {
         setIsLoading(true);
 
         try {
+            // We pass actualBusType to the API. 
+            // The API handles fare recalculation and wallet refund if actual < booked.
             const response = await fetch(`${API_ENDPOINTS.USE}/${ticket.ticketCode}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -126,7 +129,7 @@ export default function VerifyTicketPage() {
         <Header showBackButton={true} backHref="/conductor/ticket" title="Verify Ticket" />
         
         <main className="flex flex-col items-center p-4 space-y-6 pb-32">
-          {/* SEARCH CARD - STRUCTURED INPUT */}
+          {/* STRUCTURED SEARCH CARD */}
           <Card className="w-full max-w-md shadow-sm border-slate-200">
             <CardHeader className="pb-3">
                 <CardTitle className="font-headline text-xl uppercase">Verify Ticket Code</CardTitle>
@@ -138,6 +141,7 @@ export default function VerifyTicketPage() {
                     TKT-
                 </div>
                 
+                {/* Searchable Route Selector */}
                 <Button 
                     variant="outline" 
                     className="h-12 w-16 border-2 border-slate-200 rounded-xl font-bold text-lg"
@@ -148,6 +152,7 @@ export default function VerifyTicketPage() {
 
                 <div className="text-slate-400 font-bold">-</div>
 
+                {/* Dedicated Code Box */}
                 <Input 
                   placeholder="XXXXX" 
                   value={ticketDigits} 
@@ -177,7 +182,7 @@ export default function VerifyTicketPage() {
           {status === 'found' && ticket && (
             <div className="w-full max-w-md space-y-6">
               {justValidated ? (
-                  /* FINAL PINK TICKET - Adjusted fare reflected here */
+                  /* FINAL PINK TICKET - Adjusted values reflected here */
                   <div className="animate-in slide-in-from-bottom-4 duration-500">
                       <ValidatedTicket ticket={{
                         ...ticket, 
@@ -188,11 +193,10 @@ export default function VerifyTicketPage() {
                           className="w-full mt-6 h-14 bg-white border-slate-200 text-slate-500 font-black rounded-2xl uppercase tracking-widest" 
                           onClick={() => {setStatus('idle'); setTicketDigits(''); setTicket(null); setJustValidated(false);}}
                       >
-                          Done - Verify Next
+                          Verify Next Passenger
                       </Button>
                   </div>
               ) : (ticket.status === 'used' || ticket.status === 'cancelled' || ticket.status === 'expired') ? (
-                  /* INVALID STATUS CARD */
                   <Card className="overflow-hidden bg-white shadow-lg border-slate-200 animate-in zoom-in-95 duration-300">
                       <CardHeader className="text-center bg-slate-50 py-12">
                           <h1 className={cn("text-4xl font-black uppercase tracking-[0.2em]", 
@@ -205,7 +209,7 @@ export default function VerifyTicketPage() {
                       </CardHeader>
                   </Card>
               ) : (
-                  /* JOURNEY DETAILS PREVIEW CARD */
+                  /* HIGH FIDELITY JOURNEY DETAILS PREVIEW CARD */
                   <Card className="overflow-hidden shadow-2xl bg-white border-none rounded-[2rem] border-t-8 border-t-[#00B893] animate-in slide-in-from-bottom-4 duration-500">
                       <CardHeader className="text-center pb-2 pt-8 relative">
                           <RefreshCcw 
@@ -217,7 +221,7 @@ export default function VerifyTicketPage() {
                       </CardHeader>
 
                       <CardContent className="space-y-6 px-8 pt-6">
-                          {/* ROUTE BOXES - HIGH FIDELITY */}
+                          {/* BOXED ROUTES */}
                           <div className="flex justify-between items-center p-6 bg-slate-50 rounded-3xl border border-slate-100 shadow-inner">
                               <div className="text-center flex-1">
                                   <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">FROM</p>
@@ -249,12 +253,12 @@ export default function VerifyTicketPage() {
                                   <p className="font-black text-[#00B893] text-xl">Rs. {ticket.totalFare.toFixed(2)}</p>
                                </div>
                                <div className="space-y-0.5 text-right">
-                                  <p className="text-[10px] font-black text-slate-400 uppercase">WALLET REFUND?</p>
-                                  <p className="font-black text-slate-500 text-sm italic">Automatic</p>
+                                  <p className="text-[10px] font-black text-slate-400 uppercase">AUTO-REFUND?</p>
+                                  <p className="font-black text-slate-500 text-sm italic">Enabled</p>
                                </div>
                           </div>
 
-                          {/* CATEGORY SELECTOR FOR AUTO-REFUND */}
+                          {/* CATEGORY SELECTOR FOR FARE ADJUSTMENT */}
                           <div className="bg-slate-50 p-5 rounded-2xl border border-slate-100">
                                <p className="text-[9px] font-black text-slate-400 uppercase mb-3 text-center tracking-widest">ACTUAL BOARDING CATEGORY</p>
                                <Select value={actualBusType} onValueChange={setActualBusType}>
@@ -297,7 +301,7 @@ export default function VerifyTicketPage() {
 
                       <CardFooter className="p-0 flex flex-col">
                           <div className="w-full bg-[#0F172A] py-6 flex flex-col items-center gap-1">
-                              <p className="text-[10px] font-black text-slate-400 uppercase">TICKET NO</p>
+                              <p className="text-[10px] font-black text-slate-400 uppercase">TICKET ID</p>
                               <p className="text-xl font-black text-white tracking-widest">{ticket.ticketCode}</p>
                           </div>
                           <Button 
@@ -315,7 +319,7 @@ export default function VerifyTicketPage() {
           )}
         </main>
 
-        {/* ROUTE SELECTOR DIALOG */}
+        {/* SEARCHABLE ROUTE SELECTOR DIALOG */}
         <Dialog open={isRouteSelectorOpen} onOpenChange={setRouteSelectorOpen}>
             <DialogContent className="max-w-md rounded-3xl p-0 overflow-hidden border-none">
                 <DialogHeader className="bg-[#00B893] text-white p-6">
