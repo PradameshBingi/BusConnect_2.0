@@ -94,6 +94,8 @@ export default function TicketDetailPage() {
   }
 
   const isUsed = ticket.status === 'used';
+  
+  // STRICT: Use validation time for used tickets, creation time otherwise
   const displayDate = isUsed && ticket.validatedAt 
     ? new Date(ticket.validatedAt) 
     : new Date(ticket.createdAt);

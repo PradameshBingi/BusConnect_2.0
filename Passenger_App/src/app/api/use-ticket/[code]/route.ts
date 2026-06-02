@@ -56,7 +56,7 @@ export async function POST(
             ].filter(c => c.phone !== null)
         };
 
-        if (diff > 0) { // Refund (Downgrade or Quantity Decrease)
+        if (diff > 0) { // Refund (Quantity Decrease or Downgrade)
             const refundWithFee = Math.round(diff * 0.90); // 10% fee
             await Wallet.findOneAndUpdate(query, {
                 $inc: { walletBalance: refundWithFee },
@@ -70,21 +70,21 @@ export async function POST(
                 }
             }, { upsert: true });
         } else if (diff < 0) { // Deduction (Upgrade)
-            const wallet = await Wallet.findOne(query);
             const amountToDeduct = Math.abs(diff);
-            
-            if (wallet && wallet.autoDeductEnabled) {
-                await Wallet.findOneAndUpdate(query, {
-                    $inc: { walletBalance: -amountToDeduct },
-                    $push: {
-                        transactions: {
-                            type: 'debit',
-                            amount: amountToDeduct,
-                            description: `${transitionMsg || 'Adjustment'} Charge: ${ticketCode}`,
-                            date: new Date()
-                        }
-                    }
-                });
+            // We assume payment is handled on frontend, but we log the transaction in wallet if it exists
+            const wallet = await Wallet.findOne(query);
+            if (wallet) {
+               await Wallet.findOneAndUpdate(query, {
+                  $inc: { walletBalance: wallet.autoDeductEnabled ? -amountToDeduct : 0 },
+                  $push: {
+                      transactions: {
+                          type: 'debit',
+                          amount: amountToDeduct,
+                          description: `${transitionMsg || 'Adjustment'} Charge: ${ticketCode}`,
+                          date: new Date()
+                      }
+                  }
+               });
             }
         }
     }
@@ -95,10 +95,10 @@ export async function POST(
         ticket.serviceTransition.push(transitionMsg);
     }
 
-    // Status logic: modifications keep current status, empty calls are validations
+    // Status logic: modifications/upgradations keep current status, empty/explicit validation calls are 'used'
     if (updateData.status) {
         ticket.status = updateData.status;
-    } else if (Object.keys(updateData).length === 0 && ticket.status === 'valid') {
+    } else if (isValidation && ticket.status === 'valid') {
         ticket.status = 'used';
     }
 

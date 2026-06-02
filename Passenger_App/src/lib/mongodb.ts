@@ -71,18 +71,10 @@ const TicketSchema = new mongoose.Schema({
   fare: { type: Number, required: true },
   busType: { type: String, required: true },
   securityCode: { type: String, required: true },
-  bookedBy: { type: String, required: true },
+  bookedBy: { type: mongoose.Schema.Types.Mixed, required: true },
   walletAmountUsed: { type: Number, default: 0 },
   validatedAt: Date,
-  boardingChanged: { type: Boolean, default: false },
-  serviceTransition: { type: [String], default: [] },
-  actualFare: { type: Number },
-  refundAmount: { type: Number },
-  refundProcessed: { type: Boolean, default: false },
-  refundedAt: Date,
-  deductionAmount: { type: Number },
-  deductionProcessed: { type: Boolean, default: false },
-  deductedAt: Date
+  serviceTransition: { type: [String], default: [] }
 }, { 
   bufferCommands: true,
   timestamps: true,

@@ -97,7 +97,7 @@ export function ValidatedTicket({ ticket }: ValidatedTicketProps) {
   }, [ticket.from, ticket.to, displayBusType]);
 
   return (
-    <div className="w-full max-w-sm mx-auto bg-white shadow-2xl relative font-mono text-black rounded-sm overflow-hidden border border-gray-200">
+    <div className="w-full max-sm:w-[calc(100vw-2rem)] max-w-sm mx-auto bg-white shadow-2xl relative font-mono text-black rounded-sm overflow-hidden border border-gray-200">
       <div className="absolute left-0 top-0 bottom-0 w-4 bg-repeat-y z-20" style={{backgroundImage: 'linear-gradient(135deg, #ffb6c1 50%, transparent 50%), linear-gradient(-135deg, #ffb6c1 50%, transparent 50%)', backgroundSize: '8px 8px'}}></div>
       <div className="absolute right-0 top-0 bottom-0 w-4 bg-repeat-y z-20" style={{backgroundImage: 'linear-gradient(-45deg, #ffb6c1 50%, transparent 50%), linear-gradient(45deg, #ffb6c1 50%, transparent 50%)', backgroundSize: '8px 8px'}}></div>
       
