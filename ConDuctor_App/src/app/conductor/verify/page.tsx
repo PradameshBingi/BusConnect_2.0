@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useMemo } from 'react';
@@ -112,7 +111,7 @@ export default function VerifyTicketPage() {
                             ticketCode: updatedTicket.ticketCode,
                             from: updatedTicket.from,
                             to: updatedTicket.to,
-                            busType: updatedTicket.busType,
+                            busType: actualBusType,
                             totalFare: updatedTicket.totalFare,
                             passengers: updatedTicket.passengers,
                             quantities: updatedTicket.quantities

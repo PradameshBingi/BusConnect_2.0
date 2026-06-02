@@ -56,21 +56,22 @@ export async function POST(
         if (newFare < oldFare) {
             refundAmount = oldFare - newFare;
             
-            // Credit refund back to passenger wallet
+            // Credit refund back to passenger wallet using 'bookedBy' as the unique ID
             if (ticket.bookedBy) {
                 const User = getUserModel();
                 await User.findOneAndUpdate(
                     { phone: ticket.bookedBy },
-                    { $inc: { wallet: refundAmount } }
+                    { $inc: { wallet: refundAmount } },
+                    { upsert: true } // Create user if not exists (safeguard)
                 );
-                console.log(`✅ Refund of Rs. ${refundAmount} credited to wallet for: ${ticket.bookedBy}`);
+                console.log(`✅ Auto-Refund: Rs. ${refundAmount} credited to ${ticket.bookedBy}`);
             }
         }
         
         // UPDATE ticket with ACTUAL boarding details for the Pink Receipt
         ticket.busType = actualBusType;
         ticket.totalFare = newFare;
-        ticket.fare = newFare; // Also update base fare to ensure consistency
+        ticket.fare = newFare; 
     }
 
     ticket.status = "used";
