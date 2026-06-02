@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -7,7 +6,7 @@ import Link from 'next/link';
 import Header from '@/app/components/header';
 import { ValidatedTicket } from '@/app/components/validated-ticket';
 import { CountdownTimer } from '@/app/components/countdown-timer';
-import { Loader2, ArrowRight, RefreshCw, XCircle, Ticket as TicketIcon, ArrowUpCircle, FileX, Eye, EyeOff } from 'lucide-react';
+import { Loader2, ArrowRight, RefreshCw, XCircle, ArrowUpCircle, FileX, Eye, EyeOff } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -39,7 +38,6 @@ export default function TicketDetailPage() {
   const [showPin, setShowPin] = useState(false);
   const [now, setNow] = useState<number | null>(null);
   const { toast } = useToast();
-  const router = useRouter();
 
   const fetchTicket = async (silent = false) => {
     if (!ticketCode) return;
@@ -74,15 +72,6 @@ export default function TicketDetailPage() {
     toast({ title: "Copied!", description: `${fieldName} copied to clipboard.` });
   };
 
-  const getFullBusType = (type: string) => {
-    switch (type.toLowerCase()) {
-      case 'ordinary': return 'City Ordinary';
-      case 'express': return 'Metro Express';
-      case 'deluxe': return 'Metro Deluxe';
-      default: return type;
-    }
-  };
-
   if (isLoading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
@@ -97,14 +86,13 @@ export default function TicketDetailPage() {
         <Header showBackButton backHref="/booking-history" title="Ticket Not Found" />
         <div className="p-8 text-center flex flex-col items-center gap-4">
           <XCircle className="h-16 w-16 text-destructive" />
-          <p className="text-xl font-bold">The requested ticket could not be found in system records.</p>
+          <p className="text-xl font-bold">The requested ticket could not be found.</p>
           <Button asChild><Link href="/booking-history">Back to History</Link></Button>
         </div>
       </>
     );
   }
 
-  // Use Validation Time for 'Used' tickets, otherwise use creation time
   const displayDate = ticket.status === 'used' && ticket.validatedAt 
     ? new Date(ticket.validatedAt) 
     : new Date(ticket.createdAt);
@@ -114,25 +102,7 @@ export default function TicketDetailPage() {
       <>
         <Header showBackButton backHref="/booking-history" title="Validated Ticket" />
         <div className="p-4 md:p-8 flex flex-col items-center space-y-6 pb-32">
-          {/* Use validatedAt strictly for used tickets */}
           <ValidatedTicket ticket={{ ...ticket, timestamp: ticket.validatedAt || ticket.createdAt }} />
-          
-          <div className="w-full max-w-sm p-4 bg-primary/5 rounded-2xl border border-primary/20 flex flex-col items-center gap-2">
-            <p className="text-[10px] uppercase text-muted-foreground font-black tracking-[0.2em]">Security Code</p>
-            <div className="flex items-center justify-center w-full gap-3">
-              <p 
-                className="font-mono text-4xl font-black tracking-[0.3em] text-primary min-w-[140px] text-center cursor-pointer active:opacity-70 transition-opacity"
-                onClick={() => showPin && handleCopy(ticket.securityCode, 'Security PIN')}
-                title={showPin ? "Tap to Copy" : ""}
-              >
-                  {showPin ? ticket.securityCode : '•••••'}
-              </p>
-              <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full" onClick={() => setShowPin(!showPin)}>
-                  {showPin ? <EyeOff className="h-[18px] w-[18px] text-muted-foreground" /> : <Eye className="h-[18px] w-[18px] text-muted-foreground" />}
-              </Button>
-            </div>
-          </div>
-
           <Button asChild variant="ghost" className="w-full max-w-sm h-12 rounded-xl text-slate-500 font-bold"><Link href="/booking-history">Back to History</Link></Button>
         </div>
       </>
@@ -143,8 +113,6 @@ export default function TicketDetailPage() {
   const expiryTimestamp = issueDate.getTime() + 10 * 60 * 1000;
   const isCurrentlyExpired = ticket.status === 'valid' && now !== null && (now > expiryTimestamp);
   const displayStatus = isCurrentlyExpired ? 'expired' : ticket.status;
-  const totalCost = ticket.totalFare || (ticket.fare + (ticket.walletAmountUsed || 0));
-  const isHighestTier = ticket.busType.toLowerCase() === 'deluxe';
 
   return (
     <>
@@ -206,11 +174,11 @@ export default function TicketDetailPage() {
               </div>
               <div className="space-y-1">
                 <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest">Fare Paid</p>
-                <p className="font-bold text-primary text-base">Rs. {Math.round(totalCost)}.00</p>
+                <p className="font-bold text-primary text-base">Rs. {Math.round(ticket.totalFare)}.00</p>
               </div>
               <div className="space-y-1 text-right">
                 <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest">Bus Category</p>
-                <p className="font-bold text-primary text-base">{getFullBusType(ticket.busType)}</p>
+                <p className="font-bold text-primary text-base">{ticket.busType}</p>
               </div>
             </div>
 
@@ -221,7 +189,6 @@ export default function TicketDetailPage() {
                   <p 
                     className="font-mono text-4xl font-black tracking-[0.3em] text-primary min-w-[140px] text-center cursor-pointer active:opacity-70 transition-opacity"
                     onClick={() => showPin && handleCopy(ticket.securityCode, 'Security PIN')}
-                    title={showPin ? "Tap to Copy" : ""}
                   >
                       {showPin ? ticket.securityCode : '•••••'}
                   </p>
@@ -232,7 +199,7 @@ export default function TicketDetailPage() {
               </div>
             )}
 
-            <div className="text-center p-4 bg-slate-900 text-white rounded-2xl cursor-pointer hover:bg-slate-800 transition-colors shadow-inner" onClick={() => handleCopy(ticket.ticketCode, 'Ticket No')}>
+            <div className="text-center p-4 bg-slate-900 text-white rounded-2xl shadow-inner">
               <p className="text-[10px] uppercase text-slate-400 mb-1 font-black tracking-widest">Ticket No</p>
               <p className="font-mono text-xl font-bold break-all tracking-wider">{ticket.ticketCode}</p>
             </div>
@@ -243,14 +210,12 @@ export default function TicketDetailPage() {
           </CardContent>
           <CardFooter className="flex flex-col gap-3 p-6 pt-0">
             {displayStatus === 'valid' && (
-              <div className={cn("grid gap-3 w-full", isHighestTier ? "grid-cols-1" : "grid-cols-2")}>
-                <Button className="bg-red-600 hover:bg-red-700 h-14 font-black text-white shadow-lg border-none rounded-2xl uppercase tracking-widest text-xs" asChild>
-                  <Link href={`/ticket-cancellation?code=${ticket.ticketCode}`}>
-                    Cancel Ticket
-                  </Link>
+              <div className={cn("grid gap-3 w-full", ticket.busType === 'Metro Deluxe' ? "grid-cols-1" : "grid-cols-2")}>
+                <Button className="bg-red-600 hover:bg-red-700 h-14 font-black text-white rounded-2xl uppercase tracking-widest text-xs" asChild>
+                  <Link href={`/ticket-cancellation?code=${ticket.ticketCode}`}>Cancel Ticket</Link>
                 </Button>
-                {!isHighestTier && (
-                  <Button className="bg-accent hover:bg-accent/90 h-14 font-black shadow-lg rounded-2xl uppercase tracking-widest text-xs" asChild>
+                {ticket.busType !== 'Metro Deluxe' && (
+                  <Button className="bg-accent hover:bg-accent/90 h-14 font-black rounded-2xl uppercase tracking-widest text-xs" asChild>
                     <Link href={`/upgrade-ticket?id=${ticket.ticketCode}`}>
                       <ArrowUpCircle className="mr-2 h-4 w-4" /> Upgrade
                     </Link>

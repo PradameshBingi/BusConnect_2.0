@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { calculateFare } from '@/lib/fare-calculator';
+import { calculateFare, BUS_CATEGORIES } from '@/lib/fare-calculator';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -24,28 +24,25 @@ type Ticket = {
   securityCode: string;
   status: 'valid' | 'invalid' | 'used' | 'expired' | 'cancelled';
   createdAt: string;
-  busType: 'ordinary' | 'express' | 'deluxe';
+  busType: string;
   walletAmountUsed?: number;
 };
 
-type BusType = 'ordinary' | 'express' | 'deluxe';
-
-const busTypeMeta: { name: BusType, title: string, level: number }[] = [
-    { name: 'ordinary', title: 'City Ordinary', level: 1 },
-    { name: 'express', title: 'Metro Express', level: 2 },
-    { name: 'deluxe', title: 'Metro Deluxe', level: 3 },
+const busTypeMeta = [
+    { name: BUS_CATEGORIES.ORDINARY, level: 1 },
+    { name: BUS_CATEGORIES.EXPRESS, level: 2 },
+    { name: BUS_CATEGORIES.DELUXE, level: 3 },
 ];
 
 export function UpgradeForm({ ticket }: { ticket: Ticket }) {
     const router = useRouter();
     const { toast } = useToast();
-    const [isLoading, setIsLoading] = useState<BusType | null>(null);
+    const [isLoading, setIsLoading] = useState<string | null>(null);
     const [walletBalance, setWalletBalance] = useState(0);
     const [useWallet, setUseWallet] = useState(false);
     const [showPayment, setShowPayment] = useState(false);
     const [selectedUpgrade, setSelectedUpgrade] = useState<any>(null);
 
-    // Fetch Wallet Balance from Database
     useEffect(() => {
         const fetchWallet = async () => {
           const phone = localStorage.getItem('currentUser');
@@ -57,14 +54,14 @@ export function UpgradeForm({ ticket }: { ticket: Ticket }) {
               setWalletBalance(data.walletBalance || 0);
             }
           } catch (e) {
-            console.error("Failed to fetch wallet for upgrade form");
+            console.error("Wallet fetch failed");
           }
         };
         fetchWallet();
     }, []);
 
     const currentBusMeta = useMemo(() => {
-        const found = busTypeMeta.find(b => b.name === ticket.busType.toLowerCase());
+        const found = busTypeMeta.find(b => b.name === ticket.busType);
         return found || busTypeMeta[0];
     }, [ticket.busType]);
 
@@ -111,19 +108,13 @@ export function UpgradeForm({ ticket }: { ticket: Ticket }) {
                     busType: opt.name,
                     totalFare: opt.newTotalFare,
                     fare: Math.round((ticket.fare || 0) + opt.amountToPay),
-                    status: 'valid', // MUST preserve valid status after passenger upgrade
+                    status: 'valid',
                     createdAt: newCreatedAt 
                 })
             });
 
-            if (!response.ok) {
-                const errData = await response.json().catch(() => ({}));
-                throw new Error(errData.message || "Database update failed.");
-            }
-            
-            const result = await response.json();
+            if (!response.ok) throw new Error("Upgrade failed at database.");
 
-            // Deduct from cloud wallet if used
             if (currentUserId && opt.walletUsedForUpgrade > 0) {
                 await fetch('/api/user', {
                     method: 'POST',
@@ -132,44 +123,39 @@ export function UpgradeForm({ ticket }: { ticket: Ticket }) {
                         phone: currentUserId,
                         amount: opt.walletUsedForUpgrade,
                         type: 'debit',
-                        description: `Upgrade to ${opt.title} for ${ticket.ticketCode}`
+                        description: `Upgrade to ${opt.name} for ${ticket.ticketCode}`
                     })
                 });
             }
 
-            toast({ title: "Upgrade Successful!", description: `Ticket upgraded to ${opt.title} and timer restarted.` });
+            toast({ title: "Upgrade Successful", description: `Service updated to ${opt.name}.` });
             router.push(`/ticket/${ticket.ticketCode}`);
         } catch (error: any) {
-            toast({ variant: 'destructive', title: 'Upgrade Failed', description: error.message });
+            toast({ variant: 'destructive', title: 'Error', description: error.message });
             setIsLoading(null);
         }
     };
 
     return (
         <>
-            <Card className="w-full max-w-md border-t-8 border-t-accent shadow-xl">
-                <CardHeader>
+            <Card className="w-full max-w-md border-none shadow-2xl rounded-3xl overflow-hidden">
+                <CardHeader className="bg-accent text-white p-8">
                     <div className="flex items-center gap-3 mb-2">
-                        <div className="p-2 bg-accent/10 rounded-full">
-                            <Bus className="h-6 w-6 text-accent" />
-                        </div>
-                        <CardTitle className="text-2xl font-headline uppercase tracking-tight">Upgrade Portal</CardTitle>
+                        <Bus className="h-8 w-8 text-white" />
+                        <CardTitle className="text-2xl font-headline uppercase tracking-tight">Upgrade Service</CardTitle>
                     </div>
-                    <CardDescription>
-                        Current: <span className="font-bold text-foreground capitalize">{ticket.busType}</span><br/>
-                        Paid Fare: <span className="font-bold text-primary">Rs. {Math.round(ticket.totalFare)}</span>
+                    <CardDescription className="text-white/80">
+                        From: <span className="font-bold text-white">{ticket.busType}</span>
                     </CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-6">
-                    <Separator />
-                    
+                <CardContent className="space-y-6 p-8">
                     {walletBalance > 0 && (
-                        <div className="flex items-center justify-between rounded-xl border p-4 bg-muted/30">
-                            <div className="flex items-center gap-3">
+                        <div className="flex items-center justify-between rounded-2xl border p-4 bg-slate-50">
+                            <div className="flex items-center gap-3 text-slate-700">
                                 <Wallet className="h-6 w-6 text-primary" />
                                 <div>
-                                    <span className="font-bold text-sm">Use Wallet Balance</span>
-                                    <p className="text-xs text-muted-foreground">Available: Rs. {Math.round(walletBalance)}</p>
+                                    <p className="font-bold text-sm">Use Wallet</p>
+                                    <p className="text-[10px] text-muted-foreground uppercase font-bold">Balance: Rs. {Math.round(walletBalance)}</p>
                                 </div>
                             </div>
                             <Switch checked={useWallet} onCheckedChange={setUseWallet} disabled={!!isLoading} />
@@ -179,52 +165,31 @@ export function UpgradeForm({ ticket }: { ticket: Ticket }) {
                     {upgradeOptions.length > 0 ? (
                         <div className="space-y-4">
                             {upgradeOptions.map(opt => (
-                                <div key={opt.name} className="p-5 border-2 rounded-2xl hover:border-accent transition-colors group">
-                                    <div className="flex justify-between items-start mb-3">
-                                        <div>
-                                            <h4 className="text-lg font-black text-accent uppercase tracking-tighter">{opt.title}</h4>
-                                            <p className="text-[10px] font-bold text-muted-foreground uppercase">Next Tier Category</p>
-                                        </div>
+                                <div key={opt.name} className="p-6 border-2 rounded-2xl hover:border-accent transition-all cursor-pointer group" onClick={() => !isLoading && handleUpgradeClick(opt)}>
+                                    <div className="flex justify-between items-start mb-4">
+                                        <h4 className="text-xl font-black text-accent uppercase tracking-tighter">{opt.name}</h4>
                                         <div className="text-right">
-                                            <p className="font-black text-xl">+ Rs. {Math.round(opt.fareDifference)}</p>
-                                            <p className="text-[9px] font-bold text-muted-foreground uppercase">Difference</p>
+                                            <p className="font-black text-2xl text-primary">+ Rs. {Math.round(opt.fareDifference)}</p>
+                                            <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">Difference</p>
                                         </div>
                                     </div>
-                                    <div className="space-y-1.5 text-xs font-medium bg-muted/20 p-3 rounded-lg border border-dashed">
-                                        <div className="flex justify-between"><span>New Total Fare:</span> <span className="font-bold">Rs. {Math.round(opt.newTotalFare)}</span></div>
-                                        {useWallet && opt.walletUsedForUpgrade > 0 && (
-                                            <div className="flex justify-between text-green-600">
-                                                <span>From Wallet:</span> 
-                                                <span className="font-bold">- Rs. {Math.round(opt.walletUsedForUpgrade)}</span>
-                                            </div>
-                                        )}
-                                        <div className="flex justify-between text-base font-black border-t pt-2 mt-2">
-                                            <span>Payable:</span> 
-                                            <span className="text-primary">Rs. {Math.round(opt.amountToPay)}</span>
-                                        </div>
+                                    <div className="flex justify-between items-center text-xs font-bold text-slate-500 bg-slate-50 p-3 rounded-xl border border-dashed">
+                                        <span>New Total: Rs. {Math.round(opt.newTotalFare)}</span>
+                                        <span className="text-accent uppercase">Payable: Rs. {Math.round(opt.amountToPay)}</span>
                                     </div>
-                                    <Button 
-                                        className="w-full mt-5 h-12 text-sm font-bold bg-accent hover:bg-accent/90 rounded-xl" 
-                                        disabled={!!isLoading} 
-                                        onClick={() => handleUpgradeClick(opt)}
-                                    >
-                                        {isLoading === opt.name ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <ArrowUpCircle className="mr-2 h-4 w-4" />}
-                                        {isLoading === opt.name ? 'Upgrading...' : `Upgrade to ${opt.name.toUpperCase()}`}
+                                    <Button className="w-full mt-6 h-12 bg-accent hover:bg-accent/90 rounded-xl font-bold" disabled={!!isLoading}>
+                                        {isLoading === opt.name ? <Loader2 className="animate-spin h-5 w-5" /> : `Select ${opt.name}`}
                                     </Button>
                                 </div>
                             ))}
                         </div>
                     ) : (
-                        <div className="text-center py-10">
+                        <div className="text-center py-10 bg-slate-50 rounded-2xl border border-dashed">
                             <Bus className="h-12 w-12 text-green-500 mx-auto mb-3" />
-                            <p className="font-bold">Highest Category Reached</p>
-                            <p className="text-sm text-muted-foreground">You are already on the Metro Deluxe service.</p>
+                            <p className="font-bold text-slate-800">Highest Category Reached</p>
                         </div>
                     )}
                 </CardContent>
-                <CardFooter>
-                    <Button variant="ghost" className="w-full text-muted-foreground" onClick={() => router.back()}>Cancel and Go Back</Button>
-                </CardFooter>
             </Card>
 
             {selectedUpgrade && (

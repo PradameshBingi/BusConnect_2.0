@@ -1,16 +1,7 @@
 import { NextResponse } from 'next/server';
-import dbConnect, { getTicketModel, getWalletModel, getConductorLogModel } from '@/lib/mongodb';
+import dbConnect, { getTicketModel, getWalletModel } from '@/lib/mongodb';
 
 export const dynamic = "force-dynamic";
-
-/**
- * Service mapping for readable logs
- */
-const serviceNames: Record<string, string> = {
-  ordinary: 'City Ordinary',
-  express: 'Metro Express',
-  deluxe: 'Metro Deluxe'
-};
 
 export async function POST(
   request: Request,
@@ -30,114 +21,78 @@ export async function POST(
     const ticket = await Ticket.findOne({ ticketCode });
     if (!ticket) return NextResponse.json({ status: "invalid" }, { status: 404 });
 
-    // Validation guard: Don't re-validate used tickets unless specifically updating metadata
-    if (ticket.status === "used" && !updateData.force) {
-      return NextResponse.json({ status: "already_used", message: "Ticket already validated" }, { status: 400 });
-    }
+    const originalBusType = ticket.busType;
+    const newBusType = updateData.busType || originalBusType;
+    const isValidation = updateData.status === 'used' || (!updateData.status && ticket.status === 'valid');
+    const isPassengerChange = updateData.status === 'valid';
 
-    // 1. Calculate Fare Adjustment
-    const bookedBus = ticket.busType;
-    const boardedBus = updateData.busType || bookedBus;
-    const actualFare = updateData.totalFare !== undefined ? updateData.totalFare : ticket.totalFare;
-    const originalPaid = ticket.totalFare;
-    
-    const diff = originalPaid - actualFare; // Positive = Refund, Negative = Extra Charge
-    const isRefund = diff > 0;
-    const isCharge = diff < 0;
-    const boardingChanged = bookedBus !== boardedBus;
-
-    const transitionLabel = `${serviceNames[bookedBus] || bookedBus} → ${serviceNames[boardedBus] || boardedBus}`;
-
-    // 2. Financial Processing
-    const Wallet = getWalletModel();
-    const phone = ticket.bookedBy;
-
-    if (boardingChanged && !ticket.refundProcessed && !ticket.deductionProcessed) {
-        if (isRefund) {
-            // Automatic Refund
-            await Wallet.findOneAndUpdate(
-                { phone },
-                { 
-                    $inc: { walletBalance: Math.abs(diff) },
-                    $push: { 
-                        transactions: {
-                            type: 'credit',
-                            amount: Math.abs(diff),
-                            description: `Fare Difference Refund (${transitionLabel}) ${ticketCode}`,
-                            date: new Date()
-                        }
-                    }
-                }
-            );
-            ticket.refundProcessed = true;
-            ticket.refundAmount = Math.abs(diff);
-            ticket.refundedAt = new Date();
-        } else if (isCharge) {
-            // Charge Logic (Requires Authorization)
-            const userWallet = await Wallet.findOne({ phone });
-            if (userWallet && userWallet.autoDeductEnabled && userWallet.walletBalance >= Math.abs(diff)) {
-                await Wallet.findOneAndUpdate(
-                    { phone },
-                    { 
-                        $inc: { walletBalance: -Math.abs(diff) },
-                        $push: { 
-                            transactions: {
-                                type: 'debit',
-                                amount: Math.abs(diff),
-                                description: `Fare Difference Deducted (${transitionLabel}) ${ticketCode}`,
-                                date: new Date()
-                            }
-                        }
-                    }
-                );
-                ticket.deductionProcessed = true;
-                ticket.deductionAmount = Math.abs(diff);
-                ticket.deductedAt = new Date();
-            }
+    // 1. Determine Transition Type
+    let transitionMsg = "";
+    if (isValidation) {
+        transitionMsg = `Conductor Transition (${originalBusType} → ${newBusType})`;
+    } else if (isPassengerChange) {
+        if (originalBusType !== newBusType) {
+            transitionMsg = `Upgradation (${originalBusType} → ${newBusType})`;
+        } else {
+            transitionMsg = "Modification (Details Updated)";
         }
     }
 
-    // 3. Update Ticket Document
-    // If status is provided in payload (e.g. from modification form), use it.
-    // Otherwise, default to "used" (for conductor validation)
-    ticket.status = updateData.status || "used";
+    // 2. Financial Processing Logic
+    const Wallet = getWalletModel();
+    const phone = ticket.bookedBy;
+    const diff = (ticket.totalFare || 0) - (updateData.totalFare || ticket.totalFare);
     
-    if (ticket.status === "used") {
-      ticket.validatedAt = new Date();
+    if (Math.abs(diff) > 0) {
+        const query = {
+            $or: [
+              { phone: phone.toString() },
+              { phone: !isNaN(Number(phone)) ? Number(phone) : null }
+            ].filter(c => c.phone !== null)
+        };
+
+        if (diff > 0) { // Refund
+            const refundWithFee = Math.round(diff * 0.90); // 10% fee for downgrades/removals
+            await Wallet.findOneAndUpdate(query, {
+                $inc: { walletBalance: refundWithFee },
+                $push: {
+                    transactions: {
+                        type: 'credit',
+                        amount: refundWithFee,
+                        description: `${transitionMsg} Refund for ${ticketCode}`,
+                        date: new Date()
+                    }
+                }
+            });
+        }
+        // Deductions (upgrades) are handled by the calling form (SimulatedPayment) 
+        // or auto-deduct logic if conductor side.
     }
+
+    // 3. Update Ticket Document
+    if (transitionMsg) {
+        ticket.serviceTransition.push(transitionMsg);
+    }
+
+    ticket.status = updateData.status || "used";
+    if (ticket.status === "used") ticket.validatedAt = new Date();
     
     ticket.updatedAt = new Date();
-    ticket.actualFare = actualFare;
-    ticket.totalFare = actualFare;
-    ticket.busType = boardedBus;
-    ticket.boardingChanged = boardingChanged;
-    ticket.serviceTransition = transitionLabel;
-
     if (updateData.from) ticket.from = updateData.from;
     if (updateData.to) ticket.to = updateData.to;
     if (updateData.quantities) ticket.quantities = updateData.quantities;
     if (updateData.passengers) ticket.passengers = updateData.passengers;
+    if (updateData.totalFare !== undefined) ticket.totalFare = updateData.totalFare;
     if (updateData.fare !== undefined) ticket.fare = updateData.fare;
+    if (updateData.busType) ticket.busType = updateData.busType;
     if (updateData.createdAt) ticket.createdAt = new Date(updateData.createdAt);
 
     await ticket.save();
-
-    // 4. Operational Log (Only if validated)
-    if (ticket.status === "used") {
-      const ConductorLog = getConductorLogModel();
-      await ConductorLog.create({
-          action: 'ticket_validation',
-          ticketCode,
-          amount: Math.abs(diff),
-          type: isRefund ? 'refund' : isCharge ? 'deduction' : 'standard',
-          timestamp: new Date()
-      });
-    }
 
     return NextResponse.json({ status: "updated", ticket: ticket.toObject() });
 
   } catch (err: any) {
     console.error("❌ API /use-ticket Error:", err);
-    return NextResponse.json({ error: "Internal Server Error", details: err.message }, { status: 500 });
+    return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }

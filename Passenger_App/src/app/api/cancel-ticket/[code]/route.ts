@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import dbConnect, { getTicketModel, getUserModel } from '@/lib/mongodb';
+import dbConnect, { getTicketModel, getWalletModel } from '@/lib/mongodb';
 
 export const dynamic = "force-dynamic";
 
@@ -10,10 +10,7 @@ export async function POST(
   try {
     const conn = await dbConnect();
     if (!conn) {
-      return NextResponse.json({ 
-        error: "Database Unreachable", 
-        details: "Could not establish connection to MongoDB." 
-      }, { status: 503 });
+      return NextResponse.json({ error: "Database Unreachable" }, { status: 503 });
     }
 
     const { code } = await params;
@@ -25,43 +22,55 @@ export async function POST(
       return NextResponse.json({ status: "invalid", message: "Ticket not found" }, { status: 404 });
     }
 
-    if (ticket.status === "used") {
-      return NextResponse.json({ status: "already_used", message: "Cannot cancel a validated ticket" }, { status: 400 });
-    }
-
-    if (ticket.status === "cancelled") {
-      return NextResponse.json({ status: "already_cancelled", message: "Ticket is already cancelled" }, { status: 400 });
+    if (ticket.status !== "valid") {
+      return NextResponse.json({ status: "error", message: `Ticket is already ${ticket.status}` }, { status: 400 });
     }
 
     // 1. Mark as cancelled
     ticket.status = "cancelled";
+    ticket.updatedAt = new Date();
     await ticket.save();
 
-    // 2. Credit Wallet
-    const User = getUserModel();
-    const user = await User.findOne({ phone: ticket.bookedBy });
-    if (user) {
-        const originalFare = ticket.totalFare || 0;
-        const cancellationFee = Math.round(originalFare * 0.10);
-        const refundAmount = Math.max(0, originalFare - cancellationFee);
-
-        user.walletBalance += refundAmount;
-        user.transactions.push({
-            type: 'credit',
-            description: `Cancellation Refund: ${ticketCode}`,
-            amount: refundAmount,
-            date: new Date()
-        });
-        await user.save();
-    }
+    // 2. Credit Wallet (Standardizing on getWalletModel and phone matching)
+    const Wallet = getWalletModel();
+    const phone = ticket.bookedBy;
     
-    return NextResponse.json({ status: "cancelled", ticket: ticket.toObject() });
+    const originalFare = ticket.totalFare || 0;
+    const cancellationFee = Math.round(originalFare * 0.10);
+    const refundAmount = Math.max(0, originalFare - cancellationFee);
+
+    const query = {
+      $or: [
+        { phone: phone.toString() },
+        { phone: !isNaN(Number(phone)) ? Number(phone) : null }
+      ].filter(c => c.phone !== null)
+    };
+
+    const wallet = await Wallet.findOneAndUpdate(
+        query,
+        { 
+            $inc: { walletBalance: refundAmount },
+            $push: { 
+                transactions: {
+                    type: 'credit',
+                    description: `Cancellation Refund: ${ticketCode}`,
+                    amount: refundAmount,
+                    date: new Date()
+                }
+            }
+        },
+        { new: true, upsert: true }
+    );
+    
+    return NextResponse.json({ 
+      status: "cancelled", 
+      ticket: ticket.toObject(),
+      refundAmount,
+      newBalance: wallet.walletBalance
+    });
 
   } catch (err: any) {
     console.error("❌ API /cancel-ticket Error:", err);
-    return NextResponse.json({ 
-      error: "Database Unreachable", 
-      details: err.message 
-    }, { status: 500 });
+    return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }

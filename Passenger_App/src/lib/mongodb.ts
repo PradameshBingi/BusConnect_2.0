@@ -75,7 +75,7 @@ const TicketSchema = new mongoose.Schema({
   walletAmountUsed: { type: Number, default: 0 },
   validatedAt: Date,
   boardingChanged: { type: Boolean, default: false },
-  serviceTransition: { type: String },
+  serviceTransition: [String], // Array for multiple transitions
   actualFare: { type: Number },
   refundAmount: { type: Number },
   refundProcessed: { type: Boolean, default: false },
@@ -89,7 +89,7 @@ const TicketSchema = new mongoose.Schema({
   collection: 'Passengers_Ticket'
 });
 
-// Wallet Schema (Type-Robust for phone)
+// Wallet Schema
 const WalletSchema = new mongoose.Schema({
   phone: { type: mongoose.Schema.Types.Mixed, unique: true, required: true },
   walletBalance: { type: Number, default: 0 },
@@ -106,7 +106,7 @@ const WalletSchema = new mongoose.Schema({
   collection: 'Passengers_Wallet'
 });
 
-// Passenger Admin Schema (Source for Credentials) - Using Mixed to support Long/Int types
+// Passenger Admin Schema
 const PassengerAdminSchema = new mongoose.Schema({
   phone: { type: mongoose.Schema.Types.Mixed, unique: true, required: true },
   password: { type: mongoose.Schema.Types.Mixed, required: true },
@@ -114,10 +114,10 @@ const PassengerAdminSchema = new mongoose.Schema({
   lastLogin: Date
 }, { 
   timestamps: true,
-  collection: 'Passengers_Admin'
+  collection: 'Passenger_Admin'
 });
 
-// ConDuctor Admin Schema (Staff)
+// Conductor Admin Schema
 const AdminSchema = new mongoose.Schema({
   adminId: { type: String, unique: true, required: true },
   password: { type: String, required: true },
@@ -125,7 +125,7 @@ const AdminSchema = new mongoose.Schema({
   lastLogin: Date
 }, { 
   timestamps: true,
-  collection: 'Conductor_Admin'
+  collection: 'Admin'
 });
 
 // Feedback Schema
@@ -138,19 +138,6 @@ const FeedbackSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now }
 }, { 
   collection: 'Passengers_Feedbacks'
-});
-
-// Conductor verification Insights Schema
-const ConductorLogSchema = new mongoose.Schema({
-  conductorId: String,
-  action: String, 
-  ticketCode: String,
-  passCode: String,
-  amount: Number,
-  type: String, 
-  timestamp: { type: Date, default: Date.now }
-}, {
-  collection: 'conductor_logs'
 });
 
 export function getTicketModel() {
@@ -171,8 +158,4 @@ export function getAdminModel() {
 
 export function getFeedbackModel() {
   return mongoose.models.Feedback || mongoose.model('Feedback', FeedbackSchema);
-}
-
-export function getConductorLogModel() {
-  return mongoose.models.ConductorLog || mongoose.model('ConductorLog', ConductorLogSchema);
 }

@@ -1,14 +1,18 @@
-
 import { hyderabadLocalities } from '@/lib/locations';
 
 type PassengerType = 'Men' | 'Child' | 'Women';
 type Quantities = { [key in PassengerType]: number };
-type BusType = 'ordinary' | 'express' | 'deluxe' | string;
+type BusType = 'City Ordinary' | 'Metro Express' | 'Metro Deluxe' | string;
 
 /**
- * Calculates the total fare for a group of passengers on a specific route and bus type.
- * Ensures linear scaling (Total = Rate * Quantity) as requested.
+ * Standardized Bus Type Labels
  */
+export const BUS_CATEGORIES = {
+    ORDINARY: 'City Ordinary',
+    EXPRESS: 'Metro Express',
+    DELUXE: 'Metro Deluxe'
+};
+
 export function calculateFare(
   from: string,
   to: string,
@@ -26,11 +30,9 @@ export function calculateFare(
     return 0;
   }
 
-  // 1. Calculate base distance-based fare
   const distance = Math.abs(parseInt(fromLocality.routeNumber, 10) - parseInt(toLocality.routeNumber, 10));
   const baseFare = 10 + distance * 1.5; 
 
-  // 2. Define category rates (Rounded first to ensure 1+1=2 scaling)
   const ordinaryAdultRate = Math.round(Math.max(10, baseFare));
   const ordinaryChildRate = Math.round(ordinaryAdultRate / 2);
 
@@ -38,20 +40,18 @@ export function calculateFare(
   let childRate = ordinaryChildRate;
   let womenRate = 0; 
 
-  const type = (busType || 'ordinary').toLowerCase();
+  const type = (busType || '').toString().toLowerCase();
 
-  // 3. Apply Surcharges based on Bus Category
   if (type.includes('express')) {
       menRate = ordinaryAdultRate + 5;
       childRate = Math.round(ordinaryChildRate + 2.5);
-      womenRate = 0; // Free for express
+      womenRate = 0; 
   } else if (type.includes('deluxe')) {
       menRate = ordinaryAdultRate + 10;
       childRate = ordinaryChildRate + 5;
-      womenRate = ordinaryAdultRate + 10; // Chargeable for deluxe
+      womenRate = ordinaryAdultRate + 10; 
   }
 
-  // 4. Calculate total (Linear sum of rates)
   const totalFare = (quantities.Men * menRate) + (quantities.Child * childRate) + (quantities.Women * womenRate);
 
   return Math.round(totalFare);
