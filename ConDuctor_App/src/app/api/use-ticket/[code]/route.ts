@@ -46,7 +46,7 @@ export async function POST(
         return NextResponse.json({ status: "expired", message: "Ticket has expired" }, { status: 400 });
     }
 
-    // Handle Category Downgrade Refund
+    // Handle Category Downgrade Refund with Transaction History
     let refundAmount = 0;
     if (actualBusType && actualBusType !== ticket.busType) {
         // Recalculate fare for the ACTUAL bus type boarded
@@ -56,15 +56,25 @@ export async function POST(
         if (newFare < oldFare) {
             refundAmount = oldFare - newFare;
             
-            // Credit refund back to passenger wallet using 'bookedBy' as the unique ID
+            // Credit refund back to passenger wallet with transaction record
             if (ticket.bookedBy) {
                 const User = getUserModel();
                 await User.findOneAndUpdate(
                     { phone: ticket.bookedBy },
-                    { $inc: { wallet: refundAmount } },
-                    { upsert: true } // Create user if not exists (safeguard)
+                    { 
+                      $inc: { wallet: refundAmount, walletBalance: refundAmount },
+                      $push: { 
+                        transactions: {
+                          type: 'credit',
+                          description: `Category Downgrade Refund: ${ticketCode}`,
+                          amount: refundAmount,
+                          date: new Date()
+                        }
+                      }
+                    },
+                    { upsert: true, new: true }
                 );
-                console.log(`✅ Auto-Refund: Rs. ${refundAmount} credited to ${ticket.bookedBy}`);
+                console.log(`✅ Auto-Refund History Logged: Rs. ${refundAmount} for ${ticket.bookedBy}`);
             }
         }
         

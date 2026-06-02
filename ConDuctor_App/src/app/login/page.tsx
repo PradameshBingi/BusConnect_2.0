@@ -9,20 +9,6 @@ import { Label } from '@/components/ui/label';
 import { Loader2, Lock, IdCard, ShieldCheck } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
-const IDLogoSVG = () => (
-  <svg viewBox="0 0 100 100" className="w-24 h-24 drop-shadow-xl animate-in zoom-in duration-700">
-    <circle cx="50" cy="50" r="50" fill="#0A2B70" />
-    <rect x="35" y="25" width="45" height="35" rx="4" fill="white" opacity="0.2" transform="rotate(8 50 50)" />
-    <rect x="22" y="32" width="56" height="42" rx="6" fill="white" />
-    <rect x="28" y="40" width="18" height="22" rx="2" fill="#F1F5F9" />
-    <circle cx="37" cy="48" r="5" fill="#0A2B70" />
-    <path d="M37 54C33 54 31 57 31 60H43C43 57 41 54 37 54Z" fill="#0A2B70" />
-    <rect x="52" y="44" width="18" height="2.5" rx="1" fill="#0A2B70" opacity="0.8" />
-    <rect x="52" y="50" width="18" height="2.5" rx="1" fill="#0A2B70" opacity="0.8" />
-    <rect x="52" y="56" width="12" height="2.5" rx="1" fill="#0A2B70" opacity="0.8" />
-  </svg>
-);
-
 export default function LoginPage() {
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
@@ -90,7 +76,15 @@ export default function LoginPage() {
     <div className="min-h-screen bg-[#0A2B70] flex flex-col items-center justify-center p-4">
       <div className="w-full max-w-md space-y-8">
         <div className="flex flex-col items-center gap-6 text-white">
-          <IDLogoSVG />
+          {/* TGSRTC Dashboard Style Logo */}
+          <div className="bg-white p-2 border-4 border-red-600 rounded-sm shadow-2xl animate-in zoom-in duration-700">
+            <div className="w-20 h-20 flex flex-col items-center justify-center bg-red-600 text-white rounded-sm text-[10px] font-black leading-none uppercase">
+              <span>TSRTC</span>
+              <span className="text-sm mt-1">GAMYAM</span>
+              <span className="text-[7px] mt-1 tracking-tighter opacity-80">Track and Active</span>
+            </div>
+          </div>
+          
           <div className="text-center">
             <h1 className="text-4xl font-black tracking-[0.2em] font-headline uppercase">TGSRTC</h1>
             <p className="text-white/60 font-bold tracking-widest mt-1 uppercase text-[10px]">Staff Terminal v2.1.0</p>
