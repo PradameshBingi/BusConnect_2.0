@@ -14,32 +14,32 @@ export async function POST(request: Request) {
 
     const PassengerAdmin = getPassengerAdminModel();
     
-    // Robust query: handles strings and numbers (Int64/Int32) for phone and password
+    // Convert inputs to numbers for type-agnostic matching
     const phoneNum = Number(phone);
     const passNum = Number(password);
 
-    // Build an $or query to match against both String and Numeric formats
-    const orConditions: any[] = [
-      { phone: phone.toString(), password: password.toString() }
-    ];
-    
-    if (!isNaN(phoneNum)) {
-      // Case: phone is numeric, password is string
-      orConditions.push({ phone: phoneNum, password: password.toString() });
-      if (!isNaN(passNum)) {
-        // Case: both are numeric
-        orConditions.push({ phone: phoneNum, password: passNum });
-      }
-    }
-    
-    if (!isNaN(passNum)) {
-      // Case: phone is string, password is numeric
-      orConditions.push({ phone: phone.toString(), password: passNum });
-    }
-
-    const user = await PassengerAdmin.findOne({ $or: orConditions });
+    // 1. Find the user by phone number (checking both string and numeric formats)
+    // This is necessary because MongoDB stores Longs/Ints differently than Strings
+    const user = await PassengerAdmin.findOne({
+      $or: [
+        { phone: phone.toString() },
+        { phone: isNaN(phoneNum) ? null : phoneNum }
+      ].filter(condition => condition.phone !== null)
+    });
 
     if (!user) {
+      console.log(`❌ Login Failed: User not found for phone ${phone}`);
+      return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
+    }
+
+    // 2. Verify password (handling both string and numeric matches)
+    const storedPassword = user.password;
+    const isPasswordMatch = 
+      (storedPassword.toString() === password.toString()) || 
+      (!isNaN(passNum) && typeof storedPassword === 'number' && storedPassword === passNum);
+
+    if (!isPasswordMatch) {
+      console.log(`❌ Login Failed: Password mismatch for ${phone}`);
       return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
     }
 
@@ -47,6 +47,7 @@ export async function POST(request: Request) {
     user.lastLogin = new Date();
     await user.save();
 
+    console.log(`✅ Login Successful: ${phone}`);
     return NextResponse.json({ 
       status: "success", 
       user: {

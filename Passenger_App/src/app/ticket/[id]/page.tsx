@@ -103,12 +103,17 @@ export default function TicketDetailPage() {
     );
   }
 
+  // Use Validation Time for 'Used' tickets, otherwise use creation time
+  const displayDate = ticket.status === 'used' && ticket.validatedAt 
+    ? new Date(ticket.validatedAt) 
+    : new Date(ticket.createdAt);
+
   if (ticket.status === 'used') {
     return (
       <>
         <Header showBackButton backHref="/booking-history" title="Validated Ticket" />
         <div className="p-4 md:p-8 flex flex-col items-center space-y-6 pb-32">
-          {/* Use validatedAt for the receipt display strictly for date & time */}
+          {/* Use validatedAt strictly for used tickets */}
           <ValidatedTicket ticket={{ ...ticket, timestamp: ticket.validatedAt || ticket.createdAt }} />
           
           <div className="w-full max-w-sm p-4 bg-primary/5 rounded-2xl border border-primary/20 flex flex-col items-center gap-2">
@@ -187,12 +192,12 @@ export default function TicketDetailPage() {
 
             <div className="grid grid-cols-2 gap-y-5 gap-x-4 text-sm font-medium">
               <div className="space-y-1">
-                <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest">Issue Date</p>
-                <p className="font-bold text-slate-800">{issueDate.toLocaleDateString('en-GB')}</p>
+                <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest">Updated Date</p>
+                <p className="font-bold text-slate-800">{displayDate.toLocaleDateString('en-GB')}</p>
               </div>
               <div className="space-y-1 text-right">
-                <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest">Issue Time</p>
-                <p className="font-bold text-slate-800">{issueDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+                <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest">Updated Time</p>
+                <p className="font-bold text-slate-800">{displayDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
               </div>
               <div className="col-span-2 space-y-1 py-2 border-y border-dashed">
                 <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest">Passengers</p>
