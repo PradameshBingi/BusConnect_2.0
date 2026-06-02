@@ -29,6 +29,7 @@ export async function POST(
     // 1. Mark as cancelled
     ticket.status = "cancelled";
     ticket.updatedAt = new Date();
+    if (!ticket.serviceTransition) ticket.serviceTransition = [];
     ticket.serviceTransition.push("Ticket Cancellation");
     await ticket.save();
 

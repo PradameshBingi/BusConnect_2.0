@@ -24,24 +24,22 @@ export async function POST(
     const originalBusType = ticket.busType;
     const newBusType = updateData.busType || originalBusType;
     
-    // Determine transition status
-    const isValidation = updateData.status === 'used' || (!updateData.status && ticket.status === 'valid');
-    const isPassengerChange = updateData.status === 'valid';
-
     // 1. Determine Transition Type & Label
     let transitionMsg = "";
+    const isValidation = updateData.status === 'used' || (Object.keys(updateData).length === 0 && ticket.status === 'valid');
+    const isModification = (updateData.from || updateData.to || updateData.quantities) && !updateData.busType;
+    const isUpgradation = updateData.busType && updateData.busType !== originalBusType;
+
     if (isValidation) {
         if (originalBusType !== newBusType) {
             transitionMsg = `Conductor Transition (${originalBusType} → ${newBusType})`;
         } else if (ticket.status !== 'used') {
             transitionMsg = "Conductor Validation";
         }
-    } else if (isPassengerChange) {
-        if (originalBusType !== newBusType) {
-            transitionMsg = `Upgradation (${originalBusType} → ${newBusType})`;
-        } else {
-            transitionMsg = "Modification (Details Updated)";
-        }
+    } else if (isUpgradation) {
+        transitionMsg = `Upgradation (${originalBusType} → ${newBusType})`;
+    } else if (isModification) {
+        transitionMsg = "Modification (Details Updated)";
     }
 
     // 2. Financial Processing Logic
@@ -58,7 +56,7 @@ export async function POST(
             ].filter(c => c.phone !== null)
         };
 
-        if (diff > 0) { // Refund (Downgrade)
+        if (diff > 0) { // Refund (Downgrade or Quantity Decrease)
             const refundWithFee = Math.round(diff * 0.90); // 10% fee
             await Wallet.findOneAndUpdate(query, {
                 $inc: { walletBalance: refundWithFee },
@@ -75,7 +73,6 @@ export async function POST(
             const wallet = await Wallet.findOne(query);
             const amountToDeduct = Math.abs(diff);
             
-            // Only auto-deduct if enabled
             if (wallet && wallet.autoDeductEnabled) {
                 await Wallet.findOneAndUpdate(query, {
                     $inc: { walletBalance: -amountToDeduct },
@@ -93,14 +90,21 @@ export async function POST(
     }
 
     // 3. Update Ticket Document
+    if (!ticket.serviceTransition) ticket.serviceTransition = [];
     if (transitionMsg) {
         ticket.serviceTransition.push(transitionMsg);
     }
 
-    if (updateData.status) ticket.status = updateData.status;
-    else if (ticket.status !== 'used') ticket.status = 'used';
+    // Status logic: modifications keep current status, empty calls are validations
+    if (updateData.status) {
+        ticket.status = updateData.status;
+    } else if (Object.keys(updateData).length === 0 && ticket.status === 'valid') {
+        ticket.status = 'used';
+    }
 
-    if (ticket.status === "used" && !ticket.validatedAt) ticket.validatedAt = new Date();
+    if (ticket.status === "used" && !ticket.validatedAt) {
+        ticket.validatedAt = new Date();
+    }
     
     ticket.updatedAt = new Date();
     if (updateData.from) ticket.from = updateData.from;

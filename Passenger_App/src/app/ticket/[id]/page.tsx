@@ -93,17 +93,18 @@ export default function TicketDetailPage() {
     );
   }
 
-  const displayDate = ticket.status === 'used' && ticket.validatedAt 
+  const isUsed = ticket.status === 'used';
+  const displayDate = isUsed && ticket.validatedAt 
     ? new Date(ticket.validatedAt) 
     : new Date(ticket.createdAt);
 
-  if (ticket.status === 'used') {
+  if (isUsed) {
     return (
       <>
         <Header showBackButton backHref="/booking-history" title="Validated Ticket" />
         <div className="p-4 md:p-8 flex flex-col items-center space-y-6 pb-32">
           <ValidatedTicket ticket={{ ...ticket, timestamp: ticket.validatedAt || ticket.createdAt }} />
-          <Button asChild variant="ghost" className="w-full max-w-sm h-12 rounded-xl text-slate-500 font-bold"><Link href="/booking-history">Back to History</Link></Button>
+          <Button asChild variant="ghost" className="w-full h-12 rounded-xl text-slate-500 font-bold"><Link href="/booking-history">Back to History</Link></Button>
         </div>
       </>
     );
