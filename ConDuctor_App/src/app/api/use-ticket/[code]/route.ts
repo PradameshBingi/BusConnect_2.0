@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import dbConnect, { getTicketModel, getUserModel } from '@/lib/mongodb';
+import dbConnect, { getTicketModel, getUserModel, getConductorLogModel } from '@/lib/mongodb';
 import { calculateFare } from '@/lib/fare-calculator';
 
 export const dynamic = "force-dynamic";
@@ -8,55 +8,78 @@ const getServiceLabel = (type: string) => {
   const map: Record<string, string> = { 
     ordinary: "City Ordinary", 
     express: "Metro Express", 
-    deluxe: "Metro Deluxe" 
+    deluxe: "Metro Deluxe",
+    "city ordinary": "City Ordinary",
+    "metro express": "Metro Express",
+    "metro deluxe": "Metro Deluxe"
   };
   return map[type.toLowerCase()] || type;
 };
 
 /**
- * Reusable backend function to process fare refunds atomically.
+ * Enhanced Fare Adjustment Handler (Credits and Debits)
  */
-async function processFareRefund(
-  ticketCode: string, 
-  originalFare: number, 
+async function processFareAdjustment(
+  ticket: any, 
   actualFare: number, 
-  phone: string,
-  originalService: string,
-  actualService: string
+  conductorId: string,
+  autoDeductRequested: boolean
 ) {
-  try {
-    const User = getUserModel();
-    const refundAmount = originalFare - actualFare;
+  const User = getUserModel();
+  const diff = ticket.totalFare - actualFare; // Positive = Refund, Negative = Deduction
+  const phone = ticket.bookedBy;
 
-    if (refundAmount > 0 && phone) {
-      const serviceTransition = `${getServiceLabel(originalService)} → ${getServiceLabel(actualService)}`;
-      
-      // Atomically update walletBalance and push history with requested history tag format
-      const updatedUser = await User.findOneAndUpdate(
+  const bookedLabel = getServiceLabel(ticket.busType);
+  const boardedLabel = getServiceLabel(ticket.actualBusType || ticket.busType);
+  const transition = `${bookedLabel} → ${boardedLabel}`;
+
+  if (diff > 0) {
+    // REFUND (Credit)
+    await User.findOneAndUpdate(
+      { phone: phone },
+      { 
+        $inc: { walletBalance: diff },
+        $push: { 
+          transactions: {
+            type: 'credit',
+            description: `Fare Difference Refund (${transition}) ${ticket.ticketCode}`,
+            amount: diff,
+            date: new Date()
+          }
+        }
+      },
+      { upsert: true }
+    );
+    ticket.refundAmount = diff;
+    ticket.refundProcessed = true;
+    ticket.refundedAt = new Date();
+  } else if (diff < 0) {
+    // DEDUCTION (Debit) - ONLY IF AUTHORIZED
+    const amountToDeduct = Math.abs(diff);
+    const user = await User.findOne({ phone });
+
+    if (autoDeductRequested && user?.autoDeductEnabled && user.walletBalance >= amountToDeduct) {
+      await User.findOneAndUpdate(
         { phone: phone },
         { 
-          $inc: { walletBalance: refundAmount },
-          $unset: { wallet: "" }, // Remove legacy field if it exists
+          $inc: { walletBalance: -amountToDeduct },
           $push: { 
             transactions: {
-              type: 'credit',
-              description: `Fare Difference Refund (${serviceTransition}) ${ticketCode}`,
-              amount: refundAmount,
+              type: 'debit',
+              description: `Fare Difference Deducted (${transition}) ${ticket.ticketCode}`,
+              amount: amountToDeduct,
               date: new Date()
             }
           }
-        },
-        { upsert: true, new: true }
+        }
       );
-      
-      console.log(`✅ Refund of Rs. ${refundAmount} credited to ${phone} for ${ticketCode}.`);
-      return { refundAmount, serviceTransition };
+      ticket.deductionAmount = amountToDeduct;
+      ticket.deductionProcessed = true;
     }
-    return { refundAmount: 0, serviceTransition: null };
-  } catch (error) {
-    console.error("Refund processing error:", error);
-    throw error;
   }
+
+  ticket.boardingChanged = diff !== 0;
+  ticket.serviceTransition = transition;
 }
 
 export async function POST(
@@ -64,88 +87,60 @@ export async function POST(
   { params }: { params: Promise<{ code: string }> }
 ) {
   try {
-    const conn = await dbConnect();
-    if (!conn) {
-      return NextResponse.json({ error: "Database Unreachable" }, { status: 503 });
-    }
-
+    await dbConnect();
     const { code } = await params;
-    const ticketCode = code.toUpperCase();
-    
     const body = await request.json().catch(() => ({}));
-    const actualBusType = body.actualBusType;
-    
+    const { actualBusType, conductorId } = body;
+
     const Ticket = getTicketModel();
-    const ticket = await Ticket.findOne({ ticketCode });
-
+    const ConductorLog = getConductorLogModel();
+    
+    const ticket = await Ticket.findOne({ ticketCode: code.toUpperCase() });
     if (!ticket) return NextResponse.json({ message: "Ticket not found" }, { status: 404 });
+    if (ticket.status !== "valid") return NextResponse.json({ message: `Ticket is ${ticket.status}` }, { status: 400 });
 
-    if (ticket.status === "used") {
-      return NextResponse.json({ message: "Ticket already validated" }, { status: 400 });
-    }
+    const originalFare = ticket.totalFare;
+    const calculatedFare = calculateFare(ticket.from, ticket.to, ticket.quantities, actualBusType);
 
-    if (ticket.status === "cancelled") {
-      return NextResponse.json({ message: "Ticket is cancelled" }, { status: 400 });
-    }
-
-    // Process Refund if category is changed
-    let refundIssued = 0;
-    let transitionString = null;
-    const originalBusType = ticket.busType;
-    const originalTotalFare = ticket.totalFare;
-    let calculatedActualFare = originalTotalFare;
-
-    if (actualBusType) {
-        calculatedActualFare = calculateFare(ticket.from, ticket.to, ticket.quantities, actualBusType);
-        
-        // Handle logic for transitions and refunds
-        if (calculatedActualFare < originalTotalFare) {
-            const refundResult = await processFareRefund(
-                ticketCode, 
-                originalTotalFare, 
-                calculatedActualFare, 
-                ticket.bookedBy,
-                originalBusType,
-                actualBusType
-            );
-            refundIssued = refundResult.refundAmount;
-            transitionString = refundResult.serviceTransition;
-            
-            // Update ticket records with adjusted financial and transition data
-            ticket.refundAmount = refundIssued;
-            ticket.refundProcessed = true;
-            ticket.refundedAt = new Date();
-            ticket.boardingChanged = true;
-            ticket.serviceTransition = transitionString;
-        } else {
-            // No refund needed, but we still track transition if it's "Same to Same" or upgrade (unlikely scenario here)
-            ticket.boardingChanged = originalBusType.toLowerCase() !== actualBusType.toLowerCase();
-            ticket.serviceTransition = `${getServiceLabel(originalBusType)} → ${getServiceLabel(actualBusType)}`;
-        }
-        
-        // Update ticket with the ACTUAL service and fare paid
-        ticket.busType = actualBusType;
-        ticket.totalFare = calculatedActualFare;
-        ticket.actualFare = calculatedActualFare;
-    }
-
-    // Final Validation
+    // Apply adjustments
+    ticket.actualBusType = actualBusType;
+    await processFareAdjustment(ticket, calculatedFare, conductorId, true);
+    
+    // Update ticket state
     ticket.status = "used";
     ticket.validatedAt = new Date();
+    ticket.busType = actualBusType;
+    ticket.totalFare = calculatedFare;
     await ticket.save();
 
+    // CLOUD SYNC: Log to Conductor Verification Stats
+    if (conductorId) {
+      await new ConductorLog({
+        conductorId,
+        type: 'ticket',
+        data: {
+          ticketCode: ticket.ticketCode,
+          from: ticket.from,
+          to: ticket.to,
+          busType: actualBusType,
+          totalFare: calculatedFare,
+          originalFare,
+          passengers: ticket.passengers,
+          quantities: ticket.quantities,
+          boardingChanged: ticket.boardingChanged,
+          transition: ticket.serviceTransition
+        }
+      }).save();
+    }
+
     return NextResponse.json({ 
-        status: "updated", 
-        ticket: ticket.toObject(),
-        refunded: refundIssued > 0 ? refundIssued : null,
-        message: refundIssued > 0 ? `Refund of Rs. ${refundIssued} credited to wallet.` : "Validation successful."
+      status: "success", 
+      ticket: ticket.toObject(),
+      refunded: ticket.refundAmount > 0 ? ticket.refundAmount : null,
+      deducted: ticket.deductionAmount > 0 ? ticket.deductionAmount : null
     });
 
   } catch (err: any) {
-    console.error("❌ API /use-ticket Error:", err);
-    return NextResponse.json({ 
-      error: "Validation Failed", 
-      details: err.message 
-    }, { status: 500 });
+    return NextResponse.json({ error: "Server Error", details: err.message }, { status: 500 });
   }
 }

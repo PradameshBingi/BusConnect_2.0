@@ -2,13 +2,11 @@
 
 import { useState, useEffect } from 'react';
 import Header from '@/app/components/header';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
-import { IndianRupee, History, ShieldCheck, Zap, ArrowRight, Loader2 } from 'lucide-react';
+import { IndianRupee, History, ShieldCheck, Zap, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { Separator } from '@/components/ui/separator';
 
 export default function PassengerWalletPage() {
   const [balance, setWalletBalance] = useState(0);
@@ -19,17 +17,20 @@ export default function PassengerWalletPage() {
   const { toast } = useToast();
 
   useEffect(() => {
-    const phone = localStorage.getItem('passengerPhone') || '9999999999'; // Mock or session ph
+    // In a real app, phone comes from auth session
+    const phone = localStorage.getItem('passengerPhone') || '9999999999';
     fetchWalletData(phone);
   }, []);
 
   const fetchWalletData = async (phone: string) => {
     try {
-      const res = await fetch(`/api/conductor-session?id=${phone}`); // Reuse session API to get user data
+      const res = await fetch(`/api/user-data?phone=${phone}`);
       const data = await res.json();
-      setWalletBalance(data.walletBalance || 0);
-      setAutoDeduct(data.autoDeductEnabled || false);
-      setHistory(data.transactions || []);
+      if (res.ok) {
+        setWalletBalance(data.user?.walletBalance || 0);
+        setAutoDeduct(data.user?.autoDeductEnabled || false);
+        setHistory(data.user?.transactions || []);
+      }
     } catch (error) {
       console.error("Failed to load wallet", error);
     } finally {
@@ -52,9 +53,9 @@ export default function PassengerWalletPage() {
 
       setAutoDeduct(checked);
       toast({
-        title: checked ? "Authorization Enabled" : "Authorization Disabled",
+        title: checked ? "Authorization Granted" : "Authorization Revoked",
         description: checked 
-          ? "Conductors can now deduct fare differences automatically."
+          ? "Conductors can now deduct fare differences automatically for upgrades."
           : "You must pay fare differences in cash to the conductor."
       });
     } catch (error) {
@@ -75,7 +76,6 @@ export default function PassengerWalletPage() {
       <Header title="My Wallet" showBackButton={true} backHref="/" />
       
       <main className="p-4 max-w-2xl mx-auto w-full space-y-6 pb-20">
-        {/* Balance Card */}
         <Card className="bg-[#0A2B70] text-white border-none shadow-2xl rounded-[2.5rem] overflow-hidden">
           <CardContent className="p-10 flex flex-col items-center text-center space-y-4">
              <p className="text-[10px] font-black uppercase tracking-[0.4em] opacity-60">Available Balance</p>
@@ -89,7 +89,6 @@ export default function PassengerWalletPage() {
           </CardContent>
         </Card>
 
-        {/* Security / Authorization Toggle */}
         <Card className="rounded-3xl border-none shadow-sm overflow-hidden">
            <CardHeader className="bg-slate-50 border-b">
               <CardTitle className="text-xs font-black uppercase tracking-widest flex items-center gap-2 text-slate-900">
@@ -100,9 +99,9 @@ export default function PassengerWalletPage() {
            <CardContent className="p-6 space-y-6">
               <div className="flex items-start justify-between gap-6">
                  <div className="space-y-1">
-                    <h3 className="font-bold text-sm text-slate-800">Auto Deduct Fare Difference</h3>
-                    <p className="text-[11px] text-slate-400 leading-relaxed">
-                       If you board a higher-category bus (e.g. Express → Deluxe), allow the conductor to debit the difference from your wallet instantly.
+                    <h3 className="font-bold text-sm text-slate-800 uppercase">Auto Deduct Authorization For Conductor</h3>
+                    <p className="text-[11px] text-slate-400 leading-relaxed uppercase">
+                       Allow conductors to debit fare differences directly from your wallet if you board a higher-category bus (e.g. Ordinary → Deluxe).
                     </p>
                  </div>
                  <Switch 
@@ -116,13 +115,12 @@ export default function PassengerWalletPage() {
               <div className="bg-blue-50 p-4 rounded-2xl flex gap-3 items-center">
                  <Zap className="h-5 w-5 text-[#0A2B70] shrink-0" />
                  <p className="text-[10px] font-bold text-[#0A2B70] uppercase leading-tight">
-                    Ensures high-speed boarding without cash handling during peak hours.
+                    Authorizing auto-deduct ensures high-speed boarding without cash handling.
                  </p>
               </div>
            </CardContent>
         </Card>
 
-        {/* History Section */}
         <div className="space-y-4 pt-4">
            <h2 className="text-sm font-black uppercase tracking-widest flex items-center gap-2 ml-2">
               <History className="h-4 w-4" /> Recent Activity

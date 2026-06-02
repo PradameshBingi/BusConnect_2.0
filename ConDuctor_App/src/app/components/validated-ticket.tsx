@@ -8,7 +8,8 @@ interface Ticket {
   from: string;
   to: string;
   timestamp: string; 
-  updatedAt?: string; // High-fidelity updated timestamp
+  updatedAt?: string;
+  validatedAt?: string;
   status: string;
   passengers: string;
   totalFare: number;
@@ -31,7 +32,6 @@ const TicketWatermark = () => (
 );
 
 export function ValidatedTicket({ ticket }: ValidatedTicketProps) {
-  // Stable Randomized Data based on Ticket Code
   const stableData = useMemo(() => {
     const seed = ticket.ticketCode.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
     const rnd = (min: number, max: number, offset: number) => {
@@ -52,17 +52,18 @@ export function ValidatedTicket({ ticket }: ValidatedTicketProps) {
     };
   }, [ticket.ticketCode]);
 
-  // STRICT LOGIC: For Pink Ticket, use the Validation Time (updatedAt) if the ticket is used.
+  // STRICT LOGIC: Issue Time is ONLY the Validation Time if used.
   const displayTime = useMemo(() => {
-    const timeToUse = ticket.status === 'used' ? (ticket.updatedAt || ticket.timestamp) : ticket.timestamp;
+    const timeToUse = ticket.status === 'used' 
+      ? (ticket.validatedAt || ticket.updatedAt || ticket.timestamp) 
+      : ticket.timestamp;
     const d = new Date(timeToUse);
     return isNaN(d.getTime()) ? new Date() : d;
-  }, [ticket.timestamp, ticket.updatedAt, ticket.status]);
+  }, [ticket.timestamp, ticket.updatedAt, ticket.validatedAt, ticket.status]);
 
   const formattedDate = displayTime.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' });
   const formattedTime = displayTime.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
 
-  // ALIGNED FARE LOGIC (Matches calculateFare exactly)
   const { menRate, childRate, womenRate } = useMemo(() => {
     const fromLocality = hyderabadLocalities.find(l => l.name === ticket.from);
     const toLocality = hyderabadLocalities.find(l => l.name === ticket.to);
@@ -80,18 +81,14 @@ export function ValidatedTicket({ ticket }: ValidatedTicketProps) {
 
     const busTypeLower = ticket.busType.toLowerCase();
 
-    if (busTypeLower === 'express') {
+    if (busTypeLower === 'express' || busTypeLower === 'metro express') {
         mRate += 5;
         cRate = Math.round(ordinaryChildFare + 2.5);
         wRate = 0;
-    } else if (busTypeLower === 'deluxe') {
+    } else if (busTypeLower === 'deluxe' || busTypeLower === 'metro deluxe') {
         mRate += 10;
         cRate = ordinaryChildFare + 5;
         wRate = ordinaryAdultFare + 10;
-    } else { // ordinary
-        mRate = ordinaryAdultFare;
-        cRate = ordinaryChildFare;
-        wRate = 0;
     }
 
     return { menRate: mRate, childRate: cRate, womenRate: wRate };
@@ -99,7 +96,6 @@ export function ValidatedTicket({ ticket }: ValidatedTicketProps) {
 
   return (
     <div className="w-full max-w-sm mx-auto bg-white shadow-2xl relative font-mono text-black rounded-sm overflow-hidden border border-gray-200">
-      {/* Pink Scalloped Sides */}
       <div className="absolute left-0 top-0 bottom-0 w-4 bg-repeat-y z-20" style={{backgroundImage: 'linear-gradient(135deg, #ffb6c1 50%, transparent 50%), linear-gradient(-135deg, #ffb6c1 50%, transparent 50%)', backgroundSize: '8px 8px'}}></div>
       <div className="absolute right-0 top-0 bottom-0 w-4 bg-repeat-y z-20" style={{backgroundImage: 'linear-gradient(-45deg, #ffb6c1 50%, transparent 50%), linear-gradient(45deg, #ffb6c1 50%, transparent 50%)', backgroundSize: '8px 8px'}}></div>
       
@@ -140,9 +136,6 @@ export function ValidatedTicket({ ticket }: ValidatedTicketProps) {
                 {womenRate === 0 && <span className="bg-green-100 text-green-700 text-[9px] px-1 py-0.5 rounded font-black tracking-widest">FREE</span>}
             </div>
           )}
-          {(!ticket.quantities) && (
-            <p>PASSENGERS: {ticket.passengers}</p>
-          )}
         </div>
 
         <div className="border-t-2 border-dashed border-gray-400 my-3"></div>
@@ -159,7 +152,7 @@ export function ValidatedTicket({ ticket }: ValidatedTicketProps) {
               <p>Waybill: {stableData.waybill}</p>
               <p className="text-right">Bus: {stableData.busNo}</p>
               <p>ETIM No: I062300078</p>
-              <p className="text-right">v1.9.29</p>
+              <p className="text-right">v2.1.0</p>
           </div>
         </div>
 
