@@ -137,6 +137,7 @@ export default function VerifyTicketPage() {
         <Header showBackButton={true} backHref="/" title="Verify Ticket" />
         
         <main className="flex flex-col items-center p-4 space-y-6 pb-32">
+          {/* Persistent Verification Input Bar */}
           <Card className="w-full max-w-md shadow-sm border-slate-200">
             <CardHeader className="pb-3">
                 <CardTitle className="font-headline text-xl uppercase">Verify Ticket Code</CardTitle>
@@ -144,10 +145,12 @@ export default function VerifyTicketPage() {
             </CardHeader>
             <CardContent>
               <div className="flex items-center gap-2">
+                {/* Static Prefix */}
                 <div className="bg-slate-100 h-12 px-3 flex items-center rounded-xl font-mono font-bold text-slate-500">
                     TKT-
                 </div>
                 
+                {/* Route Selector Button */}
                 <Button 
                     variant="outline" 
                     className="h-12 w-16 border-2 border-slate-200 rounded-xl font-bold text-lg"
@@ -158,6 +161,7 @@ export default function VerifyTicketPage() {
 
                 <div className="text-slate-400 font-bold">-</div>
 
+                {/* Rectangular Digit Box */}
                 <Input 
                   placeholder="XXXXX" 
                   value={ticketDigits} 
@@ -165,6 +169,7 @@ export default function VerifyTicketPage() {
                   className="font-mono text-lg h-12 tracking-[0.2em] rounded-xl border-2 border-slate-200 focus:border-[#00B893] text-center" 
                 />
                 
+                {/* Action Button */}
                 <Button 
                     onClick={() => handleVerification()} 
                     disabled={isLoading || ticketDigits.length !== 5} 
@@ -213,6 +218,7 @@ export default function VerifyTicketPage() {
                       </CardHeader>
                   </Card>
               ) : (
+                  /* High Fidelity Journey Details Preview */
                   <Card className="overflow-hidden shadow-2xl bg-white border-none rounded-[2rem] border-t-8 border-t-[#00B893] animate-in slide-in-from-bottom-4 duration-500">
                       <CardHeader className="text-center pb-2 pt-8 relative">
                           <RefreshCcw 
@@ -224,6 +230,7 @@ export default function VerifyTicketPage() {
                       </CardHeader>
 
                       <CardContent className="space-y-6 px-8 pt-6">
+                          {/* Route Boxed Layout */}
                           <div className="flex justify-between items-center p-6 bg-slate-50 rounded-3xl border border-slate-100 shadow-inner">
                               <div className="text-center flex-1">
                                   <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">FROM</p>
@@ -238,6 +245,7 @@ export default function VerifyTicketPage() {
                               </div>
                           </div>
 
+                          {/* Passenger & Fare Breakdown */}
                           <div className="grid grid-cols-2 gap-y-4 px-2">
                                <div className="space-y-0.5">
                                   <p className="text-[10px] font-black text-slate-400 uppercase">PASSENGERS</p>
@@ -260,6 +268,7 @@ export default function VerifyTicketPage() {
                                </div>
                           </div>
 
+                          {/* Actual Boarding Category Selector */}
                           <div className="bg-slate-50 p-5 rounded-2xl border border-slate-100">
                                <p className="text-[9px] font-black text-slate-400 uppercase mb-3 text-center tracking-widest">ACTUAL BOARDING CATEGORY</p>
                                <Select value={actualBusType} onValueChange={setActualBusType}>
@@ -274,6 +283,7 @@ export default function VerifyTicketPage() {
                                </Select>
                           </div>
 
+                          {/* Security PIN Section */}
                           <div className="bg-[#F0FDF4] p-8 rounded-3xl border border-[#DCFCE7] flex flex-col items-center">
                               <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4">SECURITY PIN</p>
                               <div className="flex flex-col items-center gap-4">
@@ -319,6 +329,7 @@ export default function VerifyTicketPage() {
           )}
         </main>
 
+        {/* Searchable Route Selector Dialog */}
         <Dialog open={isRouteSelectorOpen} onOpenChange={setRouteSelectorOpen}>
             <DialogContent className="max-w-md rounded-3xl p-0 overflow-hidden border-none">
                 <DialogHeader className="bg-[#00B893] text-white p-6">
