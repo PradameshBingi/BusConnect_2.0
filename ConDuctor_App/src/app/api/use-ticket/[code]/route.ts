@@ -56,13 +56,13 @@ export async function POST(
         if (newFare < oldFare) {
             refundAmount = oldFare - newFare;
             
-            // Credit refund back to passenger wallet with transaction record
+            // Credit refund back to passenger wallet Balance with history
             if (ticket.bookedBy) {
                 const User = getUserModel();
                 await User.findOneAndUpdate(
                     { phone: ticket.bookedBy },
                     { 
-                      $inc: { wallet: refundAmount, walletBalance: refundAmount },
+                      $inc: { walletBalance: refundAmount },
                       $push: { 
                         transactions: {
                           type: 'credit',
@@ -74,7 +74,7 @@ export async function POST(
                     },
                     { upsert: true, new: true }
                 );
-                console.log(`✅ Auto-Refund History Logged: Rs. ${refundAmount} for ${ticket.bookedBy}`);
+                console.log(`✅ Automated Wallet Refund Logged: Rs. ${refundAmount} for ${ticket.bookedBy}`);
             }
         }
         

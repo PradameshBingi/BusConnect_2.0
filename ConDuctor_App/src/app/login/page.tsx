@@ -41,11 +41,13 @@ export default function LoginPage() {
     
     setIsLoading(true);
 
+    // Mock Authentication Logic combined with Session Tracking
     setTimeout(async () => {
       if (phone === '9999999999' && password === '54987') {
         const newSessionId = Date.now().toString();
         
         try {
+          // Register session in MongoDB for single-session constraint
           await fetch('/api/conductor-session', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },

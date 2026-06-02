@@ -51,7 +51,7 @@ const TicketSchema = new mongoose.Schema({
   to: { type: String, required: true },
   routeNo: String,
   passengers: String,
-  bookedBy: String,
+  bookedBy: String, // Passenger Mobile No
   quantities: {
     Men: { type: Number, default: 0 },
     Child: { type: Number, default: 0 },
@@ -79,10 +79,9 @@ export function getTicketModel() {
   return mongoose.models.Ticket || mongoose.model('Ticket', TicketSchema);
 }
 
-// User Schema for Wallet Refunds (Updated to include Balance and History)
+// User Schema for Wallet Refunds (Source of Truth)
 const UserSchema = new mongoose.Schema({
   phone: { type: String, unique: true, required: true },
-  wallet: { type: Number, default: 0 },
   walletBalance: { type: Number, default: 0 },
   transactions: [{
     type: { type: String, enum: ['credit', 'debit'] },
