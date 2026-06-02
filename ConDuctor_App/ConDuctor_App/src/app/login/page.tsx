@@ -10,6 +10,20 @@ import { Label } from '@/components/ui/label';
 import { Loader2, Lock, IdCard, ShieldCheck } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
+const IDLogoSVG = () => (
+  <svg viewBox="0 0 100 100" className="w-24 h-24 drop-shadow-xl animate-in zoom-in duration-700">
+    <circle cx="50" cy="50" r="50" fill="#0A2B70" />
+    <rect x="35" y="25" width="45" height="35" rx="4" fill="white" opacity="0.2" transform="rotate(8 50 50)" />
+    <rect x="22" y="32" width="56" height="42" rx="6" fill="white" />
+    <rect x="28" y="40" width="18" height="22" rx="2" fill="#F1F5F9" />
+    <circle cx="37" cy="48" r="5" fill="#0A2B70" />
+    <path d="M37 54C33 54 31 57 31 60H43C43 57 41 54 37 54Z" fill="#0A2B70" />
+    <rect x="52" y="44" width="18" height="2.5" rx="1" fill="#0A2B70" opacity="0.8" />
+    <rect x="52" y="50" width="18" height="2.5" rx="1" fill="#0A2B70" opacity="0.8" />
+    <rect x="52" y="56" width="12" height="2.5" rx="1" fill="#0A2B70" opacity="0.8" />
+  </svg>
+);
+
 export default function LoginPage() {
   const [idNo, setIdNo] = useState('');
   const [password, setPassword] = useState('');
@@ -40,7 +54,6 @@ export default function LoginPage() {
           toast({ title: "Login Successful", description: "Terminal Access Granted." });
           router.push('/');
         } catch (err) {
-          // Fallback to local storage if API is mock, but allow navigation for prototype
           localStorage.setItem('conductorUser', idNo);
           localStorage.setItem('conductorSessionId', newSessionId);
           toast({ title: "Login Successful", description: "Access Granted." });
@@ -56,27 +69,21 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen bg-[#0A2B70] flex flex-col items-center justify-center p-4">
       <div className="w-full max-w-md space-y-8">
-        <div className="flex flex-col items-center gap-4 text-white">
-          <div className="bg-white p-1 rounded-sm shadow-inner border-2 border-white">
-            <div className="w-16 h-16 flex flex-col items-center justify-center bg-red-600 text-white rounded-sm text-[9px] font-bold leading-none uppercase">
-              <span className="mb-0.5">TSRTC</span>
-              <span className="mb-0.5">GAMYAM</span>
-              <span className="text-[6px] scale-90">Track and Active</span>
-            </div>
-          </div>
+        <div className="flex flex-col items-center gap-6 text-white">
+          <IDLogoSVG />
           <div className="text-center">
             <h1 className="text-4xl font-black tracking-[0.2em] font-headline uppercase">TGSRTC</h1>
             <p className="text-white/60 font-bold tracking-widest mt-1 uppercase text-[10px]">Staff Terminal v2.1.0</p>
           </div>
         </div>
 
-        <Card className="border-none shadow-2xl rounded-[2rem] overflow-hidden">
-          <CardHeader className="text-center pb-2 pt-8">
+        <Card className="border-none shadow-2xl rounded-[2.5rem] overflow-hidden">
+          <CardHeader className="text-center pb-2 pt-10">
             <CardTitle className="text-2xl font-black font-headline uppercase tracking-tight">Staff Login</CardTitle>
             <CardDescription className="text-xs font-bold uppercase text-slate-400">Enter secure ID to access dashboard</CardDescription>
           </CardHeader>
           <form onSubmit={handleLogin}>
-            <CardContent className="space-y-6 pt-6">
+            <CardContent className="space-y-6 pt-6 px-8">
               <div className="space-y-2">
                 <Label className="text-[10px] font-black uppercase text-slate-400 ml-1">Conductor ID</Label>
                 <div className="relative">
@@ -105,7 +112,7 @@ export default function LoginPage() {
                 </div>
               </div>
             </CardContent>
-            <CardFooter className="pb-8 pt-4">
+            <CardFooter className="pb-10 pt-4 px-8">
               <Button type="submit" className="w-full h-16 text-lg font-black bg-[#0A2B70] hover:bg-[#08215c] rounded-2xl uppercase tracking-widest shadow-xl" disabled={isLoading}>
                 {isLoading ? <Loader2 className="animate-spin mr-3 h-6 w-6" /> : <ShieldCheck className="mr-3 h-6 w-6" />}
                 Authorize Access

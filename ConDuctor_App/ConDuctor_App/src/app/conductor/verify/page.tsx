@@ -1,6 +1,7 @@
+
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -133,7 +134,7 @@ export default function VerifyTicketPage() {
   return (
     <AuthGuard>  
       <div className="flex flex-col min-h-screen bg-slate-50">
-        <Header showBackButton={true} backHref="/conductor/ticket" title="Verify Ticket" />
+        <Header showBackButton={true} backHref="/" title="Verify Ticket" />
         
         <main className="flex flex-col items-center p-4 space-y-6 pb-32">
           <Card className="w-full max-w-md shadow-sm border-slate-200">
