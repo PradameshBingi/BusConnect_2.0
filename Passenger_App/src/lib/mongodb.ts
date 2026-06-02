@@ -89,7 +89,7 @@ const TicketSchema = new mongoose.Schema({
   collection: 'tickets'
 });
 
-// Wallet Schema
+// Wallet Schema (Renamed from users)
 const WalletSchema = new mongoose.Schema({
   phone: { type: String, unique: true, required: true },
   walletBalance: { type: Number, default: 0 },
@@ -106,7 +106,7 @@ const WalletSchema = new mongoose.Schema({
   collection: 'Wallet'
 });
 
-// Passenger Admin Schema (New)
+// Passenger Admin Schema (Source for Credentials)
 const PassengerAdminSchema = new mongoose.Schema({
   phone: { type: String, unique: true, required: true },
   password: { type: String, required: true },

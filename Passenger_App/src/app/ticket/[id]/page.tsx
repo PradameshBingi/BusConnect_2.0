@@ -108,7 +108,7 @@ export default function TicketDetailPage() {
       <>
         <Header showBackButton backHref="/booking-history" title="Validated Ticket" />
         <div className="p-4 md:p-8 flex flex-col items-center space-y-6 pb-32">
-          {/* Strictly use validatedAt for the used ticket receipt */}
+          {/* Use validatedAt for the receipt display strictly for date & time */}
           <ValidatedTicket ticket={{ ...ticket, timestamp: ticket.validatedAt || ticket.createdAt }} />
           
           <div className="w-full max-w-sm p-4 bg-primary/5 rounded-2xl border border-primary/20 flex flex-col items-center gap-2">
