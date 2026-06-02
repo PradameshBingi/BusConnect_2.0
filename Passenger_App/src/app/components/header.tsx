@@ -44,9 +44,11 @@ export default function Header({ showBackButton = false, backHref, title }: { sh
               });
               handleLogout();
             }
+          } else {
+            console.warn(`Session check returned status: ${res.status}`);
           }
         } catch (e) {
-          console.error("Session check failed");
+          console.error("Session heartbeat failed:", e);
         }
       }
     };

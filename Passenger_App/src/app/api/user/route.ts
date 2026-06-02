@@ -13,11 +13,21 @@ export async function GET(request: Request) {
     if (!phone) return NextResponse.json({ error: "Phone missing" }, { status: 400 });
 
     const Wallet = getWalletModel();
-    let wallet = await Wallet.findOne({ phone });
+    
+    // Type-robust lookup
+    const phoneNum = Number(phone);
+    const query = {
+      $or: [
+        { phone: phone.toString() },
+        { phone: isNaN(phoneNum) ? null : phoneNum }
+      ].filter(condition => condition.phone !== null)
+    };
+
+    let wallet = await Wallet.findOne(query);
 
     if (!wallet) {
       wallet = await Wallet.create({ 
-        phone, 
+        phone: isNaN(phoneNum) ? phone : phoneNum, 
         walletBalance: 0, 
         autoDeductEnabled: false,
         transactions: [] 
@@ -32,6 +42,7 @@ export async function GET(request: Request) {
 
     return NextResponse.json(walletObj);
   } catch (error: any) {
+    console.error("❌ API /user GET Error:", error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
@@ -43,19 +54,28 @@ export async function POST(request: Request) {
     const data = await request.json();
     const { phone, amount, type, description, sessionId } = data;
 
+    if (!phone) return NextResponse.json({ error: "Phone required" }, { status: 400 });
+
     const Wallet = getWalletModel();
+    const phoneNum = Number(phone);
+    const query = {
+      $or: [
+        { phone: phone.toString() },
+        { phone: isNaN(phoneNum) ? null : phoneNum }
+      ].filter(condition => condition.phone !== null)
+    };
     
     // Handle Session Update separately
     if (type === 'session_update') {
         const wallet = await Wallet.findOneAndUpdate(
-            { phone },
+            query,
             { $set: { sessionId } },
-            { new: true, upsert: true }
+            { new: true, upsert: true, setDefaultsOnInsert: true }
         );
         return NextResponse.json({ status: "success", sessionId: wallet.sessionId });
     }
 
-    const wallet = await Wallet.findOne({ phone });
+    const wallet = await Wallet.findOne(query);
     if (!wallet) return NextResponse.json({ error: "Wallet not found" }, { status: 404 });
 
     if (type === 'debit' && wallet.walletBalance < amount) {
@@ -66,7 +86,7 @@ export async function POST(request: Request) {
     
     // Atomic update
     const updatedWallet = await Wallet.findOneAndUpdate(
-        { phone },
+        query,
         { 
             $inc: { walletBalance: adjustment },
             $push: { 
@@ -86,6 +106,7 @@ export async function POST(request: Request) {
         walletBalance: updatedWallet.walletBalance 
     });
   } catch (error: any) {
+    console.error("❌ API /user POST Error:", error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

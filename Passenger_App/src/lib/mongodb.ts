@@ -89,9 +89,9 @@ const TicketSchema = new mongoose.Schema({
   collection: 'Passengers_Ticket'
 });
 
-// Wallet Schema
+// Wallet Schema (Type-Robust for phone)
 const WalletSchema = new mongoose.Schema({
-  phone: { type: String, unique: true, required: true },
+  phone: { type: mongoose.Schema.Types.Mixed, unique: true, required: true },
   walletBalance: { type: Number, default: 0 },
   autoDeductEnabled: { type: Boolean, default: false },
   sessionId: { type: String },

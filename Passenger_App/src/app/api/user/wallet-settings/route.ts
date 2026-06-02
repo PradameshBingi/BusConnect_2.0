@@ -13,8 +13,16 @@ export async function POST(request: Request) {
     }
 
     const Wallet = getWalletModel();
+    const phoneNum = Number(phone);
+    const query = {
+      $or: [
+        { phone: phone.toString() },
+        { phone: isNaN(phoneNum) ? null : phoneNum }
+      ].filter(condition => condition.phone !== null)
+    };
+
     const wallet = await Wallet.findOneAndUpdate(
-      { phone },
+      query,
       { $set: { autoDeductEnabled } },
       { new: true, upsert: true }
     );
