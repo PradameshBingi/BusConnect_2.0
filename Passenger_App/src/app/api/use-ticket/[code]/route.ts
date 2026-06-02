@@ -21,14 +21,23 @@ export async function POST(
     const ticket = await Ticket.findOne({ ticketCode });
     if (!ticket) return NextResponse.json({ error: "Ticket not found" }, { status: 404 });
 
-    const originalBusType = ticket.busType;
-    const newBusType = updateData.busType || originalBusType;
+    // 1. Terminology Stabilization
+    const normalizeBusType = (type: string) => {
+        if (!type) return "City Ordinary";
+        const t = type.toLowerCase();
+        if (t.includes('deluxe')) return 'Metro Deluxe';
+        if (t.includes('express')) return 'Metro Express';
+        return 'City Ordinary';
+    };
+
+    const originalBusType = normalizeBusType(ticket.busType);
+    const newBusType = updateData.busType ? normalizeBusType(updateData.busType) : originalBusType;
     
-    // 1. Determine Transition Type & Label
+    // 2. Determine Transition Type & Label
     let transitionMsg = "";
     const isValidation = updateData.status === 'used' || (Object.keys(updateData).length === 0 && ticket.status === 'valid');
     const isModification = (updateData.from || updateData.to || updateData.quantities) && !updateData.busType;
-    const isUpgradation = updateData.busType && updateData.busType !== originalBusType;
+    const isUpgradation = updateData.busType && newBusType !== originalBusType;
 
     if (isValidation) {
         if (originalBusType !== newBusType) {
@@ -42,12 +51,14 @@ export async function POST(
         transitionMsg = "Modification (Details Updated)";
     }
 
-    // 2. Financial Processing Logic
+    // 3. Financial Processing Logic (Refunds for quantity decrease or category downgrade)
     const Wallet = getWalletModel();
     const phone = ticket.bookedBy;
-    const diff = (ticket.totalFare || 0) - (updateData.totalFare || ticket.totalFare);
+    const oldFare = ticket.totalFare || 0;
+    const newFare = updateData.totalFare !== undefined ? updateData.totalFare : oldFare;
+    const diff = oldFare - newFare;
     
-    if (phone && Math.abs(diff) > 0) {
+    if (phone && diff > 0) { // Refund detected
         const phoneNum = Number(phone);
         const query = {
             $or: [
@@ -56,46 +67,30 @@ export async function POST(
             ].filter(c => c.phone !== null)
         };
 
-        if (diff > 0) { // Refund (Quantity Decrease or Downgrade)
-            const refundWithFee = Math.round(diff * 0.90); // 10% fee
-            await Wallet.findOneAndUpdate(query, {
-                $inc: { walletBalance: refundWithFee },
-                $push: {
-                    transactions: {
-                        type: 'credit',
-                        amount: refundWithFee,
-                        description: `${transitionMsg || 'Adjustment'} Refund: ${ticketCode}`,
-                        date: new Date()
-                    }
+        const refundWithFee = Math.round(diff * 0.90); // 10% fee
+        await Wallet.findOneAndUpdate(query, {
+            $inc: { walletBalance: refundWithFee },
+            $push: {
+                transactions: {
+                    type: 'credit',
+                    amount: refundWithFee,
+                    description: `${transitionMsg || 'Adjustment'} Refund: ${ticketCode}`,
+                    date: new Date()
                 }
-            }, { upsert: true });
-        } else if (diff < 0) { // Deduction (Upgrade)
-            const amountToDeduct = Math.abs(diff);
-            // We assume payment is handled on frontend, but we log the transaction in wallet if it exists
-            const wallet = await Wallet.findOne(query);
-            if (wallet) {
-               await Wallet.findOneAndUpdate(query, {
-                  $inc: { walletBalance: wallet.autoDeductEnabled ? -amountToDeduct : 0 },
-                  $push: {
-                      transactions: {
-                          type: 'debit',
-                          amount: amountToDeduct,
-                          description: `${transitionMsg || 'Adjustment'} Charge: ${ticketCode}`,
-                          date: new Date()
-                      }
-                  }
-               });
             }
-        }
+        }, { upsert: true });
     }
 
-    // 3. Update Ticket Document
-    if (!ticket.serviceTransition) ticket.serviceTransition = [];
+    // 4. Update Ticket Document (Strict Array Safety)
+    if (!Array.isArray(ticket.serviceTransition)) {
+        ticket.serviceTransition = [];
+    }
+    
     if (transitionMsg) {
         ticket.serviceTransition.push(transitionMsg);
     }
 
-    // Status logic: modifications/upgradations keep current status, empty/explicit validation calls are 'used'
+    // Status logic: modifications/upgradations keep valid status, empty/explicit validation calls mark as used
     if (updateData.status) {
         ticket.status = updateData.status;
     } else if (isValidation && ticket.status === 'valid') {
@@ -113,7 +108,7 @@ export async function POST(
     if (updateData.passengers) ticket.passengers = updateData.passengers;
     if (updateData.totalFare !== undefined) ticket.totalFare = updateData.totalFare;
     if (updateData.fare !== undefined) ticket.fare = updateData.fare;
-    if (updateData.busType) ticket.busType = updateData.busType;
+    if (updateData.busType) ticket.busType = newBusType;
     if (updateData.createdAt) ticket.createdAt = new Date(updateData.createdAt);
 
     await ticket.save();

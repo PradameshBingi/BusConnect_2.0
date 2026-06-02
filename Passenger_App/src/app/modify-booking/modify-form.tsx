@@ -138,33 +138,23 @@ export function ModifyForm({ ticket, onReset }: { ticket: any, onReset: () => vo
         })
       });
 
-      if (!response.ok) throw new Error("Server failed to update ticket details.");
+      if (!response.ok) {
+          const errData = await response.json().catch(() => ({}));
+          throw new Error(errData.error || "Server failed to update ticket details.");
+      }
 
-      // Process Cloud Wallet updates if modified
-      if (currentUserId) {
-          if (isRefund && refundWithFee > 0) {
-              await fetch('/api/user', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({
-                      phone: currentUserId,
-                      amount: refundWithFee,
-                      type: 'credit',
-                      description: `Modification Refund for ${ticket.ticketCode}`
-                  })
-              });
-          } else if (isAddition && fareDifference > 0) {
-              await fetch('/api/user', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({
-                      phone: currentUserId,
-                      amount: fareDifference,
-                      type: 'debit',
-                      description: `Modification Upgrade for ${ticket.ticketCode}`
-                  })
-              });
-          }
+      // Process Cloud Wallet updates for additions (refunds are handled by API)
+      if (currentUserId && isAddition && fareDifference > 0) {
+          await fetch('/api/user', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                  phone: currentUserId,
+                  amount: fareDifference,
+                  type: 'debit',
+                  description: `Modification Upgrade for ${ticket.ticketCode}`
+              })
+          });
       }
 
       toast({ 
@@ -233,17 +223,15 @@ export function ModifyForm({ ticket, onReset }: { ticket: any, onReset: () => vo
              <div className="flex justify-between text-xs opacity-60"><span>Original Total:</span> <span>Rs. {Math.round(ticket.totalFare)}</span></div>
              <div className="flex justify-between font-bold text-lg">
                 <span>New Total:</span> 
-                <span>Rs. {isModified ? Math.round(newTotalFare) : 0}</span>
+                <span>Rs. {isModified ? Math.round(newTotalFare) : Math.round(ticket.totalFare)}</span>
              </div>
              {isModified ? (
                <div className="pt-2 border-t border-white/10 mt-2">
                  {isRefund && refundWithFee > 0 && (
-                   <>
-                     <div className="flex justify-between text-green-400 font-bold">
-                        <span>Refund to Wallet:</span>
-                        <span>+ Rs. {Math.round(refundWithFee)}</span>
-                     </div>
-                   </>
+                   <div className="flex justify-between text-green-400 font-bold">
+                      <span>Refund to Wallet:</span>
+                      <span>+ Rs. {Math.round(refundWithFee)}</span>
+                   </div>
                  )}
                  {isAddition && fareDifference > 0 && (
                    <div className="flex justify-between text-orange-400 font-bold">

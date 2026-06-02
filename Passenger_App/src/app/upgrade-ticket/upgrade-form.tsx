@@ -147,8 +147,9 @@ export function UpgradeForm({ ticket }: { ticket: Ticket }) {
                         <Bus className="h-8 w-8 text-white" />
                         <CardTitle className="text-2xl font-headline uppercase tracking-tight">Upgrade Service</CardTitle>
                     </div>
-                    <CardDescription className="text-white/80">
-                        From: <span className="font-bold text-white">{ticket.busType}</span>
+                    <CardDescription className="text-white/80 leading-relaxed">
+                        From: <span className="font-bold text-white">{ticket.busType}</span><br />
+                        Fare Paid: <span className="font-bold text-white">Rs. {Math.round(ticket.totalFare)}</span>
                     </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6 p-8">
