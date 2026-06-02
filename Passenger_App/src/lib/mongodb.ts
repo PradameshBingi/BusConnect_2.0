@@ -86,10 +86,10 @@ const TicketSchema = new mongoose.Schema({
 }, { 
   bufferCommands: true,
   timestamps: true,
-  collection: 'tickets'
+  collection: 'Passengers_Ticket'
 });
 
-// Wallet Schema (Renamed from users)
+// Wallet Schema
 const WalletSchema = new mongoose.Schema({
   phone: { type: String, unique: true, required: true },
   walletBalance: { type: Number, default: 0 },
@@ -103,13 +103,13 @@ const WalletSchema = new mongoose.Schema({
   }]
 }, { 
   timestamps: true,
-  collection: 'Wallet'
+  collection: 'Passengers_Wallet'
 });
 
 // Passenger Admin Schema (Source for Credentials)
 const PassengerAdminSchema = new mongoose.Schema({
-  phone: { type: String, unique: true, required: true },
-  password: { type: String, required: true },
+  phone: { type: mongoose.Schema.Types.Mixed, unique: true, required: true },
+  password: { type: mongoose.Schema.Types.Mixed, required: true },
   name: String,
   lastLogin: Date
 }, { 
@@ -137,7 +137,7 @@ const FeedbackSchema = new mongoose.Schema({
   suggestions: { type: String },
   createdAt: { type: Date, default: Date.now }
 }, { 
-  collection: 'feedbacks'
+  collection: 'Passengers_Feedbacks'
 });
 
 // Conductor Log Schema
