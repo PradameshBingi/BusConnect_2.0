@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Bus, Loader2, Lock, Phone } from 'lucide-react';
+import { Bus, Loader2, Lock,IdCard } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 export default function LoginPage() {
@@ -119,7 +119,7 @@ export default function LoginPage() {
                     inputMode="numeric"
                     suppressHydrationWarning
                   />
-                  <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                  <IdCard className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                 </div>
               </div>
               <div className="space-y-2">
