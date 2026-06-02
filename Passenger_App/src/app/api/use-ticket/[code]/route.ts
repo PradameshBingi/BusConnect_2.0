@@ -23,13 +23,19 @@ export async function POST(
 
     const originalBusType = ticket.busType;
     const newBusType = updateData.busType || originalBusType;
+    
+    // Determine transition status
     const isValidation = updateData.status === 'used' || (!updateData.status && ticket.status === 'valid');
     const isPassengerChange = updateData.status === 'valid';
 
-    // 1. Determine Transition Type
+    // 1. Determine Transition Type & Label
     let transitionMsg = "";
     if (isValidation) {
-        transitionMsg = `Conductor Transition (${originalBusType} → ${newBusType})`;
+        if (originalBusType !== newBusType) {
+            transitionMsg = `Conductor Transition (${originalBusType} → ${newBusType})`;
+        } else {
+            transitionMsg = "Conductor Validation";
+        }
     } else if (isPassengerChange) {
         if (originalBusType !== newBusType) {
             transitionMsg = `Upgradation (${originalBusType} → ${newBusType})`;
@@ -44,29 +50,47 @@ export async function POST(
     const diff = (ticket.totalFare || 0) - (updateData.totalFare || ticket.totalFare);
     
     if (Math.abs(diff) > 0) {
+        const phoneNum = Number(phone);
         const query = {
             $or: [
               { phone: phone.toString() },
-              { phone: !isNaN(Number(phone)) ? Number(phone) : null }
+              { phone: isNaN(phoneNum) ? null : phoneNum }
             ].filter(c => c.phone !== null)
         };
 
-        if (diff > 0) { // Refund
-            const refundWithFee = Math.round(diff * 0.90); // 10% fee for downgrades/removals
+        if (diff > 0) { // Refund (Downgrade)
+            const refundWithFee = Math.round(diff * 0.90); // 10% fee
             await Wallet.findOneAndUpdate(query, {
                 $inc: { walletBalance: refundWithFee },
                 $push: {
                     transactions: {
                         type: 'credit',
                         amount: refundWithFee,
-                        description: `${transitionMsg} Refund for ${ticketCode}`,
+                        description: `${transitionMsg} Refund: ${ticketCode}`,
                         date: new Date()
                     }
                 }
-            });
+            }, { upsert: true });
+        } else if (diff < 0) { // Deduction (Upgrade)
+            const wallet = await Wallet.findOne(query);
+            const amountToDeduct = Math.abs(diff);
+            
+            // Only auto-deduct if enabled OR if initiated via digital payment (handled by client before API call)
+            // But if this API is called from conductor side, it checks autoDeductEnabled
+            if (wallet && wallet.autoDeductEnabled) {
+                await Wallet.findOneAndUpdate(query, {
+                    $inc: { walletBalance: -amountToDeduct },
+                    $push: {
+                        transactions: {
+                            type: 'debit',
+                            amount: amountToDeduct,
+                            description: `${transitionMsg} Charge: ${ticketCode}`,
+                            date: new Date()
+                        }
+                    }
+                });
+            }
         }
-        // Deductions (upgrades) are handled by the calling form (SimulatedPayment) 
-        // or auto-deduct logic if conductor side.
     }
 
     // 3. Update Ticket Document

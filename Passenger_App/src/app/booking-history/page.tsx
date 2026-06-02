@@ -53,13 +53,12 @@ export default function BookingHistoryPage() {
     }
   }, []);
 
-  const getFullBusType = (type: string) => {
-    switch (type) {
-      case 'ordinary': return 'City Ordinary';
-      case 'express': return 'Metro Express';
-      case 'deluxe': return 'Metro Deluxe';
-      default: return type;
-    }
+  const getStandardizedBusType = (type: string) => {
+    const t = type.toLowerCase();
+    if (t.includes('ordinary')) return 'City Ordinary';
+    if (t.includes('express')) return 'Metro Express';
+    if (t.includes('deluxe')) return 'Metro Deluxe';
+    return type;
   };
 
   return (
@@ -116,7 +115,7 @@ export default function BookingHistoryPage() {
                     </div>
                     <div className="flex justify-between items-end mt-2">
                       <p className="font-bold text-slate-800">Total: Rs. {ticket.totalFare.toFixed(2)}</p>
-                      <Badge variant="outline" className="border-primary text-primary font-bold text-xs uppercase">{getFullBusType(ticket.busType)}</Badge>
+                      <Badge variant="outline" className="border-primary text-primary font-bold text-xs uppercase">{getStandardizedBusType(ticket.busType)}</Badge>
                     </div>
                       <div className="flex items-center text-xs mt-2 text-muted-foreground font-medium">
                         <User className="h-4 w-4 mr-1.5" /> {ticket.passengers}

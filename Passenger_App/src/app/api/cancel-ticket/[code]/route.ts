@@ -29,9 +29,10 @@ export async function POST(
     // 1. Mark as cancelled
     ticket.status = "cancelled";
     ticket.updatedAt = new Date();
+    ticket.serviceTransition.push("Ticket Cancellation");
     await ticket.save();
 
-    // 2. Credit Wallet (Standardizing on getWalletModel and phone matching)
+    // 2. Credit Wallet
     const Wallet = getWalletModel();
     const phone = ticket.bookedBy;
     
@@ -39,10 +40,11 @@ export async function POST(
     const cancellationFee = Math.round(originalFare * 0.10);
     const refundAmount = Math.max(0, originalFare - cancellationFee);
 
+    const phoneNum = Number(phone);
     const query = {
       $or: [
         { phone: phone.toString() },
-        { phone: !isNaN(Number(phone)) ? Number(phone) : null }
+        { phone: !isNaN(phoneNum) ? phoneNum : null }
       ].filter(c => c.phone !== null)
     };
 

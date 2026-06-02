@@ -42,13 +42,12 @@ function TicketContent() {
   const { toast } = useToast();
   const id = searchParams.get('id');
 
-  const getFullBusType = (type: string) => {
-    switch (type.toLowerCase()) {
-      case 'ordinary': return 'City Ordinary';
-      case 'express': return 'Metro Express';
-      case 'deluxe': return 'Metro Deluxe';
-      default: return type;
-    }
+  const getStandardizedBusType = (type: string) => {
+    const t = type.toLowerCase();
+    if (t.includes('ordinary')) return 'City Ordinary';
+    if (t.includes('express')) return 'Metro Express';
+    if (t.includes('deluxe')) return 'Metro Deluxe';
+    return type;
   };
 
   const fetchTicket = async (showToast = false) => {
@@ -182,7 +181,7 @@ function TicketContent() {
                 </div>
                 <div className="space-y-1 text-right">
                     <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest">Bus Category</p>
-                    <p className="font-bold text-primary text-base">{getFullBusType(ticket.busType)}</p>
+                    <p className="font-bold text-primary text-base">{getStandardizedBusType(ticket.busType)}</p>
                 </div>
             </div>
 

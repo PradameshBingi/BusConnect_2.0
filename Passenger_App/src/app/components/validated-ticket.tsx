@@ -73,11 +73,13 @@ export function ValidatedTicket({ ticket }: ValidatedTicketProps) {
     let cRate = ordinaryChildFare;
     let wRate = 0;
 
-    if (ticket.busType === 'express') {
+    const type = (ticket.busType || '').toLowerCase();
+
+    if (type.includes('express')) {
         mRate += 5;
         cRate = Math.round(ordinaryChildFare + 2.5);
         wRate = 0;
-    } else if (ticket.busType === 'deluxe') {
+    } else if (type.includes('deluxe')) {
         mRate += 10;
         cRate = ordinaryChildFare + 5;
         wRate = ordinaryAdultFare + 10;
@@ -109,7 +111,7 @@ export function ValidatedTicket({ ticket }: ValidatedTicketProps) {
         <div className="text-center relative py-3 mb-3">
           <TicketWatermark />
           <p className="text-[11px] font-black mb-0 relative z-10">Service Number: {stableData.serviceNo}</p>
-          <h2 className="text-2xl font-black uppercase tracking-tighter relative z-10 py-0.5">CITY {ticket.busType.toUpperCase()}</h2>
+          <h2 className="text-2xl font-black uppercase tracking-tighter relative z-10 py-0.5">{ticket.busType.toUpperCase()}</h2>
           <p className="text-[11px] font-black relative z-10">Trip No: {stableData.tripNo}</p>
         </div>
 

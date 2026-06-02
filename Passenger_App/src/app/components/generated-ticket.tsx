@@ -48,11 +48,13 @@ export function GeneratedTicket({ ticket, refundCode }: GeneratedTicketProps) {
         let cRate = ordinaryChildFare;
         let wRate = 0;
 
-        if (ticket.busType === 'express') {
+        const type = (ticket.busType || '').toLowerCase();
+
+        if (type.includes('express')) {
             mRate += 5;
             cRate = Math.round(ordinaryChildFare + 2.5);
             wRate = 0;
-        } else if (ticket.busType === 'deluxe') {
+        } else if (type.includes('deluxe')) {
             mRate += 10;
             cRate = ordinaryChildFare + 5;
             wRate = ordinaryAdultFare + 10;
@@ -83,7 +85,7 @@ export function GeneratedTicket({ ticket, refundCode }: GeneratedTicketProps) {
                 <div className="my-4 relative py-2">
                     <BusStamp />
                     <p className="text-[11px] font-bold">Service Number: {serviceNumber}</p>
-                    <p className="font-black text-2xl uppercase tracking-tighter">CITY {ticket.busType.toUpperCase()}</p>
+                    <p className="font-black text-2xl uppercase tracking-tighter">{ticket.busType.toUpperCase()}</p>
                     <p className="text-[11px] font-bold">Trip No: {Math.floor(Math.random() * 5) + 1}</p>
                 </div>
 
