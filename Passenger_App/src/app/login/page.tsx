@@ -54,6 +54,8 @@ export default function LoginPage() {
         throw new Error(errorData.error || "Authentication failed. Invalid phone or password.");
       }
 
+      const loginData = await loginRes.json();
+
       // 2. Establish Secure Session in Cloud
       const newSessionId = Date.now().toString();
       await fetch('/api/user', {
@@ -68,9 +70,10 @@ export default function LoginPage() {
 
       // 3. Persist Locally
       localStorage.setItem('currentUser', phone);
+      localStorage.setItem('userName', loginData.user.name);
       localStorage.setItem('sessionId', newSessionId);
       
-      toast({ title: "Login Successful", description: `Welcome back to BusConnect.` });
+      toast({ title: "Login Successful", description: `Welcome back, ${loginData.user.name}.` });
       router.push('/');
 
     } catch (err: any) {

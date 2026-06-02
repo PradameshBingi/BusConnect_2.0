@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useCallback } from 'react';
+import { useEffect, useCallback, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, Bell, MessageSquare, Globe, User, LogOut } from 'lucide-react';
@@ -18,19 +18,26 @@ import { useToast } from '@/hooks/use-toast';
 export default function Header({ showBackButton = false, backHref, title }: { showBackButton?: boolean; backHref?: string; title?: string }) {
   const router = useRouter();
   const { toast } = useToast();
+  const [userInfo, setUserInfo] = useState({ id: '', name: '' });
 
   const handleLogout = useCallback(() => {
     localStorage.removeItem('currentUser');
+    localStorage.removeItem('userName');
     localStorage.removeItem('sessionId');
     router.replace('/login');
   }, [router]);
 
-  // Session Validation Heartbeat
+  // Session Validation Heartbeat and Profile Loading
   useEffect(() => {
+    const phone = localStorage.getItem('currentUser');
+    const name = localStorage.getItem('userName');
+    const localSessionId = localStorage.getItem('sessionId');
+
+    if (phone) {
+      setUserInfo({ id: phone, name: name || 'Passenger' });
+    }
+
     const validateSession = async () => {
-      const phone = localStorage.getItem('currentUser');
-      const localSessionId = localStorage.getItem('sessionId');
-      
       if (phone && localSessionId) {
         try {
           const res = await fetch(`/api/user?phone=${phone}`);
@@ -104,11 +111,16 @@ export default function Header({ showBackButton = false, backHref, title }: { sh
                 <User className="h-5 w-5" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48 rounded-xl">
-              <DropdownMenuLabel>Account</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={handleLogout} className="text-red-600 focus:text-red-600 cursor-pointer font-bold">
-                <LogOut className="mr-2 h-4 w-4" />
+            <DropdownMenuContent align="end" className="w-56 rounded-xl overflow-hidden">
+              <DropdownMenuLabel className="font-normal bg-slate-50 border-b border-slate-100">
+                <div className="flex flex-col space-y-1 py-1">
+                  <p className="text-sm font-black text-slate-900 leading-none truncate">{userInfo.name}</p>
+                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">ID: {userInfo.id}</p>
+                </div>
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator className="m-0" />
+              <DropdownMenuItem onClick={handleLogout} className="text-red-600 focus:text-red-600 cursor-pointer font-bold h-12 px-4">
+                <LogOut className="mr-3 h-4 w-4" />
                 <span>Logout</span>
               </DropdownMenuItem>
             </DropdownMenuContent>
