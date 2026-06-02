@@ -41,41 +41,46 @@ export default function LoginPage() {
     
     setIsLoading(true);
 
-    // Mock Authentication Logic combined with Session Tracking
-    setTimeout(async () => {
-      if (phone === '9999999999' && password === '78945') {
-        const newSessionId = Date.now().toString();
-        
-        try {
-          // Register session in MongoDB
-          await fetch('/api/user', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              phone,
-              sessionId: newSessionId,
-              type: 'session_update'
-            })
-          });
+    try {
+      // 1. Verify credentials against Passenger_Admin collection
+      const loginRes = await fetch('/api/passenger/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone, password })
+      });
 
-          localStorage.setItem('currentUser', phone);
-          localStorage.setItem('sessionId', newSessionId);
-          
-          toast({ title: "Login Successful", description: "Welcome to BusConnect Passenger Dashboard." });
-          router.push('/');
-        } catch (err) {
-          toast({ variant: 'destructive', title: "Login Error", description: "Failed to establish secure session." });
-          setIsLoading(false);
-        }
-      } else {
-        toast({ 
-          variant: 'destructive', 
-          title: "Login Failed", 
-          description: "Invalid phone number or password." 
-        });
-        setIsLoading(false);
+      if (!loginRes.ok) {
+        const errorData = await loginRes.json().catch(() => ({}));
+        throw new Error(errorData.error || "Authentication failed. Invalid phone or password.");
       }
-    }, 800);
+
+      // 2. Establish Secure Session in Cloud
+      const newSessionId = Date.now().toString();
+      await fetch('/api/user', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          phone,
+          sessionId: newSessionId,
+          type: 'session_update'
+        })
+      });
+
+      // 3. Persist Locally
+      localStorage.setItem('currentUser', phone);
+      localStorage.setItem('sessionId', newSessionId);
+      
+      toast({ title: "Login Successful", description: `Welcome back to BusConnect.` });
+      router.push('/');
+
+    } catch (err: any) {
+      toast({ 
+        variant: 'destructive', 
+        title: "Login Failed", 
+        description: err.message || "An unexpected error occurred during login." 
+      });
+      setIsLoading(false);
+    }
   };
 
   if (!isMounted) return null;
@@ -84,7 +89,7 @@ export default function LoginPage() {
     <div className="min-h-screen bg-primary flex flex-col items-center justify-center p-4">
       <div className="w-full max-w-md space-y-8">
         <div className="flex flex-col items-center gap-4 text-white">
-          <div className="bg-white p-1 rounded-sm shadow-inner">
+          <div className="bg-white p-1 rounded-sm shadow-inner shrink-0 border border-white/20">
             <div className="w-12 h-12 flex flex-col items-center justify-center bg-red-600 text-white rounded-sm text-[7px] font-bold leading-none">
               <span className="mb-0.5">TSRTC</span>
               <span className="mb-0.5">GAMYAM</span>
@@ -92,7 +97,7 @@ export default function LoginPage() {
             </div>
           </div>
           <div className="text-center">
-            <h1 className="text-4xl font-bold tracking-[0.2em] font-headline">TGSRTC</h1>
+            <h1 className="text-4xl font-bold tracking-[0.2em] font-headline uppercase">TGSRTC</h1>
             <p className="text-white/80 font-medium tracking-tight mt-1 uppercase text-xs">Hyderabad Digital Ticketing</p>
           </div>
         </div>
@@ -117,7 +122,6 @@ export default function LoginPage() {
                     className="pl-10 h-14 rounded-xl text-lg tracking-widest"
                     maxLength={10}
                     inputMode="numeric"
-                    suppressHydrationWarning
                   />
                   <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                 </div>
@@ -133,13 +137,12 @@ export default function LoginPage() {
                     onChange={(e) => setPassword(e.target.value)} 
                     required 
                     className="pl-10 h-14 rounded-xl text-lg tracking-[0.5em]"
-                    suppressHydrationWarning
                   />
                   <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                 </div>
               </div>
             </CardContent>
-            <CardFooter className="pt-4">
+            <CardFooter className="pt-4 pb-8">
               <Button type="submit" className="w-full h-14 text-lg font-bold bg-[#0A2B70] hover:bg-[#0A2B70]/90 rounded-2xl" disabled={isLoading}>
                 {isLoading ? <Loader2 className="animate-spin mr-2" /> : "Login"}
               </Button>
@@ -147,8 +150,8 @@ export default function LoginPage() {
           </form>
         </Card>
 
-        <p className="text-center text-white/60 text-xs mt-8">
-          © 2024 TGSRTC. Developed by Bingi Pradamesh.
+        <p className="text-center text-white/60 text-[10px] mt-8 uppercase tracking-widest font-bold">
+          © 2024 TGSRTC Hyderabad • Secure Booking Portal
         </p>
       </div>
     </div>

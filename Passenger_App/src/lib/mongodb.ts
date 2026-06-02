@@ -89,7 +89,7 @@ const TicketSchema = new mongoose.Schema({
   collection: 'tickets'
 });
 
-// Wallet Schema (Renamed from User)
+// Wallet Schema
 const WalletSchema = new mongoose.Schema({
   phone: { type: String, unique: true, required: true },
   walletBalance: { type: Number, default: 0 },
@@ -106,7 +106,18 @@ const WalletSchema = new mongoose.Schema({
   collection: 'Wallet'
 });
 
-// Admin Schema
+// Passenger Admin Schema (New)
+const PassengerAdminSchema = new mongoose.Schema({
+  phone: { type: String, unique: true, required: true },
+  password: { type: String, required: true },
+  name: String,
+  lastLogin: Date
+}, { 
+  timestamps: true,
+  collection: 'Passenger_Admin'
+});
+
+// Admin Schema (Staff)
 const AdminSchema = new mongoose.Schema({
   adminId: { type: String, unique: true, required: true },
   password: { type: String, required: true },
@@ -132,11 +143,11 @@ const FeedbackSchema = new mongoose.Schema({
 // Conductor Log Schema
 const ConductorLogSchema = new mongoose.Schema({
   conductorId: String,
-  action: String, // 'ticket_validation', 'pass_verification'
+  action: String, 
   ticketCode: String,
   passCode: String,
   amount: Number,
-  type: String, // 'refund', 'deduction', 'standard'
+  type: String, 
   timestamp: { type: Date, default: Date.now }
 }, {
   collection: 'conductor_logs'
@@ -148,6 +159,10 @@ export function getTicketModel() {
 
 export function getWalletModel() {
   return mongoose.models.Wallet || mongoose.model('Wallet', WalletSchema);
+}
+
+export function getPassengerAdminModel() {
+  return mongoose.models.PassengerAdmin || mongoose.model('PassengerAdmin', PassengerAdminSchema);
 }
 
 export function getAdminModel() {
