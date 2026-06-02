@@ -6,7 +6,6 @@ import { calculateFare, BUS_CATEGORIES } from '@/lib/fare-calculator';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
 import { Wallet, ArrowUpCircle, Loader2, Bus } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { SimulatedPayment } from '@/components/simulated-payment';
@@ -148,8 +147,10 @@ export function UpgradeForm({ ticket }: { ticket: Ticket }) {
                         <CardTitle className="text-2xl font-headline uppercase tracking-tight">Upgrade Service</CardTitle>
                     </div>
                     <CardDescription className="text-white/80 leading-relaxed">
-                        From: <span className="font-bold text-white">{ticket.busType}</span><br />
-                        Fare Paid: <span className="font-bold text-white">Rs. {Math.round(ticket.totalFare)}.00</span>
+                        <div className="flex flex-col gap-1 mt-2">
+                            <p>From: <span className="font-bold text-white uppercase">{ticket.busType}</span></p>
+                            <p>Fare Paid: <span className="font-bold text-white">Rs. {Math.round(ticket.totalFare)}.00</span></p>
+                        </div>
                     </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6 p-8">

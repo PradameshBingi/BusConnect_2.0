@@ -40,13 +40,17 @@ export function calculateFare(
   let childRate = ordinaryChildRate;
   let womenRate = 0; 
 
-  const type = (busType || '').toString();
+  // Normalization logic to ensure strict category matching
+  const type = (busType || '').toString().toLowerCase();
+  let finalBusType = BUS_CATEGORIES.ORDINARY;
 
-  if (type === BUS_CATEGORIES.EXPRESS) {
+  if (type.includes('express')) {
+      finalBusType = BUS_CATEGORIES.EXPRESS;
       menRate = ordinaryAdultRate + 5;
       childRate = Math.round(ordinaryChildRate + 2.5);
       womenRate = 0; 
-  } else if (type === BUS_CATEGORIES.DELUXE) {
+  } else if (type.includes('deluxe')) {
+      finalBusType = BUS_CATEGORIES.DELUXE;
       menRate = ordinaryAdultRate + 10;
       childRate = ordinaryChildRate + 5;
       womenRate = ordinaryAdultRate + 10; 

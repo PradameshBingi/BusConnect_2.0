@@ -21,7 +21,7 @@ export async function POST(
     const ticket = await Ticket.findOne({ ticketCode });
     if (!ticket) return NextResponse.json({ error: "Ticket not found" }, { status: 404 });
 
-    // 1. Terminology Normalization
+    // 1. Terminology Normalization Layer
     const normalizeBusType = (type: string) => {
         if (!type) return "City Ordinary";
         const t = type.toLowerCase();
@@ -52,37 +52,39 @@ export async function POST(
     }
 
     // 3. Financial Processing Logic (Refunds for modifications)
-    const Wallet = getWalletModel();
     const phone = ticket.bookedBy;
-    const oldFare = ticket.totalFare || 0;
-    const newFare = updateData.totalFare !== undefined ? updateData.totalFare : oldFare;
-    const diff = oldFare - newFare;
-    
-    if (phone && diff > 0) {
-        const phoneNum = Number(phone);
-        const query = {
-            $or: [
-              { phone: phone.toString() },
-              { phone: isNaN(phoneNum) ? null : phoneNum }
-            ].filter(c => c.phone !== null)
-        };
+    if (phone) {
+        const Wallet = getWalletModel();
+        const oldFare = ticket.totalFare || 0;
+        const newFare = updateData.totalFare !== undefined ? updateData.totalFare : oldFare;
+        const diff = oldFare - newFare;
+        
+        if (diff > 0) {
+            const phoneNum = Number(phone);
+            const walletQuery = {
+                $or: [
+                  { phone: phone.toString() },
+                  { phone: !isNaN(phoneNum) ? phoneNum : null }
+                ].filter(c => c.phone !== null)
+            };
 
-        const refundWithFee = Math.round(diff * 0.90); // 10% fee
-        await Wallet.findOneAndUpdate(query, {
-            $inc: { walletBalance: refundWithFee },
-            $push: {
-                transactions: {
-                    type: 'credit',
-                    amount: refundWithFee,
-                    description: `${transitionMsg || 'Adjustment'} Refund: ${ticketCode}`,
-                    date: new Date()
+            const refundWithFee = Math.round(diff * 0.90); // 10% fee
+            await Wallet.findOneAndUpdate(walletQuery, {
+                $inc: { walletBalance: refundWithFee },
+                $push: {
+                    transactions: {
+                        type: 'credit',
+                        amount: refundWithFee,
+                        description: `${transitionMsg || 'Adjustment'} Refund: ${ticketCode}`,
+                        date: new Date()
+                    }
                 }
-            }
-        }, { upsert: true });
+            }, { upsert: true });
+        }
     }
 
     // 4. Update Ticket Document (Defensive initialization for push)
-    if (!Array.isArray(ticket.serviceTransition)) {
+    if (!ticket.serviceTransition || !Array.isArray(ticket.serviceTransition)) {
         ticket.serviceTransition = [];
     }
     
@@ -90,10 +92,11 @@ export async function POST(
         ticket.serviceTransition.push(transitionMsg);
     }
 
-    // Status logic: modifications keep valid status, empty/explicit validation marks used
+    // Status logic: modifications keep valid status, explicit validation marks used
     if (updateData.status) {
         ticket.status = updateData.status;
-    } else if (isValidation && ticket.status === 'valid') {
+    } else if (isValidation && ticket.status === 'valid' && !updateData.from && !updateData.busType) {
+        // Only auto-mark as used if it's a validation call without changes
         ticket.status = 'used';
     }
 
@@ -108,7 +111,7 @@ export async function POST(
     if (updateData.passengers) ticket.passengers = updateData.passengers;
     if (updateData.totalFare !== undefined) ticket.totalFare = updateData.totalFare;
     if (updateData.fare !== undefined) ticket.fare = updateData.fare;
-    if (updateData.busType) ticket.busType = normalizeBusType(updateData.busType);
+    if (updateData.busType) ticket.busType = newBusType;
     if (updateData.createdAt) ticket.createdAt = new Date(updateData.createdAt);
 
     await ticket.save();
