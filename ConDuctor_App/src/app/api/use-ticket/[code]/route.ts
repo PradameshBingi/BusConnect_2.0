@@ -6,63 +6,64 @@ export const dynamic = "force-dynamic";
 
 /**
  * Reusable backend function to process fare refunds atomically.
- * This ensures the refund happens exactly once per ticket.
+ * This ensures the refund happens exactly once per ticket and cleans up legacy fields.
  */
 async function processFareRefund(ticketCode: string, actualFare: number) {
-  const Ticket = getTicketModel();
-  const User = getUserModel();
+  try {
+    const Ticket = getTicketModel();
+    const User = getUserModel();
 
-  // 1. Atomically try to claim the refund for this ticket
-  // The query includes refundProcessed: false to prevent duplicate executions
-  const ticket = await Ticket.findOneAndUpdate(
-    { 
-      ticketCode: ticketCode, 
-      status: 'valid', 
-      refundProcessed: false 
-    },
-    { 
-      $set: { 
-        refundProcessed: true,
-        actualFare: actualFare,
-        refundedAt: new Date()
-      } 
-    },
-    { new: true }
-  );
-
-  if (!ticket) {
-    // If ticket not found or already processed, return null
-    return null;
-  }
-
-  const refundAmount = ticket.totalFare - actualFare;
-
-  if (refundAmount > 0 && ticket.bookedBy) {
-    // 2. Atomically update the user wallet and push transaction history
-    await User.findOneAndUpdate(
-      { phone: ticket.bookedBy },
+    // 1. Atomically try to claim the refund for this ticket
+    const ticket = await Ticket.findOneAndUpdate(
       { 
-        $inc: { walletBalance: refundAmount },
-        $push: { 
-          transactions: {
-            type: 'credit',
-            description: `Category Downgrade Refund: ${ticketCode}`,
-            amount: refundAmount,
-            date: new Date()
-          }
-        }
+        ticketCode: ticketCode, 
+        status: 'valid', 
+        refundProcessed: false 
       },
-      { upsert: true } // Create user if doesn't exist (failsafe)
+      { 
+        $set: { 
+          refundProcessed: true,
+          actualFare: actualFare,
+          refundedAt: new Date()
+        } 
+      },
+      { new: true }
     );
 
-    // Update ticket with the calculated refund amount
-    ticket.refundAmount = refundAmount;
-    await ticket.save();
-    
-    return refundAmount;
-  }
+    if (!ticket) return null;
 
-  return 0;
+    const refundAmount = ticket.totalFare - actualFare;
+
+    if (refundAmount > 0 && ticket.bookedBy) {
+      // 2. Atomically update walletBalance, remove legacy wallet field, and push history
+      await User.findOneAndUpdate(
+        { phone: ticket.bookedBy },
+        { 
+          $inc: { walletBalance: refundAmount },
+          $unset: { wallet: "" }, // Remove legacy field if it exists
+          $push: { 
+            transactions: {
+              type: 'credit',
+              description: `Category Downgrade Refund: ${ticketCode}`,
+              amount: refundAmount,
+              date: new Date()
+            }
+          }
+        },
+        { upsert: true }
+      );
+
+      ticket.refundAmount = refundAmount;
+      await ticket.save();
+      
+      return refundAmount;
+    }
+
+    return 0;
+  } catch (error) {
+    console.error("Refund processing error:", error);
+    throw error;
+  }
 }
 
 export async function POST(

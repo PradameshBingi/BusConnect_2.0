@@ -149,21 +149,21 @@ export default function VerifyTicketPage() {
         <main className="flex flex-col items-center p-4 space-y-4 pb-32">
           {/* Persistent Verification Input Bar */}
           <Card className="w-full max-w-md shadow-sm border-slate-200">
-            <CardHeader className="py-3 px-4">
+            <CardHeader className="py-2 px-4">
                 <div className="flex justify-between items-center">
-                    <CardTitle className="font-headline text-lg uppercase tracking-tight">Verify Ticket Code</CardTitle>
-                    <Badge variant="outline" className="text-[9px] font-black uppercase text-emerald-600 border-emerald-200">Live Sync</Badge>
+                    <CardTitle className="font-headline text-sm uppercase tracking-tight">Verify Ticket Code</CardTitle>
+                    <Badge variant="outline" className="text-[8px] font-black uppercase text-emerald-600 border-emerald-200">Live Sync</Badge>
                 </div>
             </CardHeader>
-            <CardContent className="px-4 pb-4">
+            <CardContent className="px-4 pb-4 pt-1">
               <div className="flex items-center gap-2">
-                <div className="bg-slate-100 h-10 px-3 flex items-center rounded-lg font-mono font-bold text-slate-500 text-sm">
+                <div className="bg-slate-100 h-10 px-3 flex items-center rounded-lg font-mono font-bold text-slate-500 text-xs">
                     TKT-
                 </div>
                 
                 <Button 
                     variant="outline" 
-                    className="h-10 w-14 border-2 border-slate-200 rounded-lg font-bold text-base bg-white"
+                    className="h-10 w-14 border-2 border-slate-200 rounded-lg font-bold text-sm bg-white"
                     onClick={() => setRouteSelectorOpen(true)}
                 >
                     {routeNo}
@@ -192,8 +192,8 @@ export default function VerifyTicketPage() {
           {status === 'not_found' && (
               <Card className="w-full max-w-md p-4 text-center text-destructive border-destructive/20 bg-white animate-in fade-in zoom-in duration-300">
                   <XCircle className="mx-auto mb-1 h-8 w-8" />
-                  <h3 className="font-bold text-sm">Ticket Not Found</h3>
-                  <p className="text-[11px] text-slate-500">The code TKT-{routeNo}-{ticketDigits} does not exist.</p>
+                  <h3 className="font-bold text-xs uppercase">Ticket Not Found</h3>
+                  <p className="text-[10px] text-slate-500">The code TKT-{routeNo}-{ticketDigits} does not exist.</p>
               </Card>
           )}
 
@@ -215,7 +215,7 @@ export default function VerifyTicketPage() {
                   </div>
               ) : (ticket.status === 'used' || ticket.status === 'cancelled' || ticket.status === 'expired') ? (
                   <Card className="overflow-hidden bg-white shadow-lg border-slate-200 animate-in zoom-in-95 duration-300">
-                      <CardHeader className="text-center bg-slate-50 py-10 px-4">
+                      <CardHeader className="text-center bg-slate-50 py-12 px-4">
                           <h1 className={cn("text-3xl font-black uppercase tracking-[0.1em]", 
                               ticket.status === 'used' ? "text-slate-300" : 
                               ticket.status === 'cancelled' ? "text-red-500" : "text-yellow-500"
@@ -226,55 +226,54 @@ export default function VerifyTicketPage() {
                       </CardHeader>
                   </Card>
               ) : (
-                  /* JOURNEY DETAILS PREVIEW (Compact & Dynamic) */
+                  /* JOURNEY DETAILS PREVIEW (Ultra-Compact) */
                   <Card className="overflow-hidden shadow-xl bg-white border-none rounded-[1.5rem] border-t-4 border-t-[#00B893] animate-in slide-in-from-bottom-2 duration-400">
-                      <CardHeader className="text-center py-4 px-6 relative border-b border-slate-50">
+                      <CardHeader className="text-center py-3 px-6 relative border-b border-slate-50">
                           <RefreshCcw 
-                            className="absolute right-4 top-5 h-4 w-4 text-slate-300 cursor-pointer hover:text-[#00B893] transition-colors" 
+                            className="absolute right-4 top-4 h-4 w-4 text-slate-300 cursor-pointer hover:text-[#00B893] transition-colors" 
                             onClick={() => {setTicket(null); setStatus('idle'); setTicketDigits('');}}
                           />
-                          <h2 className="text-sm font-black text-slate-400 tracking-[0.2em] uppercase">JOURNEY DETAILS</h2>
+                          <h2 className="text-xs font-black text-slate-400 tracking-[0.2em] uppercase">JOURNEY DETAILS</h2>
                           
-                          {/* Issue Metadata */}
-                          <div className="flex justify-center gap-4 mt-2 text-[9px] font-bold text-slate-400 uppercase">
-                              <span className="flex items-center gap-1"><Calendar className="h-2.5 w-2.5" /> {new Date(ticket.createdAt).toLocaleDateString('en-GB')}</span>
-                              <span className="flex items-center gap-1"><Clock className="h-2.5 w-2.5" /> {new Date(ticket.createdAt).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}</span>
+                          <div className="flex justify-center gap-4 mt-1 text-[8px] font-bold text-slate-400 uppercase">
+                              <span className="flex items-center gap-1"><Calendar className="h-2 w-2" /> {new Date(ticket.createdAt).toLocaleDateString('en-GB')}</span>
+                              <span className="flex items-center gap-1"><Clock className="h-2 w-2" /> {new Date(ticket.createdAt).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}</span>
                           </div>
                       </CardHeader>
 
-                      <CardContent className="space-y-4 px-6 pt-4 pb-0">
+                      <CardContent className="space-y-3 px-6 pt-3 pb-0">
                           {/* Route Indicators */}
-                          <div className="flex justify-between items-center p-3 bg-slate-50 rounded-xl border border-slate-100">
+                          <div className="flex justify-between items-center p-2.5 bg-slate-50 rounded-xl border border-slate-100">
                               <div className="text-left flex-1">
-                                  <p className="text-[8px] font-black text-slate-300 uppercase tracking-widest">SOURCE</p>
-                                  <p className="font-black text-slate-800 text-xs uppercase truncate">{ticket.from}</p>
+                                  <p className="text-[7px] font-black text-slate-300 uppercase tracking-widest">SOURCE</p>
+                                  <p className="font-black text-slate-800 text-[10px] uppercase truncate">{ticket.from}</p>
                               </div>
-                              <ArrowRight className="h-4 w-4 text-[#00B893] mx-2" />
+                              <ArrowRight className="h-3 w-3 text-[#00B893] mx-1" />
                               <div className="text-right flex-1">
-                                  <p className="text-[8px] font-black text-slate-300 uppercase tracking-widest">DESTINATION</p>
-                                  <p className="font-black text-slate-800 text-xs uppercase truncate">{ticket.to}</p>
+                                  <p className="text-[7px] font-black text-slate-300 uppercase tracking-widest">DESTINATION</p>
+                                  <p className="font-black text-slate-800 text-[10px] uppercase truncate">{ticket.to}</p>
                               </div>
                           </div>
 
                           {/* Data Grid */}
-                          <div className="grid grid-cols-2 gap-x-6 gap-y-3 text-[10px]">
+                          <div className="grid grid-cols-2 gap-x-6 gap-y-2 text-[9px]">
                                <div className="space-y-0.5">
-                                  <p className="font-bold text-slate-400 uppercase text-[8px]">PASSENGERS</p>
+                                  <p className="font-bold text-slate-400 uppercase text-[7px]">PASSENGERS</p>
                                   <p className="font-black text-slate-800">
                                       {ticket.passengers || `${ticket.quantities?.Men}M, ${ticket.quantities?.Women}W, ${ticket.quantities?.Child}C`}
                                   </p>
                                </div>
                                <div className="space-y-0.5 text-right">
-                                  <p className="font-bold text-slate-400 uppercase text-[8px]">BOOKED SERVICE</p>
+                                  <p className="font-bold text-slate-400 uppercase text-[7px]">BOOKED SERVICE</p>
                                   <p className="font-black text-[#0A2B70] uppercase">{ticket.busType}</p>
                                </div>
                                <Separator className="col-span-2 bg-slate-100/50" />
                                <div className="space-y-0.5">
-                                  <p className="font-bold text-slate-400 uppercase text-[8px]">FARE (ADJUSTED)</p>
-                                  <p className="font-black text-[#00B893] text-lg">Rs. {dynamicFare.toFixed(2)}</p>
+                                  <p className="font-bold text-slate-400 uppercase text-[7px]">FARE (ADJUSTED)</p>
+                                  <p className="font-black text-[#00B893] text-base">Rs. {dynamicFare.toFixed(2)}</p>
                                </div>
                                <div className="space-y-0.5 text-right">
-                                  <p className="font-bold text-slate-400 uppercase text-[8px]">WALLET REFUND</p>
+                                  <p className="font-bold text-slate-400 uppercase text-[7px]">WALLET REFUND</p>
                                   <p className="font-black text-slate-800">
                                     {dynamicFare < ticket.totalFare ? `Rs. ${(ticket.totalFare - dynamicFare).toFixed(2)}` : 'N/A'}
                                   </p>
@@ -282,10 +281,10 @@ export default function VerifyTicketPage() {
                           </div>
 
                           {/* Category Adjustment Selector */}
-                          <div className="pt-2">
-                               <p className="text-[8px] font-black text-slate-400 uppercase mb-2 text-center tracking-widest">ACTUAL BOARDING SERVICE</p>
+                          <div className="pt-1">
+                               <p className="text-[7px] font-black text-slate-400 uppercase mb-1.5 text-center tracking-widest">ACTUAL BOARDING SERVICE</p>
                                <Select value={actualBusType} onValueChange={setActualBusType}>
-                                  <SelectTrigger className="bg-slate-50 border-none h-10 font-black uppercase text-[10px] tracking-widest rounded-lg">
+                                  <SelectTrigger className="bg-slate-50 border-none h-8 font-black uppercase text-[9px] tracking-widest rounded-lg">
                                       <SelectValue />
                                   </SelectTrigger>
                                   <SelectContent>
@@ -297,20 +296,20 @@ export default function VerifyTicketPage() {
                           </div>
 
                           {/* PIN Section */}
-                          <div className="bg-[#F0FDF4] p-4 rounded-xl border border-[#DCFCE7] flex flex-col items-center">
-                              <p className="text-[8px] font-black text-[#00B893] uppercase tracking-[0.2em] mb-2">SECURITY PIN</p>
-                              <div className="flex flex-col items-center gap-2">
+                          <div className="bg-[#F0FDF4] p-3 rounded-xl border border-[#DCFCE7] flex flex-col items-center">
+                              <p className="text-[7px] font-black text-[#00B893] uppercase tracking-[0.2em] mb-1">SECURITY PIN</p>
+                              <div className="flex flex-col items-center gap-1.5">
                                   {showPin ? (
-                                      <p className="text-3xl font-mono font-black text-[#0A2B70] tracking-[0.2em]">
+                                      <p className="text-2xl font-mono font-black text-[#0A2B70] tracking-[0.2em]">
                                           {ticket.securityCode}
                                       </p>
                                   ) : (
-                                      <div className="flex gap-2 py-2">
-                                          {[1,2,3,4,5].map(i => <div key={i} className="w-2 h-2 rounded-full bg-[#00B893]/30"></div>)}
+                                      <div className="flex gap-2 py-1.5">
+                                          {[1,2,3,4,5].map(i => <div key={i} className="w-1.5 h-1.5 rounded-full bg-[#00B893]/30"></div>)}
                                       </div>
                                   )}
                                   <button 
-                                      className="text-[8px] font-black uppercase text-slate-400 hover:text-[#00B893] transition-colors" 
+                                      className="text-[7px] font-black uppercase text-slate-400 hover:text-[#00B893] transition-colors" 
                                       onClick={() => setShowPin(!showPin)}
                                   >
                                       {showPin ? 'Hide PIN' : 'Reveal PIN'}
@@ -319,17 +318,17 @@ export default function VerifyTicketPage() {
                           </div>
                       </CardContent>
 
-                      <CardFooter className="p-0 flex flex-col mt-4">
-                          <div className="w-full bg-[#0F172A] py-3 flex flex-col items-center gap-0.5">
-                              <p className="text-[8px] font-black text-slate-500 uppercase tracking-widest">PASSENGER TICKET ID</p>
-                              <p className="text-sm font-black text-white tracking-[0.15em]">{ticket.ticketCode}</p>
+                      <CardFooter className="p-0 flex flex-col mt-3">
+                          <div className="w-full bg-[#0F172A] py-2 flex flex-col items-center gap-0.5">
+                              <p className="text-[7px] font-black text-slate-500 uppercase tracking-widest">PASSENGER TICKET ID</p>
+                              <p className="text-xs font-black text-white tracking-[0.15em]">{ticket.ticketCode}</p>
                           </div>
                           <Button 
                               onClick={handleValidate} 
-                              className="w-full h-16 bg-[#00B893] hover:bg-[#009e7c] text-lg font-black uppercase tracking-[0.1em] rounded-none shadow-2xl" 
+                              className="w-full h-14 bg-[#00B893] hover:bg-[#009e7c] text-base font-black uppercase tracking-[0.1em] rounded-none shadow-2xl" 
                               disabled={isLoading}
                           >
-                              {isLoading ? <Loader2 className="animate-spin mr-3 h-5 w-5" /> : <CheckCircle className="mr-3 h-5 w-5" />}
+                              {isLoading ? <Loader2 className="animate-spin mr-3 h-4 w-4" /> : <CheckCircle className="mr-3 h-4 w-4" />}
                               VALIDATE BOARDING
                           </Button>
                       </CardFooter>
