@@ -51,14 +51,14 @@ const TicketSchema = new mongoose.Schema({
   to: { type: String, required: true },
   routeNo: String,
   passengers: String,
-  bookedBy: String, // Passenger Mobile No
+  bookedBy: String, // Passenger Mobile No (Wallet ID)
   quantities: {
     Men: { type: Number, default: 0 },
     Child: { type: Number, default: 0 },
     Women: { type: Number, default: 0 }
   },
-  totalFare: { type: Number, required: true },
-  fare: { type: Number, required: true },
+  totalFare: { type: Number, required: true }, // Amount originally paid
+  fare: { type: Number, required: true },      // Base fare
   ticketCode: { type: String, unique: true, required: true },
   securityCode: { type: String, required: true },
   status: { 
@@ -69,7 +69,13 @@ const TicketSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now },
   busType: { type: String, required: true },
   validatedAt: Date,
-  walletAmountUsed: { type: Number, default: 0 }
+  walletAmountUsed: { type: Number, default: 0 },
+  
+  // Refund Related Fields
+  actualFare: { type: Number },
+  refundAmount: { type: Number, default: 0 },
+  refundProcessed: { type: Boolean, default: false },
+  refundedAt: { type: Date }
 }, { 
   timestamps: true,
   collection: 'tickets'
