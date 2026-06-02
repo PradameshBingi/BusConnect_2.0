@@ -21,7 +21,7 @@ export async function POST(
     const ticket = await Ticket.findOne({ ticketCode });
     if (!ticket) return NextResponse.json({ error: "Ticket not found" }, { status: 404 });
 
-    // 1. Terminology Stabilization
+    // 1. Terminology Normalization
     const normalizeBusType = (type: string) => {
         if (!type) return "City Ordinary";
         const t = type.toLowerCase();
@@ -37,7 +37,7 @@ export async function POST(
     let transitionMsg = "";
     const isValidation = updateData.status === 'used' || (Object.keys(updateData).length === 0 && ticket.status === 'valid');
     const isModification = (updateData.from || updateData.to || updateData.quantities) && !updateData.busType;
-    const isUpgradation = updateData.busType && newBusType !== originalBusType;
+    const isUpgradation = updateData.busType && normalizeBusType(updateData.busType) !== originalBusType;
 
     if (isValidation) {
         if (originalBusType !== newBusType) {
@@ -51,14 +51,14 @@ export async function POST(
         transitionMsg = "Modification (Details Updated)";
     }
 
-    // 3. Financial Processing Logic (Refunds for quantity decrease or category downgrade)
+    // 3. Financial Processing Logic (Refunds for modifications)
     const Wallet = getWalletModel();
     const phone = ticket.bookedBy;
     const oldFare = ticket.totalFare || 0;
     const newFare = updateData.totalFare !== undefined ? updateData.totalFare : oldFare;
     const diff = oldFare - newFare;
     
-    if (phone && diff > 0) { // Refund detected
+    if (phone && diff > 0) {
         const phoneNum = Number(phone);
         const query = {
             $or: [
@@ -81,7 +81,7 @@ export async function POST(
         }, { upsert: true });
     }
 
-    // 4. Update Ticket Document (Strict Array Safety)
+    // 4. Update Ticket Document (Defensive initialization for push)
     if (!Array.isArray(ticket.serviceTransition)) {
         ticket.serviceTransition = [];
     }
@@ -90,7 +90,7 @@ export async function POST(
         ticket.serviceTransition.push(transitionMsg);
     }
 
-    // Status logic: modifications/upgradations keep valid status, empty/explicit validation calls mark as used
+    // Status logic: modifications keep valid status, empty/explicit validation marks used
     if (updateData.status) {
         ticket.status = updateData.status;
     } else if (isValidation && ticket.status === 'valid') {
@@ -108,7 +108,7 @@ export async function POST(
     if (updateData.passengers) ticket.passengers = updateData.passengers;
     if (updateData.totalFare !== undefined) ticket.totalFare = updateData.totalFare;
     if (updateData.fare !== undefined) ticket.fare = updateData.fare;
-    if (updateData.busType) ticket.busType = newBusType;
+    if (updateData.busType) ticket.busType = normalizeBusType(updateData.busType);
     if (updateData.createdAt) ticket.createdAt = new Date(updateData.createdAt);
 
     await ticket.save();
