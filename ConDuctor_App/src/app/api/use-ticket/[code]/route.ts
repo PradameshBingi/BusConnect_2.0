@@ -4,25 +4,43 @@ import { calculateFare } from '@/lib/fare-calculator';
 
 export const dynamic = "force-dynamic";
 
+const getServiceLabel = (type: string) => {
+  const map: Record<string, string> = { 
+    ordinary: "City Ordinary", 
+    express: "Metro Express", 
+    deluxe: "Metro Deluxe" 
+  };
+  return map[type.toLowerCase()] || type;
+};
+
 /**
  * Reusable backend function to process fare refunds atomically.
  */
-async function processFareRefund(ticketCode: string, originalFare: number, actualFare: number, phone: string) {
+async function processFareRefund(
+  ticketCode: string, 
+  originalFare: number, 
+  actualFare: number, 
+  phone: string,
+  originalService: string,
+  actualService: string
+) {
   try {
     const User = getUserModel();
     const refundAmount = originalFare - actualFare;
 
     if (refundAmount > 0 && phone) {
-      // Atomically update walletBalance and push history
+      const serviceTransition = `${getServiceLabel(originalService)} → ${getServiceLabel(actualService)}`;
+      
+      // Atomically update walletBalance and push history with requested history tag format
       const updatedUser = await User.findOneAndUpdate(
         { phone: phone },
         { 
           $inc: { walletBalance: refundAmount },
-          $unset: { wallet: "" }, // Remove legacy field
+          $unset: { wallet: "" }, // Remove legacy field if it exists
           $push: { 
             transactions: {
               type: 'credit',
-              description: `Category Downgrade Refund: ${ticketCode}`,
+              description: `Fare Difference Refund (${serviceTransition}) ${ticketCode}`,
               amount: refundAmount,
               date: new Date()
             }
@@ -31,10 +49,10 @@ async function processFareRefund(ticketCode: string, originalFare: number, actua
         { upsert: true, new: true }
       );
       
-      console.log(`✅ Refund of Rs. ${refundAmount} credited to ${phone}. New Balance: ${updatedUser.walletBalance}`);
-      return refundAmount;
+      console.log(`✅ Refund of Rs. ${refundAmount} credited to ${phone} for ${ticketCode}.`);
+      return { refundAmount, serviceTransition };
     }
-    return 0;
+    return { refundAmount: 0, serviceTransition: null };
   } catch (error) {
     console.error("Refund processing error:", error);
     throw error;
@@ -72,20 +90,37 @@ export async function POST(
 
     // Process Refund if category is changed
     let refundIssued = 0;
+    let transitionString = null;
+    const originalBusType = ticket.busType;
     const originalTotalFare = ticket.totalFare;
     let calculatedActualFare = originalTotalFare;
 
     if (actualBusType) {
         calculatedActualFare = calculateFare(ticket.from, ticket.to, ticket.quantities, actualBusType);
         
-        // If boarding a lower category, issue refund
+        // Handle logic for transitions and refunds
         if (calculatedActualFare < originalTotalFare) {
-            refundIssued = await processFareRefund(ticketCode, originalTotalFare, calculatedActualFare, ticket.bookedBy);
+            const refundResult = await processFareRefund(
+                ticketCode, 
+                originalTotalFare, 
+                calculatedActualFare, 
+                ticket.bookedBy,
+                originalBusType,
+                actualBusType
+            );
+            refundIssued = refundResult.refundAmount;
+            transitionString = refundResult.serviceTransition;
             
-            // Update ticket records with adjusted financial data
+            // Update ticket records with adjusted financial and transition data
             ticket.refundAmount = refundIssued;
             ticket.refundProcessed = true;
             ticket.refundedAt = new Date();
+            ticket.boardingChanged = true;
+            ticket.serviceTransition = transitionString;
+        } else {
+            // No refund needed, but we still track transition if it's "Same to Same" or upgrade (unlikely scenario here)
+            ticket.boardingChanged = originalBusType.toLowerCase() !== actualBusType.toLowerCase();
+            ticket.serviceTransition = `${getServiceLabel(originalBusType)} → ${getServiceLabel(actualBusType)}`;
         }
         
         // Update ticket with the ACTUAL service and fare paid

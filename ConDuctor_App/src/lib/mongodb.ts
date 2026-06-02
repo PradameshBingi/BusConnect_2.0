@@ -71,11 +71,13 @@ const TicketSchema = new mongoose.Schema({
   validatedAt: Date,
   walletAmountUsed: { type: Number, default: 0 },
   
-  // Refund Related Fields
+  // Refund & Service Transition Tracking
   actualFare: { type: Number },
   refundAmount: { type: Number, default: 0 },
   refundProcessed: { type: Boolean, default: false },
-  refundedAt: { type: Date }
+  refundedAt: { type: Date },
+  boardingChanged: { type: Boolean, default: false },
+  serviceTransition: { type: String }
 }, { 
   timestamps: true,
   collection: 'tickets'
