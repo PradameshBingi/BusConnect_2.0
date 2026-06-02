@@ -8,6 +8,8 @@ interface Ticket {
   from: string;
   to: string;
   timestamp: string; 
+  updatedAt?: string; // High-fidelity updated timestamp
+  status: string;
   passengers: string;
   totalFare: number;
   busType: string;
@@ -50,13 +52,15 @@ export function ValidatedTicket({ ticket }: ValidatedTicketProps) {
     };
   }, [ticket.ticketCode]);
 
-  const issuedAt = useMemo(() => {
-    const d = new Date(ticket.timestamp);
+  // STRICT LOGIC: For Pink Ticket, use the Validation Time (updatedAt) if the ticket is used.
+  const displayTime = useMemo(() => {
+    const timeToUse = ticket.status === 'used' ? (ticket.updatedAt || ticket.timestamp) : ticket.timestamp;
+    const d = new Date(timeToUse);
     return isNaN(d.getTime()) ? new Date() : d;
-  }, [ticket.timestamp]);
+  }, [ticket.timestamp, ticket.updatedAt, ticket.status]);
 
-  const formattedDate = issuedAt.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' });
-  const formattedTime = issuedAt.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+  const formattedDate = displayTime.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  const formattedTime = displayTime.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
 
   // ALIGNED FARE LOGIC (Matches calculateFare exactly)
   const { menRate, childRate, womenRate } = useMemo(() => {

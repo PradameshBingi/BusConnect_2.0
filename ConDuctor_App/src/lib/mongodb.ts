@@ -91,6 +91,7 @@ export function getTicketModel() {
 const UserSchema = new mongoose.Schema({
   phone: { type: String, unique: true, required: true },
   walletBalance: { type: Number, default: 0 },
+  autoDeductEnabled: { type: Boolean, default: false }, // Authorization toggle
   transactions: [{
     type: { type: String, enum: ['credit', 'debit'] },
     description: String,
