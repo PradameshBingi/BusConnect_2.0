@@ -133,7 +133,8 @@ export function ModifyForm({ ticket, onReset }: { ticket: any, onReset: () => vo
           passengers: passengerSummary,
           quantities,
           totalFare: newTotalFare,
-          fare: isAddition ? (ticket.fare + fareDifference) : ticket.fare
+          fare: isAddition ? (ticket.fare + fareDifference) : ticket.fare,
+          status: 'valid' // IMPORTANT: Preserve valid status after modification
         })
       });
 

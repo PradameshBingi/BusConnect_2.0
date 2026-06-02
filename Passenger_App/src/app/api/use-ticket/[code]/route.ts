@@ -54,7 +54,7 @@ export async function POST(
 
     if (boardingChanged && !ticket.refundProcessed && !ticket.deductionProcessed) {
         if (isRefund) {
-            // Automatic Refund (No authorization needed for credit)
+            // Automatic Refund
             await Wallet.findOneAndUpdate(
                 { phone },
                 { 
@@ -93,37 +93,46 @@ export async function POST(
                 ticket.deductionProcessed = true;
                 ticket.deductionAmount = Math.abs(diff);
                 ticket.deductedAt = new Date();
-            } else {
-                // If not authorized or insufficient balance, conductor must collect cash
-                // We still log the attempt or mark it as 'manual_collection'
             }
         }
     }
 
     // 3. Update Ticket Document
-    ticket.status = "used";
-    ticket.validatedAt = new Date();
+    // If status is provided in payload (e.g. from modification form), use it.
+    // Otherwise, default to "used" (for conductor validation)
+    ticket.status = updateData.status || "used";
+    
+    if (ticket.status === "used") {
+      ticket.validatedAt = new Date();
+    }
+    
     ticket.updatedAt = new Date();
     ticket.actualFare = actualFare;
-    ticket.totalFare = actualFare; // Receipt should show boarding fare
+    ticket.totalFare = actualFare;
     ticket.busType = boardedBus;
     ticket.boardingChanged = boardingChanged;
     ticket.serviceTransition = transitionLabel;
 
     if (updateData.from) ticket.from = updateData.from;
     if (updateData.to) ticket.to = updateData.to;
+    if (updateData.quantities) ticket.quantities = updateData.quantities;
+    if (updateData.passengers) ticket.passengers = updateData.passengers;
+    if (updateData.fare !== undefined) ticket.fare = updateData.fare;
+    if (updateData.createdAt) ticket.createdAt = new Date(updateData.createdAt);
 
     await ticket.save();
 
-    // 4. Operational Log
-    const ConductorLog = getConductorLogModel();
-    await ConductorLog.create({
-        action: 'ticket_validation',
-        ticketCode,
-        amount: Math.abs(diff),
-        type: isRefund ? 'refund' : isCharge ? 'deduction' : 'standard',
-        timestamp: new Date()
-    });
+    // 4. Operational Log (Only if validated)
+    if (ticket.status === "used") {
+      const ConductorLog = getConductorLogModel();
+      await ConductorLog.create({
+          action: 'ticket_validation',
+          ticketCode,
+          amount: Math.abs(diff),
+          type: isRefund ? 'refund' : isCharge ? 'deduction' : 'standard',
+          timestamp: new Date()
+      });
+    }
 
     return NextResponse.json({ status: "updated", ticket: ticket.toObject() });
 

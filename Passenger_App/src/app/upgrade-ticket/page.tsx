@@ -6,6 +6,7 @@ import Header from '@/app/components/header';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { UpgradeForm } from './upgrade-form';
+import { API_ENDPOINTS } from '@/lib/api-config';
 
 type Ticket = {
   from: string;
@@ -36,13 +37,18 @@ function UpgradeTicketContent() {
         setError('No ticket ID provided.');
         return;
     }
-    try {
-        const storedTickets: Ticket[] = JSON.parse(localStorage.getItem('generatedTickets') || '[]');
-        const foundTicket = storedTickets.find(t => t.ticketCode.toUpperCase() === id.toUpperCase());
+    
+    const fetchTicketFromDB = async () => {
+        try {
+            const res = await fetch(`${API_ENDPOINTS.VERIFY}/${id.toUpperCase()}`);
+            if (!res.ok) {
+                if (res.status === 404) throw new Error('Ticket not found in system records.');
+                throw new Error('Could not connect to database.');
+            }
+            
+            const data = await res.json();
+            const foundTicket = data.ticket;
 
-        if (!foundTicket) {
-            setError('Ticket not found in your booking history.');
-        } else {
             const now = new Date().getTime();
             const createdAt = new Date(foundTicket.createdAt).getTime();
             const isExpired = now > createdAt + (10 * 60 * 1000); // 10 minute validity
@@ -54,12 +60,14 @@ function UpgradeTicketContent() {
             } else {
                 setTicket(foundTicket);
             }
+        } catch (e: any) {
+            setError(e.message || 'Could not retrieve ticket data.');
+        } finally {
+            setLoading(false);
         }
-    } catch (e) {
-        setError('Could not retrieve ticket data.');
-    } finally {
-        setLoading(false);
-    }
+    };
+
+    fetchTicketFromDB();
   }, [id]);
 
   if (loading) {

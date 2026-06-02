@@ -111,7 +111,7 @@ export function UpgradeForm({ ticket }: { ticket: Ticket }) {
                     busType: opt.name,
                     totalFare: opt.newTotalFare,
                     fare: Math.round((ticket.fare || 0) + opt.amountToPay),
-                    status: 'valid',
+                    status: 'valid', // MUST preserve valid status after passenger upgrade
                     createdAt: newCreatedAt 
                 })
             });

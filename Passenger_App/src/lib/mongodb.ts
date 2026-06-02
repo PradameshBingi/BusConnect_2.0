@@ -114,10 +114,10 @@ const PassengerAdminSchema = new mongoose.Schema({
   lastLogin: Date
 }, { 
   timestamps: true,
-  collection: 'Passenger_Admin'
+  collection: 'Passengers_Admin'
 });
 
-// Admin Schema (Staff)
+// ConDuctor Admin Schema (Staff)
 const AdminSchema = new mongoose.Schema({
   adminId: { type: String, unique: true, required: true },
   password: { type: String, required: true },
@@ -125,7 +125,7 @@ const AdminSchema = new mongoose.Schema({
   lastLogin: Date
 }, { 
   timestamps: true,
-  collection: 'Admin'
+  collection: 'Conductor_Admin'
 });
 
 // Feedback Schema
@@ -140,7 +140,7 @@ const FeedbackSchema = new mongoose.Schema({
   collection: 'Passengers_Feedbacks'
 });
 
-// Conductor Log Schema
+// Conductor verification Insights Schema
 const ConductorLogSchema = new mongoose.Schema({
   conductorId: String,
   action: String, 
