@@ -1,3 +1,4 @@
+
 'use client';
 
 import AuthGuard from '@/app/components/AuthGuard';
@@ -16,7 +17,8 @@ import {
   CheckCircle,
   BookUser,
   GraduationCap,
-  Users
+  Users,
+  Repeat
 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { 
@@ -56,9 +58,9 @@ type FullStats = {
   totalChildren: number;
   topRoutes: RouteStat[];
   verifiedTickets: number;
-  totalCollectedDifference: number;
   totalPassesVerified: number;
   passBreakdown: PassBreakdown;
+  boardingChanges: number;
 };
 
 export default function ConductorStatsPage() {
@@ -72,6 +74,7 @@ export default function ConductorStatsPage() {
     if (!conductorId) return;
 
     try {
+      // CLOUD SYNC: Fetch all verification logs from MongoDB
       const res = await fetch(`/api/conductor-logs?conductorId=${conductorId}`);
       const data = await res.json();
       const logs: any[] = data.logs || [];
@@ -83,6 +86,7 @@ export default function ConductorStatsPage() {
       let totalMen = 0;
       let totalWomen = 0;
       let totalChildren = 0;
+      let boardingChanges = 0;
       const routeMap = new Map<string, number>();
 
       ticketLogs.forEach(log => {
@@ -91,6 +95,7 @@ export default function ConductorStatsPage() {
         totalMen += (item.quantities?.Men || 0);
         totalWomen += (item.quantities?.Women || 0);
         totalChildren += (item.quantities?.Child || 0);
+        if (item.boardingChanged) boardingChanges++;
 
         const routeKey = item.from && item.to ? `${item.from} ➔ ${item.to}` : "Unknown Route";
         if (routeKey !== "Unknown Route") {
@@ -118,9 +123,9 @@ export default function ConductorStatsPage() {
         totalChildren,
         topRoutes,
         verifiedTickets: ticketLogs.length,
-        totalCollectedDifference: 0,
         totalPassesVerified: passLogs.length,
-        passBreakdown
+        passBreakdown,
+        boardingChanges
       });
     } catch (error) {
       console.error("Failed to load conductor stats:", error);
@@ -156,13 +161,13 @@ export default function ConductorStatsPage() {
               <BarChartIcon className="h-8 w-8 text-primary" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold font-headline">Conductor Insights</h1>
-              <p className="text-sm text-muted-foreground">Analytics for tickets and verified bus passes.</p>
+              <h1 className="text-2xl font-black font-headline uppercase tracking-tight">Conductor Insights</h1>
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Real-time Cloud Sync Statistics</p>
             </div>
           </div>
-          <Button variant="outline" size="sm" onClick={calculateStats} disabled={isLoading}>
+          <Button variant="outline" size="sm" onClick={calculateStats} disabled={isLoading} className="rounded-xl h-10 border-slate-200">
             <RefreshCw className={cn("h-4 w-4 mr-2", isLoading && "animate-spin")} />
-            Refresh Data
+            Sync Cloud Data
           </Button>
         </div>
 
@@ -175,113 +180,110 @@ export default function ConductorStatsPage() {
         ) : hasData ? (
           <>
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-              <Card className="border-l-4 border-l-blue-600">
+              <Card className="border-l-4 border-l-blue-600 rounded-2xl shadow-sm">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Tickets Verified</CardTitle>
+                  <CardTitle className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Tickets Verified</CardTitle>
                   <CheckCircle className="h-4 w-4 text-blue-600" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{stats.verifiedTickets}</div>
-                  <p className="text-[10px] text-muted-foreground mt-1">Validated during boarding</p>
+                  <div className="text-2xl font-black">{stats.verifiedTickets}</div>
+                  <p className="text-[9px] font-bold text-slate-400 uppercase mt-1">Confirmed Boardings</p>
                 </CardContent>
               </Card>
 
-              <Card className="border-l-4 border-l-green-600">
+              <Card className="border-l-4 border-l-green-600 rounded-2xl shadow-sm">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Fare Revenue</CardTitle>
+                  <CardTitle className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Fare Revenue</CardTitle>
                   <IndianRupee className="h-4 w-4 text-green-600" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">Rs. {stats.totalRevenue.toLocaleString()}</div>
-                  <p className="text-[10px] text-muted-foreground mt-1">Total digital collection</p>
+                  <div className="text-2xl font-black">₹{stats.totalRevenue.toLocaleString()}</div>
+                  <p className="text-[9px] font-bold text-slate-400 uppercase mt-1">Adjusted Digital Collection</p>
                 </CardContent>
               </Card>
 
-              <Card className="border-l-4 border-l-indigo-600">
+              <Card className="border-l-4 border-l-indigo-600 rounded-2xl shadow-sm">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Passes Checked</CardTitle>
+                  <CardTitle className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Passes Checked</CardTitle>
                   <BookUser className="h-4 w-4 text-indigo-600" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{stats.totalPassesVerified}</div>
-                  <p className="text-[10px] text-muted-foreground mt-1">Student & Citizen validations</p>
+                  <div className="text-2xl font-black">{stats.totalPassesVerified}</div>
+                  <p className="text-[9px] font-bold text-slate-400 uppercase mt-1">Concessions Validated</p>
                 </CardContent>
               </Card>
 
-              <Card className="border-l-4 border-l-orange-500">
+              <Card className="border-l-4 border-l-orange-500 rounded-2xl shadow-sm">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Load Index</CardTitle>
-                  <TrendingUp className="h-4 w-4 text-orange-500" />
+                  <CardTitle className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Service Adjust</CardTitle>
+                  <Repeat className="h-4 w-4 text-orange-500" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{stats.totalMen + stats.totalWomen + stats.totalChildren}</div>
-                  <p className="text-[10px] text-muted-foreground mt-1">Total headcount today</p>
+                  <div className="text-2xl font-black">{stats.boardingChanges}</div>
+                  <p className="text-[9px] font-bold text-slate-400 uppercase mt-1">Category Transfers</p>
                 </CardContent>
               </Card>
             </div>
 
             <div className="grid gap-6 md:grid-cols-2">
-               <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg font-bold flex items-center gap-2">
+               <Card className="rounded-3xl shadow-sm border-none bg-white overflow-hidden">
+                <CardHeader className="bg-slate-50 border-b">
+                  <CardTitle className="text-sm font-black uppercase tracking-widest flex items-center gap-2">
                     <GraduationCap className="h-5 w-5 text-[#0A2B70]" />
-                    Student Pass Breakdown
+                    Student Verification
                   </CardTitle>
-                  <CardDescription>Verified student concessions by pass type.</CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-4 pt-2">
-                  <div className="flex items-center justify-between p-4 bg-blue-50/50 rounded-xl border border-blue-100">
+                <CardContent className="space-y-4 pt-6">
+                  <div className="flex items-center justify-between p-4 bg-blue-50/50 rounded-2xl border border-blue-100">
                     <div>
-                      <p className="font-bold text-slate-800">General Passes</p>
-                      <p className="text-xs text-slate-500">Valid on all ordinary/metro express</p>
+                      <p className="font-black text-xs text-slate-800 uppercase">General Passes</p>
+                      <p className="text-[9px] font-bold text-slate-400 uppercase">Ordinary/Express Access</p>
                     </div>
-                    <span className="text-2xl font-bold text-blue-700">{stats.passBreakdown.studentGeneral}</span>
+                    <span className="text-2xl font-black text-blue-700">{stats.passBreakdown.studentGeneral}</span>
                   </div>
-                  <div className="flex items-center justify-between p-4 bg-indigo-50/50 rounded-xl border border-indigo-100">
+                  <div className="flex items-center justify-between p-4 bg-indigo-50/50 rounded-2xl border border-indigo-100">
                     <div>
-                      <p className="font-bold text-slate-800">Route-Specific Passes</p>
-                      <p className="text-xs text-slate-500">Valid on specific source-destination</p>
+                      <p className="font-black text-xs text-slate-800 uppercase">Route Passes</p>
+                      <p className="text-[9px] font-bold text-slate-400 uppercase">Start-End Validation</p>
                     </div>
-                    <span className="text-2xl font-bold text-indigo-700">{stats.passBreakdown.studentRoute}</span>
+                    <span className="text-2xl font-black text-indigo-700">{stats.passBreakdown.studentRoute}</span>
                   </div>
                 </CardContent>
               </Card>
 
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg font-bold flex items-center gap-2">
+              <Card className="rounded-3xl shadow-sm border-none bg-white overflow-hidden">
+                <CardHeader className="bg-slate-50 border-b">
+                  <CardTitle className="text-sm font-black uppercase tracking-widest flex items-center gap-2">
                     <Users className="h-5 w-5 text-amber-600" />
-                    Citizen Pass Breakdown
+                    Citizen Verification
                   </CardTitle>
-                  <CardDescription>Verified citizen passes by pass type.</CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-4 pt-2">
-                  <div className="flex items-center justify-between p-4 bg-amber-50/50 rounded-xl border border-amber-100">
+                <CardContent className="space-y-4 pt-6">
+                  <div className="flex items-center justify-between p-4 bg-amber-50/50 rounded-2xl border border-amber-100">
                     <div>
-                      <p className="font-bold text-slate-800">General Passes</p>
-                      <p className="text-xs text-slate-500">Standard citizen concession</p>
+                      <p className="font-black text-xs text-slate-800 uppercase">Standard Citizens</p>
+                      <p className="text-[9px] font-bold text-slate-400 uppercase">Regular Concessions</p>
                     </div>
-                    <span className="text-2xl font-bold text-amber-700">{stats.passBreakdown.citizenGeneral}</span>
+                    <span className="text-2xl font-black text-amber-700">{stats.passBreakdown.citizenGeneral}</span>
                   </div>
-                  <div className="flex items-center justify-between p-4 bg-orange-50/50 rounded-xl border border-orange-100">
+                  <div className="flex items-center justify-between p-4 bg-orange-50/50 rounded-2xl border border-orange-100">
                     <div>
-                      <p className="font-bold text-slate-800">Route-Specific Passes</p>
-                      <p className="text-xs text-slate-500">Regular commuter route passes</p>
+                      <p className="font-black text-xs text-slate-800 uppercase">Commuter Route</p>
+                      <p className="text-[9px] font-bold text-slate-400 uppercase">Daily Path Validation</p>
                     </div>
-                    <span className="text-2xl font-bold text-orange-700">{stats.passBreakdown.citizenRoute}</span>
+                    <span className="text-2xl font-black text-orange-700">{stats.passBreakdown.citizenRoute}</span>
                   </div>
                 </CardContent>
               </Card>
             </div>
 
             <div className="grid gap-6 lg:grid-cols-3">
-              <Card className="lg:col-span-2">
+              <Card className="lg:col-span-2 rounded-3xl shadow-sm border-none bg-white">
                 <CardHeader>
-                  <CardTitle className="text-lg font-bold flex items-center gap-2">
+                  <CardTitle className="text-sm font-black uppercase tracking-widest flex items-center gap-2">
                     <MapPin className="h-5 w-5 text-primary" />
-                    Top 5 Ticket Routes
+                    Busiest Route Segments
                   </CardTitle>
-                  <CardDescription>Routes with the highest ticket verification density.</CardDescription>
                 </CardHeader>
                 <CardContent className="h-[300px] pt-4">
                   {stats.topRoutes.length > 0 ? (
@@ -294,13 +296,13 @@ export default function ConductorStatsPage() {
                             dataKey="route" 
                             type="category" 
                             width={120} 
-                            fontSize={10} 
-                            tick={{ fill: 'currentColor' }}
+                            fontSize={9} 
+                            tick={{ fill: 'currentColor', fontWeight: 'bold' }}
                             axisLine={false}
                             tickLine={false}
                           />
                           <ChartTooltip content={<ChartTooltipContent hideLabel />} />
-                          <Bar dataKey="bookings" radius={[0, 4, 4, 0]}>
+                          <Bar dataKey="bookings" radius={[0, 8, 8, 0]}>
                             {stats.topRoutes.map((entry, index) => (
                               <Cell key={`cell-${index}`} fill={`hsl(var(--primary) / ${1 - index * 0.15})`} />
                             ))}
@@ -309,58 +311,57 @@ export default function ConductorStatsPage() {
                       </ResponsiveContainer>
                     </ChartContainer>
                   ) : (
-                    <div className="h-full flex items-center justify-center text-muted-foreground">No route data available yet.</div>
+                    <div className="h-full flex items-center justify-center text-slate-400 text-xs font-bold uppercase tracking-widest">No verification data on routes.</div>
                   )}
                 </CardContent>
               </Card>
 
-              <Card>
+              <Card className="rounded-3xl shadow-sm border-none bg-white">
                 <CardHeader>
-                  <CardTitle className="text-lg font-bold">Passenger Load</CardTitle>
-                  <CardDescription>verified travelers split.</CardDescription>
+                  <CardTitle className="text-sm font-black uppercase tracking-widest">Passenger Load</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-6 pt-2">
-                  <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
+                  <div className="flex items-center justify-between p-3 bg-blue-50/50 rounded-xl">
                     <div className="flex items-center gap-3">
                       <User className="h-5 w-5 text-blue-600" />
-                      <span className="font-bold text-slate-700">Men</span>
+                      <span className="font-bold text-xs uppercase text-slate-700">Men</span>
                     </div>
-                    <span className="text-xl font-bold text-blue-700">{stats.totalMen}</span>
+                    <span className="text-xl font-black text-blue-700">{stats.totalMen}</span>
                   </div>
                   
-                  <div className="flex items-center justify-between p-3 bg-pink-50 rounded-lg">
+                  <div className="flex items-center justify-between p-3 bg-pink-50/50 rounded-xl">
                     <div className="flex items-center gap-3">
                       <PersonStanding className="h-5 w-5 text-pink-600" />
-                      <span className="font-bold text-slate-700">Women</span>
+                      <span className="font-bold text-xs uppercase text-slate-700">Women</span>
                     </div>
-                    <span className="text-xl font-bold text-pink-700">{stats.totalWomen}</span>
+                    <span className="text-xl font-black text-pink-700">{stats.totalWomen}</span>
                   </div>
 
-                  <div className="flex items-center justify-between p-3 bg-amber-50 rounded-lg">
+                  <div className="flex items-center justify-between p-3 bg-amber-50/50 rounded-xl">
                     <div className="flex items-center gap-3">
                       <Baby className="h-5 w-5 text-amber-600" />
-                      <span className="font-bold text-slate-700">Children</span>
+                      <span className="font-bold text-xs uppercase text-slate-700">Children</span>
                     </div>
-                    <span className="text-xl font-bold text-amber-700">{stats.totalChildren}</span>
+                    <span className="text-xl font-black text-amber-700">{stats.totalChildren}</span>
                   </div>
 
-                  <div className="pt-4 border-t text-center">
-                    <p className="text-xs text-muted-foreground uppercase font-bold tracking-widest mb-1">Total Headcount</p>
-                    <p className="text-3xl font-bold text-primary">{stats.totalMen + stats.totalWomen + stats.totalChildren}</p>
+                  <div className="pt-6 border-t text-center">
+                    <p className="text-[9px] text-slate-400 uppercase font-black tracking-widest mb-1">Total Headcount</p>
+                    <p className="text-4xl font-black text-[#00B893] tracking-tighter">{stats.totalMen + stats.totalWomen + stats.totalChildren}</p>
                   </div>
                 </CardContent>
               </Card>
             </div>
           </>
         ) : (
-           <Card className="max-w-md mx-auto">
+           <Card className="max-w-md mx-auto rounded-3xl border-none shadow-sm">
             <CardContent className="p-12 text-center space-y-4">
-              <div className="bg-muted w-16 h-16 rounded-full flex items-center justify-center mx-auto">
-                <BarChartIcon className="h-8 w-8 text-muted-foreground" />
+              <div className="bg-slate-50 w-20 h-20 rounded-3xl flex items-center justify-center mx-auto">
+                <BarChartIcon className="h-8 w-8 text-slate-200" />
               </div>
               <div className="space-y-1">
-                <h3 className="font-bold text-lg">No Statistics Available</h3>
-                <p className="text-sm text-muted-foreground">Start verifying tickets or bus passes to see your analytics dashboard here.</p>
+                <h3 className="font-black text-xs uppercase tracking-widest">No Cloud Data Available</h3>
+                <p className="text-[10px] font-bold text-slate-400 uppercase leading-relaxed">Verified tickets and passes will appear here after cloud sync.</p>
               </div>
             </CardContent>
           </Card>
