@@ -75,7 +75,7 @@ const TicketSchema = new mongoose.Schema({
   walletAmountUsed: { type: Number, default: 0 },
   validatedAt: Date,
   boardingChanged: { type: Boolean, default: false },
-  serviceTransition: [String], // Array for multiple transitions
+  serviceTransition: [String],
   actualFare: { type: Number },
   refundAmount: { type: Number },
   refundProcessed: { type: Boolean, default: false },
