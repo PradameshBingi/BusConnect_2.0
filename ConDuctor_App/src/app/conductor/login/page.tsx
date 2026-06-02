@@ -90,7 +90,7 @@ export default function LoginPage() {
   if (!isMounted) return null;
 
   return (
-    <div className="min-h-screen bg-[#0A2B70] flex flex-col items-center justify-center p-4">
+    <div className="min-h-screen bg-primary flex flex-col items-center justify-center p-4">
       <div className="w-full max-w-md space-y-8">
         <div className="flex flex-col items-center gap-6 text-white">
           <IDLogoSVG />
@@ -113,6 +113,7 @@ export default function LoginPage() {
                   <Input 
                     placeholder="10-digit ID" 
                     value={phone} 
+                    type='password'
                     onChange={handlePhoneChange} 
                     required 
                     className="pl-12 h-14 rounded-2xl text-lg font-bold tracking-widest bg-slate-50 border-slate-100"
