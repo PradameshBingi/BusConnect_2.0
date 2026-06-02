@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -192,11 +193,11 @@ export default function TicketDetailPage() {
 
             <div className="grid grid-cols-2 gap-y-5 gap-x-4 text-sm font-medium">
               <div className="space-y-1">
-                <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest">Updated Date</p>
+                <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest">Issued Date</p>
                 <p className="font-bold text-slate-800">{displayDate.toLocaleDateString('en-GB')}</p>
               </div>
               <div className="space-y-1 text-right">
-                <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest">Updated Time</p>
+                <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest">Issued Time</p>
                 <p className="font-bold text-slate-800">{displayDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
               </div>
               <div className="col-span-2 space-y-1 py-2 border-y border-dashed">
