@@ -106,7 +106,7 @@ const WalletSchema = new mongoose.Schema({
   collection: 'Passengers_Wallet'
 });
 
-// Passenger Admin Schema (Source for Credentials)
+// Passenger Admin Schema (Source for Credentials) - Using Mixed to support Long/Int types
 const PassengerAdminSchema = new mongoose.Schema({
   phone: { type: mongoose.Schema.Types.Mixed, unique: true, required: true },
   password: { type: mongoose.Schema.Types.Mixed, required: true },

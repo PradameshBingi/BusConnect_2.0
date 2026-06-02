@@ -18,16 +18,22 @@ export async function POST(request: Request) {
     const phoneNum = Number(phone);
     const passNum = Number(password);
 
-    const orConditions: any[] = [{ phone: phone.toString(), password: password.toString() }];
+    // Build an $or query to match against both String and Numeric formats
+    const orConditions: any[] = [
+      { phone: phone.toString(), password: password.toString() }
+    ];
     
     if (!isNaN(phoneNum)) {
+      // Case: phone is numeric, password is string
       orConditions.push({ phone: phoneNum, password: password.toString() });
       if (!isNaN(passNum)) {
+        // Case: both are numeric
         orConditions.push({ phone: phoneNum, password: passNum });
       }
     }
     
     if (!isNaN(passNum)) {
+      // Case: phone is string, password is numeric
       orConditions.push({ phone: phone.toString(), password: passNum });
     }
 
