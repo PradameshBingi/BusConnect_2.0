@@ -32,44 +32,48 @@ export async function POST(
     ticket.serviceTransition.push("Ticket Cancellation");
     await ticket.save();
 
-    // 2. Credit Wallet
+    // 2. Credit Wallet (Type-Robust)
     const Wallet = getWalletModel();
     const phone = ticket.bookedBy;
     
-    const originalFare = ticket.totalFare || 0;
-    const cancellationFee = Math.round(originalFare * 0.10);
-    const refundAmount = Math.max(0, originalFare - cancellationFee);
+    if (phone) {
+        const originalFare = ticket.totalFare || 0;
+        const cancellationFee = Math.round(originalFare * 0.10);
+        const refundAmount = Math.max(0, originalFare - cancellationFee);
 
-    const phoneNum = Number(phone);
-    const query = {
-      $or: [
-        { phone: phone.toString() },
-        { phone: !isNaN(phoneNum) ? phoneNum : null }
-      ].filter(c => c.phone !== null)
-    };
+        const phoneNum = Number(phone);
+        const query = {
+          $or: [
+            { phone: phone.toString() },
+            { phone: !isNaN(phoneNum) ? phoneNum : null }
+          ].filter(c => c.phone !== null)
+        };
 
-    const wallet = await Wallet.findOneAndUpdate(
-        query,
-        { 
-            $inc: { walletBalance: refundAmount },
-            $push: { 
-                transactions: {
-                    type: 'credit',
-                    description: `Cancellation Refund: ${ticketCode}`,
-                    amount: refundAmount,
-                    date: new Date()
+        const wallet = await Wallet.findOneAndUpdate(
+            query,
+            { 
+                $inc: { walletBalance: refundAmount },
+                $push: { 
+                    transactions: {
+                        type: 'credit',
+                        description: `Cancellation Refund: ${ticketCode}`,
+                        amount: refundAmount,
+                        date: new Date()
+                    }
                 }
-            }
-        },
-        { new: true, upsert: true }
-    );
-    
-    return NextResponse.json({ 
-      status: "cancelled", 
-      ticket: ticket.toObject(),
-      refundAmount,
-      newBalance: wallet.walletBalance
-    });
+            },
+            { new: true, upsert: true }
+        );
+        
+        return NextResponse.json({ 
+          status: "cancelled", 
+          ticket: ticket.toObject(),
+          refundAmount,
+          newBalance: wallet.walletBalance
+        });
+    }
+
+    return NextResponse.json({ status: "cancelled", ticket: ticket.toObject() });
 
   } catch (err: any) {
     console.error("❌ API /cancel-ticket Error:", err);

@@ -19,7 +19,7 @@ export async function POST(
     
     const Ticket = getTicketModel();
     const ticket = await Ticket.findOne({ ticketCode });
-    if (!ticket) return NextResponse.json({ status: "invalid" }, { status: 404 });
+    if (!ticket) return NextResponse.json({ error: "Ticket not found" }, { status: 404 });
 
     const originalBusType = ticket.busType;
     const newBusType = updateData.busType || originalBusType;
@@ -33,7 +33,7 @@ export async function POST(
     if (isValidation) {
         if (originalBusType !== newBusType) {
             transitionMsg = `Conductor Transition (${originalBusType} → ${newBusType})`;
-        } else {
+        } else if (ticket.status !== 'used') {
             transitionMsg = "Conductor Validation";
         }
     } else if (isPassengerChange) {
@@ -49,7 +49,7 @@ export async function POST(
     const phone = ticket.bookedBy;
     const diff = (ticket.totalFare || 0) - (updateData.totalFare || ticket.totalFare);
     
-    if (Math.abs(diff) > 0) {
+    if (phone && Math.abs(diff) > 0) {
         const phoneNum = Number(phone);
         const query = {
             $or: [
@@ -66,7 +66,7 @@ export async function POST(
                     transactions: {
                         type: 'credit',
                         amount: refundWithFee,
-                        description: `${transitionMsg} Refund: ${ticketCode}`,
+                        description: `${transitionMsg || 'Adjustment'} Refund: ${ticketCode}`,
                         date: new Date()
                     }
                 }
@@ -75,8 +75,7 @@ export async function POST(
             const wallet = await Wallet.findOne(query);
             const amountToDeduct = Math.abs(diff);
             
-            // Only auto-deduct if enabled OR if initiated via digital payment (handled by client before API call)
-            // But if this API is called from conductor side, it checks autoDeductEnabled
+            // Only auto-deduct if enabled
             if (wallet && wallet.autoDeductEnabled) {
                 await Wallet.findOneAndUpdate(query, {
                     $inc: { walletBalance: -amountToDeduct },
@@ -84,7 +83,7 @@ export async function POST(
                         transactions: {
                             type: 'debit',
                             amount: amountToDeduct,
-                            description: `${transitionMsg} Charge: ${ticketCode}`,
+                            description: `${transitionMsg || 'Adjustment'} Charge: ${ticketCode}`,
                             date: new Date()
                         }
                     }
@@ -98,8 +97,10 @@ export async function POST(
         ticket.serviceTransition.push(transitionMsg);
     }
 
-    ticket.status = updateData.status || "used";
-    if (ticket.status === "used") ticket.validatedAt = new Date();
+    if (updateData.status) ticket.status = updateData.status;
+    else if (ticket.status !== 'used') ticket.status = 'used';
+
+    if (ticket.status === "used" && !ticket.validatedAt) ticket.validatedAt = new Date();
     
     ticket.updatedAt = new Date();
     if (updateData.from) ticket.from = updateData.from;
@@ -117,6 +118,6 @@ export async function POST(
 
   } catch (err: any) {
     console.error("❌ API /use-ticket Error:", err);
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    return NextResponse.json({ error: err.message || "Internal Database Error" }, { status: 500 });
   }
 }

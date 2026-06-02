@@ -113,7 +113,10 @@ export function UpgradeForm({ ticket }: { ticket: Ticket }) {
                 })
             });
 
-            if (!response.ok) throw new Error("Upgrade failed at database.");
+            if (!response.ok) {
+                const errData = await response.json().catch(() => ({}));
+                throw new Error(errData.error || "Upgrade failed at database.");
+            }
 
             if (currentUserId && opt.walletUsedForUpgrade > 0) {
                 await fetch('/api/user', {
