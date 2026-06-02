@@ -1,29 +1,21 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect , useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Ticket, BookUser, ChevronRight, Database, BarChart3 , HelpCircle, Info , Bell, MessageSquare, Globe , User ,   LogOut } from 'lucide-react';
-import Header from '@/app/components/header';
+import { Ticket, BookUser, ChevronRight, BarChart3, HelpCircle, Info, Bell, MessageSquare, Globe, User, LogOut } from 'lucide-react';
 import AuthGuard from '@/app/components/AuthGuard';
 
 export default function ConductorDashboardPage() { 
-
     const router = useRouter();
     const [showProfileMenu, setShowProfileMenu] = useState(false);
-    useEffect(() => {
-      const user = localStorage.getItem('currentUser');
-      if (!user) {
-        router.replace('/conductor/login');
-      }
-    }, [router]);
 
   const serviceLinks = [
     {
-      href: '/conductor/ticket',
+      href: '/conductor/verify',
       title: 'Ticket Tools',
-      description: 'Verify tickets, check fares, and view stats.',
+      description: 'Direct verification and service adjustments.',
       icon: <Ticket className="h-8 w-8 text-[#00B893]" />,
     },
     {
@@ -38,35 +30,27 @@ export default function ConductorDashboardPage() {
       description: 'Real-time analytics for tickets and bus passes.',
       icon: <BarChart3 className="h-8 w-8 text-indigo-600" />,
     },
-    // {
-    //   href: '/conductor/pass-data',
-    //   title: 'Sample Bus Pass Data',
-    //   description: 'View pass codes for testing verification.',
-    //   icon: <Database className="h-8 w-8 text-amber-500" />,
-    // },
-       { 
-          href: '/help', 
-          title: 'Help & FAQs', 
-          description: 'Find answers to your questions.', 
-          icon: <HelpCircle className="h-8 w-8 text-slate-500" />,
-        },
-        { 
-          href: '/about', 
-          title: 'About This App', 
-          description: 'Learn more about this project.', 
-          icon: <Info className="h-8 w-8 text-blue-500" />,
-        },
+    { 
+      href: '/help', 
+      title: 'Operational Manual', 
+      description: 'Staff protocols and FAQs.', 
+      icon: <HelpCircle className="h-8 w-8 text-slate-500" />,
+    },
+    { 
+      href: '/about', 
+      title: 'System Information', 
+      description: 'Platform version and vision.', 
+      icon: <Info className="h-8 w-8 text-blue-500" />,
+    },
   ];
 
   return (
     <AuthGuard>
     <div className="min-h-screen bg-slate-50 flex flex-col">
-      {/* <Header title="" showBackButton={false} /> */}
-      
-        <header className="bg-primary text-white p-4 flex items-center justify-between sticky top-0 z-50 shadow-sm h-16 w-full">
+        <header className="bg-[#00B893] text-white p-4 flex items-center justify-between sticky top-0 z-50 shadow-sm h-16 w-full">
               <div className="flex items-center gap-3">
-                <div className="bg-white p-1 rounded-sm shadow-inner">
-                  <div className="w-8 h-8 flex flex-col items-center justify-center bg-red-600 text-white rounded-sm text-[5px] font-bold leading-none">
+                <div className="bg-white p-1 rounded-sm shadow-inner shrink-0">
+                  <div className="w-8 h-8 flex flex-col items-center justify-center bg-red-600 text-white rounded-sm text-[5px] font-bold leading-none text-center">
                     <span>TSRTC</span>
                     <span>GAMYAM</span>
                     <span className="text-[4px]">Track and Active</span>
@@ -75,44 +59,37 @@ export default function ConductorDashboardPage() {
                 <h1 className="text-xl font-bold tracking-wider font-headline uppercase">TGSRTC</h1>
               </div>
               <div className="flex items-center gap-4">
-{/*For User  Icon to logout*/}  
-        <div className="relative">
-  <User
-    className="h-5 w-5 cursor-pointer hover:opacity-80"
-    onClick={() => setShowProfileMenu(!showProfileMenu)}
-  />
-
-  {showProfileMenu && (
-    <div className="absolute right-0 top-8 w-64 bg-white rounded-2xl shadow-lg border overflow-hidden z-50">
-      <div className="px-4 py-3 bg-gray-100">
-        <h3 className="text-xl font-semibold text-gray-900">
-          Account
-        </h3>
-      </div>
-
-      <button
-        onClick={() => {
-          localStorage.removeItem('currentUser');
-          localStorage.removeItem('sessionId');
-          router.push('/conductor/login');
-        }}
-        className="w-full flex items-center gap-3 px-4 py-4 text-red-500 hover:bg-red-50 transition-colors"
-      >
-        <LogOut className="h-5 w-5" />
-        <span className="font-semibold text-lg">Logout</span>
-      </button>
-    </div>
-  )}
-</div> {/*for user icon to logout*/}
-
+                <div className="relative">
+                  <User
+                    className="h-5 w-5 cursor-pointer hover:opacity-80"
+                    onClick={() => setShowProfileMenu(!showProfileMenu)}
+                  />
+                  {showProfileMenu && (
+                    <div className="absolute right-0 top-8 w-64 bg-white rounded-2xl shadow-lg border overflow-hidden z-50">
+                      <div className="px-4 py-3 bg-gray-100">
+                        <h3 className="text-sm font-black text-gray-900 uppercase tracking-widest">Account</h3>
+                      </div>
+                      <button
+                        onClick={() => {
+                          localStorage.removeItem('currentUser');
+                          localStorage.removeItem('sessionId');
+                          router.push('/conductor/login');
+                        }}
+                        className="w-full flex items-center gap-3 px-4 py-4 text-red-500 hover:bg-red-50 transition-colors font-bold uppercase text-xs tracking-widest"
+                      >
+                        <LogOut className="h-4 w-4" />
+                        Logout Terminal
+                      </button>
+                    </div>
+                  )}
+                </div>
                 <Bell className="h-5 w-5 cursor-pointer hover:opacity-80" />
-                <MessageSquare className="h-5 w-5 cursor-pointer hover:opacity-80" />
                 <Globe className="h-5 w-5 cursor-pointer hover:opacity-80" />
               </div>
             </header>
 
       <main className="flex-grow flex flex-col items-center pt-12 p-4">
-        <h1 className="text-2xl font-bold text-slate-900 mb-8 font-headline">Conductor Dashboard</h1>
+        <h1 className="text-2xl font-black text-slate-900 mb-8 font-headline uppercase tracking-tight">Conductor Dashboard</h1>
         
         <div className="w-full max-w-2xl space-y-4">
           {serviceLinks.map((link) => (
@@ -123,8 +100,8 @@ export default function ConductorDashboardPage() {
                     {link.icon}
                   </div>
                   <div className="flex-grow">
-                    <CardTitle className="text-xl font-bold text-slate-900 mb-1">{link.title}</CardTitle>
-                    <CardDescription className="text-sm font-medium text-slate-500">
+                    <CardTitle className="text-xl font-black text-slate-900 mb-1 uppercase tracking-tight">{link.title}</CardTitle>
+                    <CardDescription className="text-xs font-bold text-slate-500 uppercase tracking-widest">
                       {link.description}
                     </CardDescription>
                   </div>

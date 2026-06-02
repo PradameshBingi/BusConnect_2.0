@@ -17,13 +17,12 @@ const getServiceLabel = (type: string) => {
 };
 
 /**
- * Enhanced Fare Adjustment Handler (Credits and Debits)
+ * Atomic Fare Adjustment Handler
  */
 async function processFareAdjustment(
   ticket: any, 
   actualFare: number, 
-  conductorId: string,
-  autoDeductRequested: boolean
+  conductorId: string
 ) {
   const User = getUserModel();
   const diff = ticket.totalFare - actualFare; // Positive = Refund, Negative = Deduction
@@ -34,7 +33,7 @@ async function processFareAdjustment(
   const transition = `${bookedLabel} → ${boardedLabel}`;
 
   if (diff > 0) {
-    // REFUND (Credit)
+    // REFUND (Credit) - Atomic update with walletBalance
     await User.findOneAndUpdate(
       { phone: phone },
       { 
@@ -46,7 +45,8 @@ async function processFareAdjustment(
             amount: diff,
             date: new Date()
           }
-        }
+        },
+        $unset: { wallet: "" } // Cleanup legacy field if present
       },
       { upsert: true }
     );
@@ -58,7 +58,7 @@ async function processFareAdjustment(
     const amountToDeduct = Math.abs(diff);
     const user = await User.findOne({ phone });
 
-    if (autoDeductRequested && user?.autoDeductEnabled && user.walletBalance >= amountToDeduct) {
+    if (user?.autoDeductEnabled && user.walletBalance >= amountToDeduct) {
       await User.findOneAndUpdate(
         { phone: phone },
         { 
@@ -104,7 +104,7 @@ export async function POST(
 
     // Apply adjustments
     ticket.actualBusType = actualBusType;
-    await processFareAdjustment(ticket, calculatedFare, conductorId, true);
+    await processFareAdjustment(ticket, calculatedFare, conductorId);
     
     // Update ticket state
     ticket.status = "used";
