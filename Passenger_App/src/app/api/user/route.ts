@@ -1,9 +1,9 @@
 import { NextResponse } from 'next/server';
-import dbConnect, { getUserModel } from '@/lib/mongodb';
+import dbConnect, { getWalletModel } from '@/lib/mongodb';
 
 export const dynamic = "force-dynamic";
 
-// GET user profile and wallet
+// GET wallet profile and balance
 export async function GET(request: Request) {
   try {
     await dbConnect();
@@ -12,45 +12,79 @@ export async function GET(request: Request) {
 
     if (!phone) return NextResponse.json({ error: "Phone missing" }, { status: 400 });
 
-    const User = getUserModel();
-    let user = await User.findOne({ phone });
+    const Wallet = getWalletModel();
+    let wallet = await Wallet.findOne({ phone });
 
-    if (!user) {
-      user = await User.create({ phone, walletBalance: 0, transactions: [] });
+    if (!wallet) {
+      wallet = await Wallet.create({ 
+        phone, 
+        walletBalance: 0, 
+        autoDeductEnabled: false,
+        transactions: [] 
+      });
     }
 
-    // Sort transactions by date descending (newest first) before returning
-    const userObj = user.toObject();
-    if (userObj.transactions) {
-      userObj.transactions.sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    // Sort transactions by date descending (newest first)
+    const walletObj = wallet.toObject();
+    if (walletObj.transactions) {
+      walletObj.transactions.sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime());
     }
 
-    return NextResponse.json(userObj);
+    return NextResponse.json(walletObj);
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
 
-// POST update wallet (recharge or deduct)
+// POST update wallet (recharge, deduct, or session)
 export async function POST(request: Request) {
   try {
     await dbConnect();
-    const { phone, amount, type, description } = await request.json();
+    const data = await request.json();
+    const { phone, amount, type, description, sessionId } = data;
 
-    const User = getUserModel();
-    const user = await User.findOne({ phone });
+    const Wallet = getWalletModel();
+    
+    // Handle Session Update separately
+    if (type === 'session_update') {
+        const wallet = await Wallet.findOneAndUpdate(
+            { phone },
+            { $set: { sessionId } },
+            { new: true, upsert: true }
+        );
+        return NextResponse.json({ status: "success", sessionId: wallet.sessionId });
+    }
 
-    if (!user) return NextResponse.json({ error: "User not found" }, { status: 404 });
+    const wallet = await Wallet.findOne({ phone });
+    if (!wallet) return NextResponse.json({ error: "Wallet not found" }, { status: 404 });
 
-    if (type === 'debit' && user.walletBalance < amount) {
+    if (type === 'debit' && wallet.walletBalance < amount) {
       return NextResponse.json({ error: "Insufficient balance" }, { status: 400 });
     }
 
-    user.walletBalance += (type === 'credit' ? amount : -amount);
-    user.transactions.push({ type, amount, description, date: new Date() });
+    const adjustment = (type === 'credit' ? amount : -amount);
+    
+    // Atomic update
+    const updatedWallet = await Wallet.findOneAndUpdate(
+        { phone },
+        { 
+            $inc: { walletBalance: adjustment },
+            $push: { 
+                transactions: { 
+                    type, 
+                    amount, 
+                    description, 
+                    date: new Date() 
+                } 
+            }
+        },
+        { new: true }
+    );
 
-    await user.save();
-    return NextResponse.json({ status: "success", walletBalance: user.walletBalance });
+    return NextResponse.json({ 
+        status: "success", 
+        walletBalance: updatedWallet.walletBalance 
+    });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }

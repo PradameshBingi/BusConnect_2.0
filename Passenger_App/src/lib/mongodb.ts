@@ -73,36 +73,28 @@ const TicketSchema = new mongoose.Schema({
   securityCode: { type: String, required: true },
   bookedBy: { type: String, required: true },
   walletAmountUsed: { type: Number, default: 0 },
-  validatedAt: Date
+  validatedAt: Date,
+  boardingChanged: { type: Boolean, default: false },
+  serviceTransition: { type: String },
+  actualFare: { type: Number },
+  refundAmount: { type: Number },
+  refundProcessed: { type: Boolean, default: false },
+  refundedAt: Date,
+  deductionAmount: { type: Number },
+  deductionProcessed: { type: Boolean, default: false },
+  deductedAt: Date
 }, { 
   bufferCommands: true,
   timestamps: true,
   collection: 'tickets'
 });
 
-// Bus Pass Schema
-const BusPassSchema = new mongoose.Schema({
-  passCode: { type: String, unique: true, required: true },
-  holderName: { type: String, required: true },
-  passType: { type: String, enum: ['General', 'Route'], required: true },
-  category: { type: String, enum: ['Student', 'Citizen'], required: true },
-  validFrom: { type: Date, required: true },
-  validTo: { type: Date, required: true },
-  validBusTypes: [{ type: String }],
-  route: {
-    from: String,
-    to: String
-  }
-}, { 
-  timestamps: true,
-  collection: 'bus_passes'
-});
-
-// User Schema (For Wallet & Data Persistence)
-const UserSchema = new mongoose.Schema({
+// Wallet Schema (Renamed from User)
+const WalletSchema = new mongoose.Schema({
   phone: { type: String, unique: true, required: true },
   walletBalance: { type: Number, default: 0 },
-  sessionId: { type: String }, // For single-session tracking
+  autoDeductEnabled: { type: Boolean, default: false },
+  sessionId: { type: String },
   transactions: [{
     type: { type: String, enum: ['credit', 'debit'] },
     description: String,
@@ -111,7 +103,18 @@ const UserSchema = new mongoose.Schema({
   }]
 }, { 
   timestamps: true,
-  collection: 'users'
+  collection: 'Wallet'
+});
+
+// Admin Schema
+const AdminSchema = new mongoose.Schema({
+  adminId: { type: String, unique: true, required: true },
+  password: { type: String, required: true },
+  role: { type: String, default: 'admin' },
+  lastLogin: Date
+}, { 
+  timestamps: true,
+  collection: 'Admin'
 });
 
 // Feedback Schema
@@ -126,18 +129,35 @@ const FeedbackSchema = new mongoose.Schema({
   collection: 'feedbacks'
 });
 
+// Conductor Log Schema
+const ConductorLogSchema = new mongoose.Schema({
+  conductorId: String,
+  action: String, // 'ticket_validation', 'pass_verification'
+  ticketCode: String,
+  passCode: String,
+  amount: Number,
+  type: String, // 'refund', 'deduction', 'standard'
+  timestamp: { type: Date, default: Date.now }
+}, {
+  collection: 'conductor_logs'
+});
+
 export function getTicketModel() {
   return mongoose.models.Ticket || mongoose.model('Ticket', TicketSchema);
 }
 
-export function getBusPassModel() {
-  return mongoose.models.BusPass || mongoose.model('BusPass', BusPassSchema);
+export function getWalletModel() {
+  return mongoose.models.Wallet || mongoose.model('Wallet', WalletSchema);
 }
 
-export function getUserModel() {
-  return mongoose.models.User || mongoose.model('User', UserSchema);
+export function getAdminModel() {
+  return mongoose.models.Admin || mongoose.model('Admin', AdminSchema);
 }
 
 export function getFeedbackModel() {
   return mongoose.models.Feedback || mongoose.model('Feedback', FeedbackSchema);
+}
+
+export function getConductorLogModel() {
+  return mongoose.models.ConductorLog || mongoose.model('ConductorLog', ConductorLogSchema);
 }
