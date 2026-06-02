@@ -6,41 +6,19 @@ export const dynamic = "force-dynamic";
 
 /**
  * Reusable backend function to process fare refunds atomically.
- * This ensures the refund happens exactly once per ticket and cleans up legacy fields.
  */
-async function processFareRefund(ticketCode: string, actualFare: number) {
+async function processFareRefund(ticketCode: string, originalFare: number, actualFare: number, phone: string) {
   try {
-    const Ticket = getTicketModel();
     const User = getUserModel();
+    const refundAmount = originalFare - actualFare;
 
-    // 1. Atomically try to claim the refund for this ticket
-    const ticket = await Ticket.findOneAndUpdate(
-      { 
-        ticketCode: ticketCode, 
-        status: 'valid', 
-        refundProcessed: false 
-      },
-      { 
-        $set: { 
-          refundProcessed: true,
-          actualFare: actualFare,
-          refundedAt: new Date()
-        } 
-      },
-      { new: true }
-    );
-
-    if (!ticket) return null;
-
-    const refundAmount = ticket.totalFare - actualFare;
-
-    if (refundAmount > 0 && ticket.bookedBy) {
-      // 2. Atomically update walletBalance, remove legacy wallet field, and push history
-      await User.findOneAndUpdate(
-        { phone: ticket.bookedBy },
+    if (refundAmount > 0 && phone) {
+      // Atomically update walletBalance and push history
+      const updatedUser = await User.findOneAndUpdate(
+        { phone: phone },
         { 
           $inc: { walletBalance: refundAmount },
-          $unset: { wallet: "" }, // Remove legacy field if it exists
+          $unset: { wallet: "" }, // Remove legacy field
           $push: { 
             transactions: {
               type: 'credit',
@@ -50,15 +28,12 @@ async function processFareRefund(ticketCode: string, actualFare: number) {
             }
           }
         },
-        { upsert: true }
+        { upsert: true, new: true }
       );
-
-      ticket.refundAmount = refundAmount;
-      await ticket.save();
       
+      console.log(`✅ Refund of Rs. ${refundAmount} credited to ${phone}. New Balance: ${updatedUser.walletBalance}`);
       return refundAmount;
     }
-
     return 0;
   } catch (error) {
     console.error("Refund processing error:", error);
@@ -95,33 +70,31 @@ export async function POST(
       return NextResponse.json({ message: "Ticket is cancelled" }, { status: 400 });
     }
 
-    // Auto-expire check (10 min window)
-    const now = new Date();
-    const createdAt = new Date(ticket.createdAt);
-    const expiryTime = new Date(createdAt.getTime() + 10 * 60 * 1000);
-
-    if (now > expiryTime && ticket.status === 'valid') {
-        ticket.status = 'expired';
-        await ticket.save();
-        return NextResponse.json({ status: "expired", message: "Ticket has expired" }, { status: 400 });
-    }
-
-    // Process Refund if category is downgraded
+    // Process Refund if category is changed
     let refundIssued = 0;
-    if (actualBusType && actualBusType !== ticket.busType) {
-        const calculatedActualFare = calculateFare(ticket.from, ticket.to, ticket.quantities, actualBusType);
+    const originalTotalFare = ticket.totalFare;
+    let calculatedActualFare = originalTotalFare;
+
+    if (actualBusType) {
+        calculatedActualFare = calculateFare(ticket.from, ticket.to, ticket.quantities, actualBusType);
         
-        if (calculatedActualFare < ticket.totalFare) {
-            const refundResult = await processFareRefund(ticketCode, calculatedActualFare);
-            refundIssued = refundResult || 0;
+        // If boarding a lower category, issue refund
+        if (calculatedActualFare < originalTotalFare) {
+            refundIssued = await processFareRefund(ticketCode, originalTotalFare, calculatedActualFare, ticket.bookedBy);
+            
+            // Update ticket records with adjusted financial data
+            ticket.refundAmount = refundIssued;
+            ticket.refundProcessed = true;
+            ticket.refundedAt = new Date();
         }
         
-        // Final updates to the ticket document for record keeping
+        // Update ticket with the ACTUAL service and fare paid
         ticket.busType = actualBusType;
+        ticket.totalFare = calculatedActualFare;
         ticket.actualFare = calculatedActualFare;
     }
 
-    // Mark as used
+    // Final Validation
     ticket.status = "used";
     ticket.validatedAt = new Date();
     await ticket.save();
