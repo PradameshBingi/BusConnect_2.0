@@ -84,13 +84,15 @@ export default function Header({ title, showBackButton, backHref }: HeaderProps)
     router.push('/conductor/dashboard');
   };
 
-  // Reusable High-Fidelity Logo
+  // REUSABLE HIGH-FIDELITY LOGO (SLOGAN ON ONE LINE)
   const Logo = () => (
-    <div className="bg-red-600 p-1 border-2 border-white rounded-sm shadow-md shrink-0">
+    <div className="bg-red-600 p-1 border-[2.5px] border-white rounded-sm shadow-md shrink-0">
       <div className="w-10 h-10 flex flex-col items-center justify-center text-white font-black leading-none uppercase text-center">
         <span className="text-[7px]">TSRTC</span>
         <span className="text-[8px] mt-0.5">GAMYAM</span>
-        <span className="text-[5px] mt-1 tracking-normal whitespace-nowrap px-0.5 border-t border-white/30 pt-0.5">Track and Active</span>
+        <div className="w-full border-t border-white/40 mt-1 pt-1">
+          <span className="text-[4.5px] tracking-tighter whitespace-nowrap block leading-none font-bold">Track and Active</span>
+        </div>
       </div>
     </div>
   );

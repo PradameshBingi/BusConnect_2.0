@@ -46,13 +46,13 @@ async function dbConnect() {
 
 export default dbConnect;
 
-// Ticket Schema
+// Ticket Schema (Passengers_Ticket)
 const TicketSchema = new mongoose.Schema({
   from: { type: String, required: true },
   to: { type: String, required: true },
   routeNo: String,
   passengers: String,
-  bookedBy: { type: mongoose.Schema.Types.Mixed },
+  bookedBy: { type: mongoose.Schema.Types.Mixed }, // User Mobile
   quantities: {
     Men: { type: Number, default: 0 },
     Child: { type: Number, default: 0 },
@@ -88,7 +88,7 @@ export function getTicketModel() {
   return mongoose.models.FinalPassengerTicket || mongoose.model('FinalPassengerTicket', TicketSchema);
 }
 
-// User/Wallet Schema
+// User/Wallet Schema (Passengers_Wallet)
 const UserSchema = new mongoose.Schema({
   phone: { type: mongoose.Schema.Types.Mixed, unique: true, required: true },
   walletBalance: { type: Number, default: 0 },
@@ -106,8 +106,8 @@ export function getUserModel() {
   return mongoose.models.FinalPassengerWallet || mongoose.model('FinalPassengerWallet', UserSchema);
 }
 
-// Conductor Schema (Production Workable Structure)
-// Use Mixed for conductorId and password to handle both String and Number inputs from MongoDB
+// Production Conductors Schema (Conductors_Admin)
+// STRICT FORMAT MATCH: handles String and Number inputs seamlessly
 const ConductorSchema = new mongoose.Schema({
   conductorId: { type: mongoose.Schema.Types.Mixed, unique: true, required: true },
   name: { type: String, required: true },
@@ -132,7 +132,7 @@ export function getConductorLogModel() {
   return mongoose.models.FinalConductorLog || mongoose.model('FinalConductorLog', ConductorLogSchema);
 }
 
-// Bus Pass Schema
+// Bus Pass Schema (Passengers_Bus_Pass_Data)
 const BusPassSchema = new mongoose.Schema({
   passCode: { type: String, unique: true, required: true },
   name: String,

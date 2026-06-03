@@ -85,10 +85,12 @@ export default function LoginPage() {
       <div className="w-full max-w-md space-y-8">
         <div className="flex flex-col items-center gap-6 text-white">
           <div className="bg-white p-2 border-4 border-red-600 rounded-sm shadow-2xl animate-in zoom-in duration-700">
-            <div className="w-20 h-20 flex flex-col items-center justify-center bg-red-600 text-white rounded-sm font-black leading-none uppercase text-center">
+            <div className="w-20 h-20 flex flex-col items-center justify-center bg-red-600 text-white rounded-sm font-black leading-none uppercase text-center px-1">
               <span className="text-[12px]">TSRTC</span>
               <span className="text-sm mt-1">GAMYAM</span>
-              <span className="text-[7px] mt-2 tracking-normal border-t border-white/30 pt-1.5 px-1">Track and Active</span>
+              <div className="w-full border-t border-white/40 mt-2 pt-2">
+                <span className="text-[7px] tracking-normal block leading-none font-bold whitespace-nowrap">Track and Active</span>
+              </div>
             </div>
           </div>
           
