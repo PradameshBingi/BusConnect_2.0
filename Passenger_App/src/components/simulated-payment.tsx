@@ -14,13 +14,16 @@ import {
   SmartphoneNfc,
   ChevronRight,
   ShieldCheck,
-  Zap
+  Zap,
+  CreditCardIcon,
+  BanknoteIcon
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { cn } from '@/lib/utils';
+import Image from 'next/image';
 
 type PaymentMethod = 'UPI' | 'Card' | 'Netbanking' | 'Wallet';
 type PaymentStatus = 'idle' | 'processing' | 'success';
@@ -108,7 +111,7 @@ export function SimulatedPayment({ isOpen, onClose, onComplete, amount }: Simula
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.95 }}
-        className="relative bg-white w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden flex flex-col md:flex-row h-auto md:h-[580px] max-h-[95vh]"
+        className="relative bg-white w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden flex flex-col md:flex-row h-auto md:h-[600px] max-h-[95vh]"
       >
         <button onClick={onClose} className="absolute top-4 right-4 z-20 p-2 rounded-full hover:bg-gray-100 bg-white/80"><X className="h-5 w-5" /></button>
 
@@ -144,7 +147,7 @@ export function SimulatedPayment({ isOpen, onClose, onComplete, amount }: Simula
                           <p className="text-[9px] text-muted-foreground uppercase font-bold">Balance: Rs. {walletBalance.toFixed(2)}</p>
                         </div>
                       </div>
-                      <Switch checked={useWallet} onCheckedChange={setUseWallet} />
+                      <Switch checked={useWallet} onCheckedChange={setUseWallet} suppressHydrationWarning />
                     </div>
                   )}
 
@@ -156,7 +159,8 @@ export function SimulatedPayment({ isOpen, onClose, onComplete, amount }: Simula
 
                   {method === 'UPI' && <UPIDetails />}
                   {method === 'Card' && <CardDetails />}
-                  {method === 'Wallet' && <div className="p-4 text-center text-xs text-muted-foreground italic bg-slate-50 rounded-xl">Selected External Wallet: Amazon Pay</div>}
+                  {method === 'Netbanking' && <NetbankingDetails />}
+                  {method === 'Wallet' && <WalletDetails />}
                 </div>
 
                 <Button onClick={() => setStatus('processing')} className="w-full h-14 text-lg font-bold rounded-2xl bg-primary hover:bg-primary/90 mt-8 shadow-xl">
@@ -193,23 +197,120 @@ function MethodTab({ active, onClick, icon, label }: { active: boolean; onClick:
   );
 }
 
+function ProviderLogo({ initials, color, name }: { initials: string; color: string; name: string }) {
+  return (
+    <div className="flex flex-col items-center gap-1 group cursor-pointer">
+      <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center text-white text-[10px] font-black shadow-sm group-hover:scale-110 transition-transform", color)}>
+        {initials}
+      </div>
+      <span className="text-[7px] font-bold uppercase text-slate-400 truncate w-full text-center">{name}</span>
+    </div>
+  );
+}
+
 function UPIDetails() {
+  const upiApps = [
+    { name: 'GPay', seed: 'GP', color: 'bg-blue-600' },
+    { name: 'PhonePe', seed: 'PP', color: 'bg-purple-700' },
+    { name: 'Amazon Pay', seed: 'AP', color: 'bg-yellow-600' },
+    { name: 'Paytm', seed: 'PY', color: 'bg-sky-500' },
+    { name: 'SuperMoney', seed: 'SM', color: 'bg-slate-900' },
+  ];
+
   return (
     <div className="space-y-4">
-      <div className="flex flex-col items-center justify-center p-6 bg-slate-50 rounded-2xl border border-slate-200">
-        <QrCode className="h-24 w-24 text-slate-300 mb-2" /><p className="text-[9px] uppercase font-black text-slate-400 tracking-widest">Scan to Pay</p>
+      <div className="grid grid-cols-5 gap-2 px-1">
+        {upiApps.map(app => (
+          <ProviderLogo key={app.name} initials={app.seed} color={app.color} name={app.name} />
+        ))}
       </div>
-      <div className="relative"><Input placeholder="user@upi" className="h-12 rounded-xl pl-10" /><Zap className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-300" /></div>
+      <div className="flex flex-col items-center justify-center p-6 bg-slate-50 rounded-2xl border border-slate-200">
+        <QrCode className="h-16 w-16 text-slate-300 mb-2" />
+        <p className="text-[9px] uppercase font-black text-slate-400 tracking-widest">Scan QR Code</p>
+      </div>
+      <div className="relative">
+        <Input placeholder="Enter UPI ID (e.g. user@upi)" className="h-12 rounded-xl pl-10" suppressHydrationWarning />
+        <Zap className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-300" />
+      </div>
     </div>
   );
 }
 
 function CardDetails() {
+  const cardTypes = [
+    { name: 'Visa', seed: 'VS', color: 'bg-blue-800' },
+    { name: 'Mastercard', seed: 'MC', color: 'bg-red-600' },
+    { name: 'RuPay', seed: 'RP', color: 'bg-blue-400' },
+    { name: 'Maestro', seed: 'MS', color: 'bg-orange-500' },
+  ];
+
   return (
-    <div className="space-y-3">
-      <Input placeholder="Card Number" className="h-12 rounded-xl" />
-      <div className="grid grid-cols-2 gap-3"><Input placeholder="MM/YY" className="h-12 rounded-xl" /><Input placeholder="CVV" type="password" className="h-12 rounded-xl" /></div>
-      <Input placeholder="Holder Name" className="h-12 rounded-xl uppercase" />
+    <div className="space-y-4">
+      <div className="flex gap-4 justify-center">
+        {cardTypes.map(c => (
+           <ProviderLogo key={c.name} initials={c.seed} color={c.color} name={c.name} />
+        ))}
+      </div>
+      <div className="space-y-3">
+        <div className="relative">
+          <Input placeholder="Card Number" className="h-12 rounded-xl pl-10" suppressHydrationWarning />
+          <CreditCardIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-300" />
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <Input placeholder="MM/YY" className="h-12 rounded-xl" suppressHydrationWarning />
+          <Input placeholder="CVV" type="password" className="h-12 rounded-xl" suppressHydrationWarning />
+        </div>
+        <Input placeholder="Holder Name" className="h-12 rounded-xl uppercase font-bold" suppressHydrationWarning />
+      </div>
+    </div>
+  );
+}
+
+function NetbankingDetails() {
+  const banks = [
+    { name: 'SBI', seed: 'SB', color: 'bg-blue-600' },
+    { name: 'HDFC', seed: 'HD', color: 'bg-red-700' },
+    { name: 'ICICI', seed: 'IC', color: 'bg-orange-600' },
+    { name: 'Axis', seed: 'AX', color: 'bg-purple-900' },
+    { name: 'Kotak', seed: 'KT', color: 'bg-red-500' },
+  ];
+
+  return (
+    <div className="space-y-4">
+      <div className="grid grid-cols-5 gap-2">
+        {banks.map(bank => (
+          <ProviderLogo key={bank.name} initials={bank.seed} color={bank.color} name={bank.name} />
+        ))}
+      </div>
+      <div className="p-4 bg-slate-50 border rounded-2xl flex items-center justify-between group cursor-pointer hover:bg-slate-100 transition-colors">
+        <div className="flex items-center gap-3">
+          <BanknoteIcon className="h-5 w-5 text-slate-400" />
+          <span className="text-sm font-bold text-slate-600">Select Other Banks</span>
+        </div>
+        <ChevronRight className="h-4 w-4 text-slate-300" />
+      </div>
+    </div>
+  );
+}
+
+function WalletDetails() {
+  const wallets = [
+    { name: 'Amazon Pay', seed: 'AP', color: 'bg-yellow-500' },
+    { name: 'Paytm', seed: 'PT', color: 'bg-sky-500' },
+    { name: 'Mobikwik', seed: 'MK', color: 'bg-blue-600' },
+    { name: 'PhonePe', seed: 'PP', color: 'bg-purple-700' },
+  ];
+
+  return (
+    <div className="space-y-4">
+      <div className="flex gap-4 justify-center">
+        {wallets.map(w => (
+           <ProviderLogo key={w.name} initials={w.seed} color={w.color} name={w.name} />
+        ))}
+      </div>
+      <div className="p-8 text-center text-xs text-muted-foreground italic bg-slate-50 rounded-2xl border border-dashed">
+        Link your external wallets for faster checkouts.
+      </div>
     </div>
   );
 }

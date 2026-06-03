@@ -115,7 +115,7 @@ export function ModifyForm({ ticket, onReset }: { ticket: any, onReset: () => vo
     }
   };
 
-  const finalizeUpdate = async () => {
+  const finalizeUpdate = async (paymentData?: { walletUsed: number, digitalPaid: number }) => {
     setIsLoading(true);
     try {
       const currentUserId = localStorage.getItem('currentUser');
@@ -133,8 +133,8 @@ export function ModifyForm({ ticket, onReset }: { ticket: any, onReset: () => vo
           passengers: passengerSummary,
           quantities,
           totalFare: newTotalFare,
-          fare: isAddition ? (ticket.fare + fareDifference) : ticket.fare,
-          status: 'valid' // IMPORTANT: Preserve valid status after modification
+          fare: isAddition ? (ticket.fare + (paymentData?.digitalPaid || 0)) : ticket.fare,
+          status: 'valid'
         })
       });
 
@@ -143,16 +143,30 @@ export function ModifyForm({ ticket, onReset }: { ticket: any, onReset: () => vo
           throw new Error(errData.error || "Server failed to update ticket details.");
       }
 
-      // Process Cloud Wallet updates for additions (refunds are handled by API)
-      if (currentUserId && isAddition && fareDifference > 0) {
+      // Record Wallet Usage if any
+      if (currentUserId && paymentData && paymentData.walletUsed > 0) {
+        await fetch('/api/user', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+              phone: currentUserId,
+              amount: paymentData.walletUsed,
+              type: 'debit',
+              description: `Wallet Payment: Modification Upgrade for ${ticket.ticketCode}`
+          })
+        });
+      }
+
+      // Record Digital Pay explicitly for history filtering
+      if (currentUserId && paymentData && paymentData.digitalPaid > 0) {
           await fetch('/api/user', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
                   phone: currentUserId,
-                  amount: fareDifference,
+                  amount: paymentData.digitalPaid,
                   type: 'debit',
-                  description: `Modification Upgrade for ${ticket.ticketCode}`
+                  description: `Digital Pay: Modification Upgrade for ${ticket.ticketCode}`
               })
           });
       }
@@ -272,7 +286,7 @@ export function ModifyForm({ ticket, onReset }: { ticket: any, onReset: () => vo
         <SimulatedPayment 
            isOpen={showPayment}
            onClose={() => setShowPayment(false)}
-           onComplete={finalizeUpdate}
+           onComplete={(data) => finalizeUpdate(data)}
            amount={fareDifference}
         />
       )}

@@ -91,8 +91,8 @@ export function UpgradeForm({ ticket }: { ticket: Ticket }) {
         }
     };
 
-    const finalizeUpgrade = async (optParam?: any) => {
-        const opt = optParam || selectedUpgrade;
+    const finalizeUpgrade = async (paymentData?: { walletUsed: number, digitalPaid: number }) => {
+        const opt = selectedUpgrade;
         if (!opt) return;
 
         setIsLoading(opt.name);
@@ -106,7 +106,7 @@ export function UpgradeForm({ ticket }: { ticket: Ticket }) {
                 body: JSON.stringify({
                     busType: opt.name,
                     totalFare: opt.newTotalFare,
-                    fare: Math.round((ticket.fare || 0) + opt.amountToPay),
+                    fare: Math.round((ticket.fare || 0) + (paymentData?.digitalPaid || 0)),
                     status: 'valid',
                     createdAt: newCreatedAt 
                 })
@@ -117,15 +117,30 @@ export function UpgradeForm({ ticket }: { ticket: Ticket }) {
                 throw new Error(errData.error || "Upgrade failed at database.");
             }
 
-            if (currentUserId && opt.walletUsedForUpgrade > 0) {
+            // Log Wallet Transaction if any
+            if (currentUserId && paymentData && paymentData.walletUsed > 0) {
                 await fetch('/api/user', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         phone: currentUserId,
-                        amount: opt.walletUsedForUpgrade,
+                        amount: paymentData.walletUsed,
                         type: 'debit',
-                        description: `Upgrade to ${opt.name} for ${ticket.ticketCode}`
+                        description: `Wallet Payment: Upgrade to ${opt.name} for ${ticket.ticketCode}`
+                    })
+                });
+            }
+
+            // Log Digital Pay explicitly for history filtering
+            if (currentUserId && paymentData && paymentData.digitalPaid > 0) {
+                await fetch('/api/user', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        phone: currentUserId,
+                        amount: paymentData.digitalPaid,
+                        type: 'debit',
+                        description: `Digital Pay: Upgrade to ${opt.name} for ${ticket.ticketCode}`
                     })
                 });
             }
@@ -163,7 +178,7 @@ export function UpgradeForm({ ticket }: { ticket: Ticket }) {
                                     <p className="text-[10px] text-muted-foreground uppercase font-bold">Balance: Rs. {Math.round(walletBalance)}</p>
                                 </div>
                             </div>
-                            <Switch checked={useWallet} onCheckedChange={setUseWallet} disabled={!!isLoading} />
+                            <Switch checked={useWallet} onCheckedChange={setUseWallet} disabled={!!isLoading} suppressHydrationWarning />
                         </div>
                     )}
 
@@ -201,7 +216,7 @@ export function UpgradeForm({ ticket }: { ticket: Ticket }) {
               <SimulatedPayment 
                 isOpen={showPayment}
                 onClose={() => setShowPayment(false)}
-                onComplete={() => finalizeUpgrade()}
+                onComplete={(data) => finalizeUpgrade(data)}
                 amount={selectedUpgrade.amountToPay}
               />
             )}

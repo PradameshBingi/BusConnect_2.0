@@ -139,9 +139,19 @@ export default function WalletPage() {
     );
   };
 
-  const digitalHistory = wallet.transactions.filter(t => t.description.toLowerCase().includes('digital pay') || t.description.toLowerCase().includes('online payment'));
-  const walletUsageHistory = wallet.transactions.filter(t => t.description.toLowerCase().includes('wallet payment') || (t.type === 'debit' && !t.description.toLowerCase().includes('digital pay')));
-  const refundHistory = wallet.transactions.filter(t => t.description.toLowerCase().includes('refund'));
+  // Refined filtering logic for transaction history
+  const digitalHistory = wallet.transactions.filter(t => 
+    t.description.toLowerCase().includes('digital pay') || 
+    t.description.toLowerCase().includes('online payment')
+  );
+  const walletUsageHistory = wallet.transactions.filter(t => 
+    t.description.toLowerCase().includes('wallet payment') || 
+    (t.type === 'debit' && !t.description.toLowerCase().includes('digital pay') && !t.description.toLowerCase().includes('online payment'))
+  );
+  const refundHistory = wallet.transactions.filter(t => 
+    t.description.toLowerCase().includes('refund') || 
+    t.description.toLowerCase().includes('reimbursement')
+  );
 
   return (
     <>
@@ -160,7 +170,14 @@ export default function WalletPage() {
                 <p className="text-5xl font-black tracking-tighter" suppressHydrationWarning>Rs. {wallet.walletBalance.toFixed(2)}</p>
                 <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mt-4">Wallet ID: {phone}</p>
                 <div className="mt-8 pt-6 border-t border-white/10 flex items-center justify-between">
-                    <p className="text-xs font-bold text-white flex items-center gap-2"><ShieldCheck className="h-4 w-4 text-primary" /> Auto Deduct</p>
+                    <div className="flex flex-col">
+                        <p className="text-xs font-bold text-white flex items-center gap-2">
+                            <ShieldCheck className="h-4 w-4 text-primary" /> Auto Deduct for Conductor Use
+                        </p>
+                        <p className="text-[9px] text-white/40 ml-6 mt-0.5 font-medium leading-tight italic">
+                            Enables staff to validate boarding instantly without secondary security PIN verification.
+                        </p>
+                    </div>
                     <Switch checked={wallet.autoDeductEnabled} onCheckedChange={handleToggleAutoDeduct} disabled={isUpdatingSettings} />
                 </div>
               </div>
@@ -170,7 +187,7 @@ export default function WalletPage() {
           <Card className="rounded-3xl shadow-lg bg-white overflow-hidden">
             <CardHeader className="pb-4"><CardTitle className="text-xl font-bold flex items-center gap-2"><CreditCard className="h-6 w-6 text-primary" /> Add Funds</CardTitle></CardHeader>
             <CardContent className="space-y-4">
-                <Input type="tel" placeholder="Amount (Rs.)" value={addAmount} onChange={handleAmountChange} className="h-14 rounded-xl text-xl font-black bg-slate-50 border-none shadow-inner" />
+                <Input type="tel" placeholder="Amount (Rs.)" value={addAmount} onChange={handleAmountChange} className="h-14 rounded-xl text-xl font-black bg-slate-50 border-none shadow-inner" suppressHydrationWarning />
                 <Button className='w-full h-14 rounded-2xl text-lg font-bold bg-[#0A2B70]' onClick={() => setShowPayment(true)}>Recharge</Button>
             </CardContent>
           </Card>
