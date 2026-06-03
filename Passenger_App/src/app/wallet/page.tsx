@@ -88,6 +88,26 @@ export default function WalletPage() {
     if (val.length <= 4) setAddAmount(val);
   };
 
+  const handleInitiateRecharge = () => {
+    const amount = parseFloat(addAmount);
+    if (!amount || amount <= 0) {
+      toast({ variant: 'destructive', title: "Invalid Amount", description: "Please enter a valid amount to recharge." });
+      return;
+    }
+
+    if (wallet.walletBalance + amount > 2000) {
+      const maxAllowed = Math.max(0, 2000 - wallet.walletBalance);
+      toast({ 
+        variant: 'destructive', 
+        title: "Wallet Limit Reached", 
+        description: `Total balance cannot exceed Rs. 2000. Based on your current balance, you can add up to Rs. ${maxAllowed}.` 
+      });
+      return;
+    }
+
+    setShowPayment(true);
+  };
+
   const finalizeAddMoney = async () => {
     const amount = parseFloat(addAmount);
     try {
@@ -100,13 +120,19 @@ export default function WalletPage() {
           type: 'recharge'
         })
       });
+
+      if (!response.ok) {
+        const errData = await response.json();
+        throw new Error(errData.error || "Recharge failed");
+      }
+
       const result = await response.json();
       setWallet(prev => ({ ...prev, walletBalance: result.walletBalance }));
       fetchWallet(phone);
       setAddAmount('');
       toast({ title: 'Recharge Success' });
-    } catch (error) {
-      toast({ variant: 'destructive', title: 'Error' });
+    } catch (error: any) {
+      toast({ variant: 'destructive', title: 'Error', description: error.message });
     }
   };
 
@@ -142,7 +168,6 @@ export default function WalletPage() {
     );
   };
 
-  // Improved Filtering Logic
   const digitalHistory = wallet.transactions.filter(t => 
     t.description.startsWith('Digital Pay:')
   );
@@ -193,7 +218,7 @@ export default function WalletPage() {
               <CardHeader className="pb-4"><CardTitle className="text-xl font-bold flex items-center gap-2"><CreditCard className="h-6 w-6 text-primary" /> Add Funds</CardTitle></CardHeader>
               <CardContent className="space-y-4">
                   <Input type="tel" placeholder="Amount (Rs.)" value={addAmount} onChange={handleAmountChange} className="h-14 rounded-xl text-xl font-black bg-slate-50 border-none shadow-inner" suppressHydrationWarning />
-                  <Button className='w-full h-14 rounded-2xl text-lg font-bold bg-[#0A2B70]' onClick={() => setShowPayment(true)}>Recharge</Button>
+                  <Button className='w-full h-14 rounded-2xl text-lg font-bold bg-[#0A2B70]' onClick={handleInitiateRecharge}>Recharge</Button>
               </CardContent>
             </Card>
             

@@ -76,13 +76,17 @@ export async function POST(request: Request) {
     if (!wallet) return NextResponse.json({ error: "Wallet not found" }, { status: 404 });
 
     /**
-     * TRANSACTION TYPE LOGIC:
-     * 'recharge': Dual History Push + Balance Increment
-     * 'credit': +Balance, History: Credit (Green)
-     * 'debit': -Balance, History: Debit (Red)
-     * 'digital': 0 change, History: Debit (Red) - Bank side debit tracking
+     * RECHARGE LIMIT LOGIC (Rs. 2000)
      */
     if (type === 'recharge') {
+        const currentBalance = wallet.walletBalance || 0;
+        if (currentBalance + amount > 2000) {
+            const maxAllowed = Math.max(0, 2000 - currentBalance);
+            return NextResponse.json({ 
+                error: `Recharge limit exceeded. Your maximum allowable recharge is Rs. ${maxAllowed}. Total balance cannot exceed Rs. 2000.` 
+            }, { status: 400 });
+        }
+
         const now = new Date();
         const transactionsToPush = [
             {
