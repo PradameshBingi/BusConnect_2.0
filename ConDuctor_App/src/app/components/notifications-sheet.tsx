@@ -2,18 +2,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/card";
-import { Ticket, Zap, Wallet, Info, Clock, Loader2 } from 'lucide-react';
-import { Separator } from '@/components/ui/separator';
+import { Ticket, Zap, Wallet, Info, Clock, Loader2, Bell, X } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import * as SheetPrimitive from "@radix-ui/react-dialog";
-import { X } from "lucide-react";
 
 interface Notification {
   _id: string;
