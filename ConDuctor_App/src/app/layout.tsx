@@ -2,6 +2,7 @@
 'use client';
 
 import "./globals.css";
+import { Toaster } from "@/components/ui/toaster";
 
 /**
  * Root Layout
@@ -20,6 +21,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <p className="font-black text-2xl tracking-tighter text-[#0A2B70] uppercase">BINGI PRADAMESH</p>
           </div>
         </footer>
+        <Toaster />
       </body>
     </html>
   );

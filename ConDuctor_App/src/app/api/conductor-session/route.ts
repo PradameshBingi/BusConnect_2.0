@@ -13,7 +13,14 @@ export async function GET(request: Request) {
   try {
     await dbConnect();
     const Conductor = getConductorModel();
-    const conductor = await Conductor.findOne({ conductorId });
+    
+    const idNum = Number(conductorId);
+    const conductor = await Conductor.findOne({ 
+      $or: [
+        { conductorId: conductorId },
+        { conductorId: isNaN(idNum) ? conductorId : idNum }
+      ] 
+    });
 
     return NextResponse.json({ 
       sessionId: conductor?.sessionId || null,
@@ -32,20 +39,27 @@ export async function POST(request: Request) {
     const { id, password, sessionId } = body;
     const Conductor = getConductorModel();
 
-    // Verify Conductor Credentials against Conductors_Admin collection
-    const conductor = await Conductor.findOne({ conductorId: id });
+    // Robust ID matching (handles ID as String or Number in MongoDB)
+    const idNum = Number(id);
+    const conductor = await Conductor.findOne({ 
+      $or: [
+        { conductorId: id },
+        { conductorId: isNaN(idNum) ? id : idNum }
+      ] 
+    });
 
     if (!conductor) {
       return NextResponse.json({ status: "error", message: "Conductor ID Not Found" }, { status: 401 });
     }
 
-    if (conductor.password !== password) {
+    // Direct comparison (Ensure both are strings for safety if needed)
+    if (conductor.password.toString() !== password.toString()) {
       return NextResponse.json({ status: "error", message: "Invalid Security PIN" }, { status: 401 });
     }
 
     // Success - Update Session
     const updated = await Conductor.findOneAndUpdate(
-      { conductorId: id },
+      { _id: conductor._id },
       { sessionId, lastActive: new Date() },
       { new: true }
     );
