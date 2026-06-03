@@ -144,7 +144,6 @@ export default function VerifyTicketPage() {
 
     const isServiceChanged = ticket && actualBusType !== ticket.busType;
     
-    // Logic for Auto-Deduct vs Manual Collection (Deduction Case Only)
     const fareDiff = Math.abs((ticket?.totalFare || 0) - dynamicFare);
     const isRefund = dynamicFare < (ticket?.totalFare || 0);
     const hasSufficientBalance = (passenger?.walletBalance || 0) >= fareDiff;
@@ -328,7 +327,7 @@ export default function VerifyTicketPage() {
                           </CardContent>
                       </Card>
 
-                      <div className="w-full bg-[#1A1F2E] py-2 flex flex-col items-center gap-0.5 rounded-2xl cursor-pointer" onClick={() => { if(ticket.ticketCode) { navigator.clipboard.writeText(ticket.ticketCode); toast({ title: "Copied", description: "Ticket ID saved." }); } }}>
+                      <div className="w-full bg-[#1A1F2E] py-2 flex flex-col items-center gap-0.5 rounded-2xl">
                           <p className="text-[7px] font-black text-slate-500 uppercase tracking-[0.3em]">TICKET CODE</p>
                           <p className="text-sm font-black text-white tracking-[0.1em] font-mono">{ticket.ticketCode}</p>
                       </div>
@@ -343,20 +342,20 @@ export default function VerifyTicketPage() {
         </main>
 
         <Dialog open={isRouteSelectorOpen} onOpenChange={setRouteSelectorOpen}>
-            <DialogContent className="max-w-md rounded-3xl p-0 overflow-hidden border-none">
+            <DialogContent className="max-w-md rounded-3xl p-0 overflow-hidden border-none bg-slate-900">
                 <DialogHeader className="bg-[#00B893] text-white p-6">
                     <DialogTitle className="font-headline uppercase tracking-tight text-xl">Select Bus Route</DialogTitle>
                     <DialogDescription className="hidden">Choose route to filter tickets</DialogDescription>
                 </DialogHeader>
-                <Command className="rounded-none">
-                    <CommandInput placeholder="Search routes (e.g. 01 or Mehdipatnam)..." onValueChange={setSearchQuery} className="h-14 font-medium" />
+                <Command className="rounded-none bg-slate-900">
+                    <CommandInput placeholder="Search routes (e.g. 01 or Mehdipatnam)..." onValueChange={setSearchQuery} className="h-14 font-medium text-white border-slate-800" />
                     <CommandList className="max-h-[300px]">
-                        <CommandEmpty>No routes found.</CommandEmpty>
+                        <CommandEmpty className="text-slate-400 p-4">No routes found.</CommandEmpty>
                         <CommandGroup>
                             {filteredRoutes.map((route) => (
-                                <CommandItem key={route.routeNo} onSelect={() => { setRouteNo(route.routeNo); setRouteSelectorOpen(false); setSearchQuery(''); }} className="flex items-center gap-4 p-4 cursor-pointer hover:bg-slate-50 border-b border-slate-50 last:border-none">
-                                    <div className="w-10 h-10 bg-[#0A2B70] text-white rounded-lg flex items-center justify-center font-bold">{route.routeNo}</div>
-                                    <span className="font-black text-slate-800 uppercase text-xs">{route.routeName}</span>
+                                <CommandItem key={route.routeNo} onSelect={() => { setRouteNo(route.routeNo); setRouteSelectorOpen(false); setSearchQuery(''); }} className="flex items-center gap-4 p-4 cursor-pointer hover:bg-slate-800 border-b border-slate-800 last:border-none data-[selected=true]:bg-slate-800">
+                                    <div className="w-10 h-10 bg-[#0A2B70] text-white rounded-lg flex items-center justify-center font-bold shrink-0">{route.routeNo}</div>
+                                    <span className="font-black text-white uppercase text-xs tracking-wide">{route.routeName}</span>
                                 </CommandItem>
                             ))}
                         </CommandGroup>

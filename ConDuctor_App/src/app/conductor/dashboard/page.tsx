@@ -71,7 +71,6 @@ export default function ConductorDashboardPage() {
               </Link>
             ))}
 
-            {/* Quick Actions (Non-functional placeholders) */}
             <div className="grid grid-cols-2 gap-4 pt-4">
               <Button 
                 variant="outline" 
