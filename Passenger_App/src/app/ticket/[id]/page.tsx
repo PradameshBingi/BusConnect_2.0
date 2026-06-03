@@ -68,28 +68,6 @@ export default function TicketDetailPage() {
     return () => clearInterval(interval);
   }, [ticketCode]);
 
-  const handleCopy = (text: string, fieldName: string) => {
-    if (typeof navigator !== 'undefined' && navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(text)
-        .then(() => {
-          toast({ title: "Copied!", description: `${fieldName} copied to clipboard.` });
-        })
-        .catch(() => {
-          toast({ 
-            variant: 'destructive', 
-            title: "Copy Blocked", 
-            description: "Permissions restricted. Please copy manually." 
-          });
-        });
-    } else {
-      toast({ 
-        variant: 'destructive', 
-        title: "Copy Failed", 
-        description: "Your browser does not support automatic copying." 
-      });
-    }
-  };
-
   if (isLoading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
@@ -205,10 +183,7 @@ export default function TicketDetailPage() {
               <div className="p-4 bg-primary/5 rounded-2xl border border-primary/20 flex flex-col items-center gap-2">
                 <p className="text-[10px] uppercase text-muted-foreground font-black tracking-[0.2em]">Security Code</p>
                 <div className="flex items-center justify-center w-full gap-3">
-                  <p 
-                    className="font-mono text-4xl font-black tracking-[0.3em] text-primary min-w-[140px] text-center cursor-pointer active:opacity-70 transition-opacity"
-                    onClick={() => showPin && handleCopy(ticket.securityCode, 'Security PIN')}
-                  >
+                  <p className="font-mono text-4xl font-black tracking-[0.3em] text-primary min-w-[140px] text-center">
                       {showPin ? ticket.securityCode : '•••••'}
                   </p>
                   <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full" onClick={() => setShowPin(!showPin)}>
@@ -218,14 +193,9 @@ export default function TicketDetailPage() {
               </div>
             )}
 
-            <div 
-              className="text-center p-4 bg-slate-900 text-white rounded-2xl shadow-inner cursor-pointer hover:bg-slate-800 active:scale-[0.98] transition-all group"
-              onClick={() => handleCopy(ticket.ticketCode, 'Ticket No')}
-              title="Tap to Copy"
-            >
-              <p className="text-[10px] uppercase text-slate-400 mb-1 font-black tracking-widest group-hover:text-primary transition-colors">Ticket No</p>
+            <div className="text-center p-4 bg-slate-900 text-white rounded-2xl shadow-inner">
+              <p className="text-[10px] uppercase text-slate-400 mb-1 font-black tracking-widest">Ticket No</p>
               <p className="font-mono text-xl font-bold break-all tracking-wider">{ticket.ticketCode}</p>
-              <p className="text-[8px] text-slate-500 font-bold uppercase mt-1 opacity-0 group-hover:opacity-100 transition-opacity">Tap to Copy</p>
             </div>
 
             {displayStatus === 'valid' && (
