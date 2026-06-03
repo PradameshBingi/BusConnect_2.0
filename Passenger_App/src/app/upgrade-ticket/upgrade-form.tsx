@@ -117,7 +117,7 @@ export function UpgradeForm({ ticket }: { ticket: Ticket }) {
                 throw new Error(errData.error || "Upgrade failed at database.");
             }
 
-            // Log Wallet Transaction if any
+            // Record Wallet Transaction if any (Actual deduction)
             if (currentUserId && paymentData && paymentData.walletUsed > 0) {
                 await fetch('/api/user', {
                     method: 'POST',
@@ -131,7 +131,7 @@ export function UpgradeForm({ ticket }: { ticket: Ticket }) {
                 });
             }
 
-            // Log Digital Pay explicitly for history filtering
+            // Record Digital Pay (History only, No balance change)
             if (currentUserId && paymentData && paymentData.digitalPaid > 0) {
                 await fetch('/api/user', {
                     method: 'POST',
@@ -139,7 +139,7 @@ export function UpgradeForm({ ticket }: { ticket: Ticket }) {
                     body: JSON.stringify({
                         phone: currentUserId,
                         amount: paymentData.digitalPaid,
-                        type: 'debit',
+                        type: 'digital', // Fixed: 'digital' doesn't subtract from balance
                         description: `Digital Pay: Upgrade to ${opt.name} for ${ticket.ticketCode}`
                     })
                 });

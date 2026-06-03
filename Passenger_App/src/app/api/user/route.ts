@@ -14,7 +14,6 @@ export async function GET(request: Request) {
 
     const Wallet = getWalletModel();
     
-    // Type-robust lookup
     const phoneNum = Number(phone);
     const query = {
       $or: [
@@ -34,7 +33,6 @@ export async function GET(request: Request) {
       });
     }
 
-    // Sort transactions by date descending (newest first)
     const walletObj = wallet.toObject();
     if (walletObj.transactions) {
       walletObj.transactions.sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime());
@@ -65,7 +63,6 @@ export async function POST(request: Request) {
       ].filter(condition => condition.phone !== null)
     };
     
-    // Handle Session Update separately
     if (type === 'session_update') {
         const wallet = await Wallet.findOneAndUpdate(
             query,
@@ -78,24 +75,40 @@ export async function POST(request: Request) {
     const wallet = await Wallet.findOne(query);
     if (!wallet) return NextResponse.json({ error: "Wallet not found" }, { status: 404 });
 
-    // Digital payments record history but DON'T adjust balance
-    const isExternalDigital = type === 'digital';
-    
-    if (type === 'debit' && !isExternalDigital && wallet.walletBalance < amount) {
-      return NextResponse.json({ error: "Insufficient balance" }, { status: 400 });
-    }
+    /**
+     * TRANSACTION TYPE LOGIC:
+     * 'credit': +Balance, History: Credit (Green)
+     * 'debit': -Balance, History: Debit (Red)
+     * 'digital': 0 change, History: Debit (Red) - User wants external pay shown as debit from source
+     * 'recharge': +Balance, History: Debit (Red) - User wants bank debit shown in red for recharge
+     */
+    let adjustment = 0;
+    let historyType: 'credit' | 'debit' = 'debit';
 
-    // Adjustment logic: Credits add, Debits subtract, Digital/Other is 0
-    const adjustment = type === 'credit' ? amount : (isExternalDigital ? 0 : -amount);
+    if (type === 'credit') {
+        adjustment = amount;
+        historyType = 'credit';
+    } else if (type === 'debit') {
+        if (wallet.walletBalance < amount) {
+            return NextResponse.json({ error: "Insufficient balance" }, { status: 400 });
+        }
+        adjustment = -amount;
+        historyType = 'debit';
+    } else if (type === 'digital') {
+        adjustment = 0;
+        historyType = 'debit';
+    } else if (type === 'recharge') {
+        adjustment = amount;
+        historyType = 'debit'; // Special requirement: Red color (debit from bank) for recharge
+    }
     
-    // Atomic update
     const updatedWallet = await Wallet.findOneAndUpdate(
         query,
         { 
             $inc: { walletBalance: adjustment },
             $push: { 
                 transactions: { 
-                    type: (isExternalDigital || type === 'debit') ? 'debit' : 'credit', 
+                    type: historyType, 
                     amount, 
                     description, 
                     date: new Date() 

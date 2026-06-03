@@ -137,7 +137,11 @@ export default function HelpPage() {
             </div>
 
             <div className="pt-4 border-t border-white/5">
-              <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Thank You For Visiting.😎👍</p>
+              {/* <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Thank You For Visiting.😎👍</p> */}
+              <p className="text-[10px] font-black tracking-[0.2em] text-emerald-500 uppercase pt-4">
+                Thank You For Visiting. 😎👍
+              </p>
+
             </div>
           </CardContent>
         </Card>

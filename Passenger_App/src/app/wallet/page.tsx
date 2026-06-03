@@ -97,8 +97,8 @@ export default function WalletPage() {
         body: JSON.stringify({
           phone,
           amount,
-          type: 'credit',
-          description: 'Online Payment: Wallet Recharge'
+          type: 'recharge', // Special type for Red UI + Balance Increment
+          description: 'Digital Pay: Wallet Recharge'
         })
       });
       const result = await response.json();
@@ -128,12 +128,12 @@ export default function WalletPage() {
                   <div>
                     <p className="font-bold text-slate-800 text-[11px] leading-tight">{tx.description}</p>
                     <p className="text-[9px] text-muted-foreground font-bold mt-0.5" suppressHydrationWarning>
-                      {isHydrated ? `${new Date(tx.date).toLocaleDateString()} • ${new Date(tx.date).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}` : '...'}
+                      {isHydrated ? `${new Date(tx.date).toLocaleDateString('en-GB')} • ${new Date(tx.date).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}` : '...'}
                     </p>
                   </div>
                 </div>
                 <p className={cn("font-black text-xs shrink-0 ml-2", tx.type === 'credit' ? "text-green-600" : "text-red-600")}>
-                  ₹{Math.round(tx.amount)}
+                  ₹{Math.round(tx.amount)}.00
                 </p>
               </CardContent>
             </Card>
@@ -154,7 +154,7 @@ export default function WalletPage() {
   const refundHistory = wallet.transactions.filter(t => 
     t.description.toLowerCase().includes('refund') || 
     t.description.toLowerCase().includes('reimbursement') ||
-    t.type === 'credit' && t.description.toLowerCase().includes('conductor')
+    (t.type === 'credit' && t.description.toLowerCase().includes('conductor'))
   );
 
   return (

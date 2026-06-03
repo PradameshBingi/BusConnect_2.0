@@ -144,7 +144,7 @@ export function ModifyForm({ ticket, onReset }: { ticket: any, onReset: () => vo
           throw new Error(errData.error || "Server failed to update ticket details.");
       }
 
-      // Record Wallet Usage if any
+      // Record Wallet Usage if any (Actual deduction)
       if (currentUserId && paymentData && paymentData.walletUsed > 0) {
         await fetch('/api/user', {
           method: 'POST',
@@ -158,7 +158,7 @@ export function ModifyForm({ ticket, onReset }: { ticket: any, onReset: () => vo
         });
       }
 
-      // Record Digital Pay explicitly for history filtering
+      // Record Digital Pay (History only, No balance change)
       if (currentUserId && paymentData && paymentData.digitalPaid > 0) {
           await fetch('/api/user', {
               method: 'POST',
@@ -166,7 +166,7 @@ export function ModifyForm({ ticket, onReset }: { ticket: any, onReset: () => vo
               body: JSON.stringify({
                   phone: currentUserId,
                   amount: paymentData.digitalPaid,
-                  type: 'debit',
+                  type: 'digital', // Fixed: 'digital' doesn't subtract from balance
                   description: `Digital Pay: Modification Upgrade for ${ticket.ticketCode}`
               })
           });

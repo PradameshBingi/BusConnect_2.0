@@ -21,7 +21,6 @@ export async function POST(
     const ticket = await Ticket.findOne({ ticketCode });
     if (!ticket) return NextResponse.json({ error: "Ticket not found" }, { status: 404 });
 
-    // 1. Terminology Normalization Layer
     const normalizeBusType = (type: string) => {
         if (!type) return "City Ordinary";
         const t = type.toLowerCase();
@@ -33,7 +32,6 @@ export async function POST(
     const originalBusType = normalizeBusType(ticket.busType);
     const newBusType = updateData.busType ? normalizeBusType(updateData.busType) : originalBusType;
     
-    // 2. Determine Transition Type & Granular Labeling
     let transitionMsg = "";
     const isValidation = updateData.status === 'used' || (Object.keys(updateData).length === 0 && ticket.status === 'valid');
     const isModification = (updateData.from || updateData.to || updateData.quantities) && !updateData.busType;
@@ -48,36 +46,15 @@ export async function POST(
     } else if (isUpgradation) {
         transitionMsg = `Upgradation (${originalBusType} → ${newBusType})`;
     } else if (isModification) {
-        const routePart = (updateData.from || updateData.to) 
-          ? `Route Changed (${ticket.from} -> ${updateData.from || ticket.from} / ${ticket.to} -> ${updateData.to || ticket.to})` 
-          : "";
-        
-        let passengerPart = "";
-        if (updateData.quantities) {
-            const pChanges = [];
-            const types = ['Men', 'Child', 'Women'] as const;
-            types.forEach(type => {
-                const diff = (updateData.quantities[type] || 0) - (ticket.quantities[type] || 0);
-                if (diff !== 0) {
-                    pChanges.push(`${type}: ${diff > 0 ? '+' : ''}${diff}`);
-                }
-            });
-            if (pChanges.length > 0) {
-                passengerPart = `Passengers Added (${pChanges.join(', ')})`;
-            }
-        }
-        
-        const details = [routePart, passengerPart].filter(Boolean).join(" & ");
-        transitionMsg = `Modification (${details})`;
+        transitionMsg = "Passenger Modification";
     }
 
-    // 3. Financial Processing Logic
     const phone = ticket.bookedBy;
     if (phone) {
         const Wallet = getWalletModel();
         const oldFare = ticket.totalFare || 0;
         const newFare = updateData.totalFare !== undefined ? updateData.totalFare : oldFare;
-        const diff = oldFare - newFare;
+        const diff = Math.round(oldFare - newFare);
         
         // If old > new, it's a refund (diff is positive)
         if (diff > 0) {
@@ -89,14 +66,14 @@ export async function POST(
                 ].filter(c => c.phone !== null)
             };
 
-            const refundWithFee = Math.round(diff * 0.90); // 10% fee
+            const refundWithFee = Math.round(diff * 0.90); 
             await Wallet.findOneAndUpdate(walletQuery, {
                 $inc: { walletBalance: refundWithFee },
                 $push: {
                     transactions: {
                         type: 'credit',
                         amount: refundWithFee,
-                        description: `${transitionMsg || 'Adjustment'} Refund: ${ticketCode}`,
+                        description: `Conductor Adjustment Refund: ${ticketCode}`,
                         date: new Date()
                     }
                 }
@@ -104,23 +81,16 @@ export async function POST(
         }
     }
 
-    // 4. Update Ticket Document
-    if (!ticket.serviceTransition || !Array.isArray(ticket.serviceTransition)) {
-        ticket.serviceTransition = [];
-    }
-    
-    if (transitionMsg) {
-        ticket.serviceTransition.push(transitionMsg);
-    }
+    if (!ticket.serviceTransition) ticket.serviceTransition = [];
+    if (transitionMsg) ticket.serviceTransition.push(transitionMsg);
 
-    // Refresh timestamp for modifications or upgrades
     if (isModification || isUpgradation) {
         ticket.createdAt = new Date();
     }
 
     if (updateData.status) {
         ticket.status = updateData.status;
-    } else if (isValidation && ticket.status === 'valid' && !updateData.from && !updateData.busType) {
+    } else if (isValidation && ticket.status === 'valid') {
         ticket.status = 'used';
     }
 
