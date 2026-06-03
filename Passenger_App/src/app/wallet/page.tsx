@@ -90,8 +90,12 @@ export default function WalletPage() {
 
   const handleInitiateRecharge = () => {
     const amount = parseFloat(addAmount);
-    if (!amount || amount <= 0) {
-      toast({ variant: 'destructive', title: "Invalid Amount", description: "Please enter a valid amount to recharge." });
+    if (!amount || amount < 100) {
+      toast({ 
+        variant: 'destructive', 
+        title: "Minimum Recharge", 
+        description: "The minimum amount required to recharge is Rs. 100." 
+      });
       return;
     }
 
@@ -217,7 +221,7 @@ export default function WalletPage() {
             <Card className="rounded-3xl shadow-lg bg-white overflow-hidden">
               <CardHeader className="pb-4"><CardTitle className="text-xl font-bold flex items-center gap-2"><CreditCard className="h-6 w-6 text-primary" /> Add Funds</CardTitle></CardHeader>
               <CardContent className="space-y-4">
-                  <Input type="tel" placeholder="Amount (Rs.)" value={addAmount} onChange={handleAmountChange} className="h-14 rounded-xl text-xl font-black bg-slate-50 border-none shadow-inner" suppressHydrationWarning />
+                  <Input type="tel" placeholder="Amount (Min Rs. 100)" value={addAmount} onChange={handleAmountChange} className="h-14 rounded-xl text-xl font-black bg-slate-50 border-none shadow-inner" suppressHydrationWarning />
                   <Button className='w-full h-14 rounded-2xl text-lg font-bold bg-[#0A2B70]' onClick={handleInitiateRecharge}>Recharge</Button>
               </CardContent>
             </Card>

@@ -18,7 +18,7 @@ export async function GET(request: Request) {
     const query = {
       $or: [
         { phone: phone.toString() },
-        { phone: isNaN(phoneNum) ? null : phoneNum }
+        { phone: !isNaN(phoneNum) ? phoneNum : null }
       ].filter(condition => condition.phone !== null)
     };
 
@@ -59,7 +59,7 @@ export async function POST(request: Request) {
     const query = {
       $or: [
         { phone: phone.toString() },
-        { phone: isNaN(phoneNum) ? null : phoneNum }
+        { phone: !isNaN(phoneNum) ? phoneNum : null }
       ].filter(condition => condition.phone !== null)
     };
     
@@ -76,9 +76,15 @@ export async function POST(request: Request) {
     if (!wallet) return NextResponse.json({ error: "Wallet not found" }, { status: 404 });
 
     /**
-     * RECHARGE LIMIT LOGIC (Rs. 2000)
+     * RECHARGE LOGIC (Min Rs. 100, Max Balance Rs. 2000)
      */
     if (type === 'recharge') {
+        if (amount < 100) {
+            return NextResponse.json({ 
+                error: "The minimum amount required to recharge is Rs. 100." 
+            }, { status: 400 });
+        }
+
         const currentBalance = wallet.walletBalance || 0;
         if (currentBalance + amount > 2000) {
             const maxAllowed = Math.max(0, 2000 - currentBalance);
