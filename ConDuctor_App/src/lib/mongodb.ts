@@ -106,9 +106,9 @@ export function getUserModel() {
   return mongoose.models.FinalPassengerWallet || mongoose.model('FinalPassengerWallet', UserSchema);
 }
 
-// Conductor Schema (Format: ConductorId, Name, Password)
+// Conductor Schema (Strict Production Format)
 const ConductorSchema = new mongoose.Schema({
-  conductorId: { type: String, unique: true, required: true },
+  conductorId: { type: mongoose.Schema.Types.Mixed, unique: true, required: true },
   name: { type: String, required: true },
   password: { type: String, required: true },
   sessionId: String,
