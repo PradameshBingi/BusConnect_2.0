@@ -13,38 +13,38 @@ export default function ConductorDashboardPage() {
     {
       href: '/conductor/verify',
       title: 'Ticket Tool',
-      description: 'Direct verification and service adjustments',
+      description: 'Direct Verification And Service Adjustments',
       icon: <Ticket className="h-6 w-6 text-[#00B893]" />,
     },
     {
       href: '/conductor/bus-pass',
       title: 'Bus Pass Verification',
-      description: 'Validate student and citizen bus passes',
+      description: 'Validate Student And Citizen Bus Passes',
       icon: <BookUser className="h-6 w-6 text-[#0A2B70]" />,
     },
     {
       href: '/conductor/stats',
       title: 'Verification Insights',
-      description: 'Real-time analytics for tickets and bus passes',
+      description: 'Real-Time Analytics For Tickets And Bus Passes',
       icon: <BarChart3 className="h-6 w-6 text-indigo-600" />,
     },
     { 
       href: '/help', 
       title: 'Help & FAQs', 
-      description: 'Find answers to your questions', 
+      description: 'Find Answers To Your Questions', 
       icon: <HelpCircle className="h-6 w-6 text-slate-500" />,
     },
     { 
       href: '/about', 
       title: 'About', 
-      description: 'Learn more about this app', 
+      description: 'Learn More About This App', 
       icon: <Info className="h-6 w-6 text-blue-500" />,
     },
   ];
 
   return (
     <AuthGuard>
-      <div className="min-h-screen bg-slate-50 flex flex-col">
+      <div className="min-h-screen bg-slate-50 flex flex-col font-headline">
         <Header title="Conductor Terminal" showBackButton={false} />
 
         <main className="flex-grow flex flex-col items-center pt-8 p-4">
@@ -60,7 +60,7 @@ export default function ConductorDashboardPage() {
                     </div>
                     <div className="flex-grow">
                       <CardTitle className="text-sm font-black text-slate-900 mb-0.5 tracking-tight">{link.title}</CardTitle>
-                      <CardDescription className="text-[10px] font-bold text-slate-500 uppercase tracking-widest leading-none">
+                      <CardDescription className="text-[10px] font-bold text-slate-500 tracking-widest leading-none">
                         {link.description}
                       </CardDescription>
                     </div>

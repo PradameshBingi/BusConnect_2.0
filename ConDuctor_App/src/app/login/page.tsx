@@ -35,49 +35,53 @@ export default function LoginPage() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (phone.length !== 10) {
-      toast({ variant: 'destructive', title: "Invalid ID", description: "Enter 10-digit ID." });
+    if (phone.length < 5) {
+      toast({ variant: 'destructive', title: "Invalid ID", description: "Enter valid Conductor ID." });
       return;
     }
     
     setIsLoading(true);
 
-    setTimeout(async () => {
-      if (phone === '9999999999' && password === '54987') {
-        const newSessionId = Date.now().toString();
-        
-        try {
-          const res = await fetch('/api/conductor-session', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ id: phone, sessionId: newSessionId })
-          });
-          
-          const data = await res.json().catch(() => ({}));
+    try {
+      const newSessionId = Date.now().toString();
+      
+      const res = await fetch('/api/conductor-session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: phone, password: password, sessionId: newSessionId })
+      });
+      
+      const data = await res.json().catch(() => ({}));
 
-          localStorage.setItem('currentUser', phone);
-          localStorage.setItem('sessionId', newSessionId);
-          localStorage.setItem('conductorName', data.name || 'Staff Member');
-          
-          toast({ title: "Authorized", description: "Terminal Access Granted." });
-          router.replace('/conductor/dashboard');
-        } catch (err) {
-          localStorage.setItem('currentUser', phone);
-          localStorage.setItem('sessionId', newSessionId);
-          toast({ title: "Authorized", description: "Terminal Online." });
-          router.replace('/conductor/dashboard');
-        }
+      if (res.ok && data.status === "success") {
+        localStorage.setItem('currentUser', phone);
+        localStorage.setItem('sessionId', newSessionId);
+        localStorage.setItem('conductorName', data.name || 'Staff Member');
+        
+        toast({ title: "Authorized", description: `Welcome back, ${data.name}.` });
+        router.replace('/conductor/dashboard');
       } else {
-        toast({ variant: 'destructive', title: "Invalid", description: "Credentials rejected." });
+        toast({ 
+          variant: 'destructive', 
+          title: "Access Denied", 
+          description: data.message || "Invalid credentials. Check ID and PIN." 
+        });
         setIsLoading(false);
       }
-    }, 800);
+    } catch (err) {
+      toast({ 
+        variant: 'destructive', 
+        title: "Connection Error", 
+        description: "Could not reach the authentication server." 
+      });
+      setIsLoading(false);
+    }
   };
 
   if (!isMounted) return null;
 
   return (
-    <div className="min-h-screen bg-[#0A2B70] flex flex-col items-center justify-center p-4">
+    <div className="min-h-screen bg-[#0A2B70] flex flex-col items-center justify-center p-4 font-headline">
       <div className="w-full max-w-md space-y-8">
         <div className="flex flex-col items-center gap-6 text-white">
           <div className="bg-white p-2 border-4 border-red-600 rounded-sm shadow-2xl animate-in zoom-in duration-700">
@@ -105,7 +109,7 @@ export default function LoginPage() {
                 <Label className="text-[10px] font-black uppercase text-slate-400 ml-1">Conductor ID</Label>
                 <div className="relative">
                   <Input 
-                    placeholder="10-digit ID" 
+                    placeholder="Conductor ID" 
                     value={phone} 
                     onChange={handlePhoneChange} 
                     required 

@@ -28,20 +28,33 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     await dbConnect();
-    const { id, sessionId } = await request.json();
+    const body = await request.json();
+    const { id, password, sessionId } = body;
     const Conductor = getConductorModel();
 
+    // Verify Conductor Credentials against Conductors_Admin collection
+    const conductor = await Conductor.findOne({ conductorId: id });
+
+    if (!conductor) {
+      return NextResponse.json({ status: "error", message: "Conductor ID Not Found" }, { status: 401 });
+    }
+
+    if (conductor.password !== password) {
+      return NextResponse.json({ status: "error", message: "Invalid Security PIN" }, { status: 401 });
+    }
+
+    // Success - Update Session
     const updated = await Conductor.findOneAndUpdate(
       { conductorId: id },
       { sessionId, lastActive: new Date() },
-      { upsert: true, new: true }
+      { new: true }
     );
 
     return NextResponse.json({ 
       status: "success", 
       name: updated?.name || 'Staff Member' 
     });
-  } catch (err) {
-    return NextResponse.json({ error: "DB Error" }, { status: 500 });
+  } catch (err: any) {
+    return NextResponse.json({ status: "error", error: "DB Error", details: err.message }, { status: 500 });
   }
 }
