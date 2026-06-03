@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Command, CommandInput, CommandEmpty, CommandGroup, CommandItem, CommandList } from '@/components/ui/command';
-import { Search, CheckCircle, XCircle, Loader2, ArrowRight, RefreshCcw, Calendar, Clock, CreditCard, ShieldAlert, Copy } from 'lucide-react';
+import { Search, CheckCircle, XCircle, Loader2, ArrowRight, RefreshCcw, Calendar, Clock, CreditCard, ShieldAlert, Copy, Eye, EyeOff } from 'lucide-react';
 import Header from '@/app/components/header';
 import { useToast } from "@/hooks/use-toast";
 import { API_ENDPOINTS } from '@/lib/api-config';
@@ -72,7 +72,7 @@ export default function VerifyTicketPage() {
             setActualBusType(result.ticket.busType);
             setDynamicFare(result.ticket.totalFare);
             
-            // Check passenger's auto-deduct authorization from cloud wallet
+            // Fetch passenger's wallet authorization status
             const userRes = await fetch(`/api/user-data?phone=${result.ticket.bookedBy}`);
             const userData = await userRes.json();
             setPassenger(userData.user);
@@ -119,18 +119,13 @@ export default function VerifyTicketPage() {
         }
     };
 
-    const copyToClipboard = (text: string) => {
-        navigator.clipboard.writeText(text);
-        toast({ title: "Copied", description: "Ticket code copied to clipboard." });
-    };
-
   return (
     <AuthGuard>  
       <div className="flex flex-col min-h-screen bg-slate-50">
         <Header showBackButton={true} backHref="/conductor/dashboard" title="Ticket Verification" />
         
         <main className="flex flex-col items-center p-4 space-y-4 pb-32">
-          {/* SCAN ENTRY CARD */}
+          {/* SCAN ENTRY CODE CARD */}
           <Card className="w-full max-w-md shadow-sm border-slate-200">
             <CardHeader className="py-2 px-4 flex-row items-center justify-between">
                 <CardTitle className="font-headline text-[10px] uppercase tracking-[0.2em] text-slate-400">Scan Entry Code</CardTitle>
@@ -146,7 +141,6 @@ export default function VerifyTicketPage() {
                   value={ticketDigits} 
                   onChange={(e) => setTicketDigits(e.target.value.replace(/\D/g, '').slice(0, 5))} 
                   className="font-mono text-base h-10 tracking-[0.2em] rounded-lg border-2 border-slate-200 focus:border-[#00B893] text-center font-black" 
-                  suppressHydrationWarning
                 />
                 <Button onClick={() => handleVerification()} disabled={isLoading || ticketDigits.length !== 5} className="h-10 w-12 bg-[#00B893] hover:bg-[#009e7c] rounded-lg shrink-0">
                     {isLoading ? <Loader2 className="animate-spin h-4 w-4" /> : <Search className="h-4 w-4" />}
@@ -182,74 +176,94 @@ export default function VerifyTicketPage() {
                       </CardHeader>
                   </Card>
               ) : (
-                  /* JOURNEY PREVIEW */
-                  <Card className="overflow-hidden shadow-xl bg-white border-none rounded-[1.5rem] border-t-4 border-t-[#00B893] animate-in slide-in-from-bottom-2 duration-400">
-                      <CardHeader className="text-center py-2 px-6 relative border-b border-slate-50">
-                          <RefreshCcw className="absolute right-4 top-4 h-3 w-3 text-slate-300 cursor-pointer hover:text-[#00B893]" onClick={() => {setTicket(null); setStatus('idle');}} />
-                          <h2 className="text-[9px] font-black text-slate-400 tracking-[0.2em] uppercase">JOURNEY DETAILS</h2>
-                          <div className="flex justify-center gap-4 mt-0.5 text-[7px] font-bold text-slate-400 uppercase">
-                              <span className="flex items-center gap-1"><Calendar className="h-2 w-2" /> {new Date(ticket.createdAt).toLocaleDateString('en-GB')}</span>
-                              <span className="flex items-center gap-1"><Clock className="h-2 w-2" /> {new Date(ticket.createdAt).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}</span>
+                  /* HIGH FIDELITY JOURNEY PREVIEW (AS PER IMAGE) */
+                  <Card className="overflow-hidden shadow-2xl bg-white border-none rounded-[2rem] border-t-8 border-t-[#00B893] animate-in slide-in-from-bottom-2 duration-400">
+                      <CardHeader className="text-center py-6 px-6 relative">
+                          <RefreshCcw className="absolute right-6 top-6 h-5 w-5 text-slate-300 cursor-pointer hover:text-[#00B893]" onClick={() => {setTicket(null); setStatus('idle');}} />
+                          <h2 className="text-2xl font-black text-slate-900 tracking-tighter uppercase font-headline">JOURNEY DETAILS</h2>
+                          <div className="flex justify-center mt-3">
+                              <Badge className="bg-emerald-500 hover:bg-emerald-600 text-white font-black px-6 py-1 rounded-full uppercase text-[10px] tracking-widest border-none">Valid</Badge>
                           </div>
                       </CardHeader>
 
-                      <CardContent className="space-y-2 px-6 pt-2 pb-0">
-                          <div className="flex justify-between items-center p-2 bg-slate-50 rounded-xl border border-slate-100">
-                              <div className="text-left flex-1">
-                                  <p className="text-[6px] font-black text-slate-300 uppercase tracking-widest">FROM</p>
-                                  <p className="font-black text-slate-800 text-[10px] uppercase truncate">{ticket.from}</p>
+                      <CardContent className="space-y-6 px-8 pt-2 pb-0">
+                          {/* FROM - TO SECTION */}
+                          <div className="flex justify-between items-center p-6 bg-slate-50/50 rounded-[1.5rem] border border-slate-100">
+                              <div className="text-center flex-1">
+                                  <p className="text-[8px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">FROM</p>
+                                  <p className="font-black text-slate-800 text-lg uppercase tracking-tight">{ticket.from}</p>
                               </div>
-                              <ArrowRight className="h-3 w-3 text-[#00B893] mx-1" />
-                              <div className="text-right flex-1">
-                                  <p className="text-[6px] font-black text-slate-300 uppercase tracking-widest">TO</p>
-                                  <p className="font-black text-slate-800 text-[10px] uppercase truncate">{ticket.to}</p>
+                              <ArrowRight className="h-5 w-5 text-[#00B893] mx-4" />
+                              <div className="text-center flex-1">
+                                  <p className="text-[8px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">TO</p>
+                                  <p className="font-black text-slate-800 text-lg uppercase tracking-tight">{ticket.to}</p>
                               </div>
                           </div>
 
-                          <div className="grid grid-cols-2 gap-x-6 gap-y-1.5 text-[9px]">
-                               <div className="space-y-0.5">
-                                  <p className="font-bold text-slate-400 uppercase text-[6px]">PASSENGERS</p>
-                                  <p className="font-black text-slate-800 uppercase">{ticket.passengers}</p>
+                          {/* ISSUE INFO SECTION */}
+                          <div className="flex justify-between items-center px-2">
+                               <div className="space-y-1">
+                                  <p className="font-black text-slate-400 uppercase text-[9px] tracking-widest">ISSUE DATE</p>
+                                  <p className="font-black text-slate-800 text-base">{new Date(ticket.createdAt).toLocaleDateString('en-GB')}</p>
                                </div>
-                               <div className="space-y-0.5 text-right">
-                                  <p className="font-bold text-slate-400 uppercase text-[6px]">BOOKED SERVICE</p>
-                                  <p className="font-black text-[#0A2B70] uppercase">{ticket.busType}</p>
-                               </div>
-                               <Separator className="col-span-2 bg-slate-100/50" />
-                               <div className="space-y-0.5">
-                                  <p className="font-bold text-slate-400 uppercase text-[6px]">FARE (ADJUSTED)</p>
-                                  <p className="font-black text-[#00B893] text-sm">₹{dynamicFare.toFixed(2)}</p>
-                               </div>
-                               <div className="space-y-0.5 text-right">
-                                  <p className="font-bold text-slate-400 uppercase text-[6px]">DIFFERENCE</p>
-                                  <p className={cn("font-black", dynamicFare <= ticket.totalFare ? "text-emerald-600" : "text-amber-600")}>
-                                    {dynamicFare === ticket.totalFare ? 'MATCHED' : `₹${Math.abs(ticket.totalFare - dynamicFare).toFixed(2)}`}
-                                  </p>
+                               <div className="space-y-1 text-right">
+                                  <p className="font-black text-slate-400 uppercase text-[9px] tracking-widest">ISSUE TIME</p>
+                                  <p className="font-black text-slate-800 text-base">{new Date(ticket.createdAt).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}</p>
                                </div>
                           </div>
 
-                          {/* WALLET AUTHORIZATION DISPLAY */}
-                          {dynamicFare > ticket.totalFare && (
-                              <div className={cn("p-2 rounded-lg flex items-center gap-2 border", 
-                                passenger?.autoDeductEnabled ? "bg-emerald-50 text-emerald-700 border-emerald-100" : "bg-amber-50 text-amber-700 border-amber-100"
+                          <Separator className="bg-slate-100" />
+
+                          {/* PASSENGERS SECTION */}
+                          <div className="px-2">
+                              <p className="font-black text-slate-400 uppercase text-[9px] tracking-widest mb-1">PASSENGERS</p>
+                              <p className="font-black text-slate-800 text-base">{ticket.passengers}</p>
+                          </div>
+
+                          <Separator className="bg-slate-100 border-dashed" />
+
+                          {/* FARE & CATEGORY SECTION */}
+                          <div className="flex justify-between items-end px-2">
+                               <div className="space-y-1">
+                                  <p className="font-black text-slate-400 uppercase text-[9px] tracking-widest">FARE (ADJUSTED)</p>
+                                  <p className="font-black text-[#00B893] text-2xl tracking-tighter">Rs. {dynamicFare.toFixed(2)}</p>
+                               </div>
+                               <div className="space-y-1 text-right">
+                                  <p className="font-black text-slate-400 uppercase text-[9px] tracking-widest">BOOKED SERVICE</p>
+                                  <p className="font-black text-emerald-500 text-lg uppercase tracking-tight">{ticket.busType}</p>
+                               </div>
+                          </div>
+
+                          {/* DIFFERENCE LOGIC BANNER */}
+                          {dynamicFare !== ticket.totalFare && (
+                              <div className={cn("p-4 rounded-2xl flex items-center justify-between border-2", 
+                                  dynamicFare < ticket.totalFare ? "bg-emerald-50 border-emerald-100 text-emerald-700" : "bg-orange-50 border-orange-100 text-orange-700"
                               )}>
-                                  {passenger?.autoDeductEnabled ? <CreditCard className="h-4 w-4" /> : <ShieldAlert className="h-4 w-4" />}
-                                  <div className="flex-1">
-                                      <p className="text-[8px] font-black uppercase tracking-wider leading-none">
-                                          {passenger?.autoDeductEnabled ? "Auto-Deduct Authorized" : "Manual Collection Needed"}
-                                      </p>
-                                      <p className="text-[7px] font-bold opacity-60 mt-0.5">
-                                          {passenger?.autoDeductEnabled ? `Wallet Balance: ₹${passenger.walletBalance.toLocaleString()}` : "Collect cash from passenger for upgrade"}
-                                      </p>
+                                  <div className="flex items-center gap-3">
+                                      {dynamicFare < ticket.totalFare ? <CreditCard className="h-5 w-5" /> : <ShieldAlert className="h-5 w-5" />}
+                                      <div>
+                                          <p className="text-[10px] font-black uppercase tracking-widest leading-none">
+                                              {dynamicFare < ticket.totalFare ? "Difference: Credit to Wallet" : 
+                                               passenger?.autoDeductEnabled ? "Difference: Auto-Deduct" : "Difference: Manual Collection"}
+                                          </p>
+                                          <p className="text-xs font-bold mt-1">
+                                              {dynamicFare < ticket.totalFare ? `Rs. ${Math.abs(ticket.totalFare - dynamicFare).toFixed(2)} will be refunded.` :
+                                               passenger?.autoDeductEnabled ? `Rs. ${Math.abs(ticket.totalFare - dynamicFare).toFixed(2)} from passenger wallet.` :
+                                               `Collect Rs. ${Math.abs(ticket.totalFare - dynamicFare).toFixed(2)} in cash.`}
+                                          </p>
+                                      </div>
                                   </div>
-                                  {passenger?.autoDeductEnabled && <Badge variant="secondary" className="bg-emerald-600 text-white text-[7px] font-black h-4">ACTIVE</Badge>}
+                                  <Badge variant="outline" className={cn("font-black", dynamicFare < ticket.totalFare ? "border-emerald-200 text-emerald-600" : "border-orange-200 text-orange-600")}>
+                                      ₹{Math.abs(ticket.totalFare - dynamicFare).toFixed(2)}
+                                  </Badge>
                               </div>
                           )}
 
-                          <div className="pt-0.5">
-                               <p className="text-[6px] font-black text-slate-400 uppercase mb-1 text-center tracking-widest">ACTUAL BOARDING SERVICE</p>
+                          {/* ACTUAL BOARDING SELECTOR */}
+                          <div className="pt-2">
+                               <p className="text-[9px] font-black text-slate-400 uppercase mb-2 text-center tracking-[0.2em]">ACTUAL BOARDING SERVICES</p>
                                <Select value={actualBusType} onValueChange={setActualBusType}>
-                                  <SelectTrigger className="bg-slate-50 border-none h-8 font-black uppercase text-[9px] tracking-widest rounded-lg">
+                                  <SelectTrigger className="bg-slate-50 border-none h-14 font-black uppercase text-xs tracking-widest rounded-xl shadow-inner">
                                       <SelectValue />
                                   </SelectTrigger>
                                   <SelectContent>
@@ -260,36 +274,33 @@ export default function VerifyTicketPage() {
                                </Select>
                           </div>
 
-                          <div className="bg-slate-50 p-3 rounded-xl flex flex-col items-center">
-                              <p className="text-[6px] font-black text-[#00B893] uppercase tracking-[0.2em] mb-1">SECURITY PIN</p>
-                              <div className="flex flex-col items-center gap-1.5">
+                          {/* SECURITY PIN SECTION */}
+                          <div className="bg-[#E6F7F3] p-6 rounded-[1.5rem] flex flex-col items-center border border-[#CCEFED]">
+                              <p className="text-[9px] font-black text-[#00B893] uppercase tracking-[0.3em] mb-4">SECURITY CODE</p>
+                              <div className="flex items-center gap-4">
                                   {showPin ? (
-                                      <p className="text-2xl font-mono font-black text-[#0A2B70] tracking-[0.3em] uppercase">{ticket.securityCode}</p>
+                                      <p className="text-3xl font-mono font-black text-[#0A2B70] tracking-[0.4em] uppercase">{ticket.securityCode}</p>
                                   ) : (
-                                      <div className="flex gap-2 py-1.5">
-                                          {[1,2,3,4,5].map(i => <div key={i} className="w-1.5 h-1.5 rounded-full bg-[#00B893]/30"></div>)}
+                                      <div className="flex gap-4">
+                                          {[1,2,3,4,5].map(i => <div key={i} className="w-3 h-3 rounded-full bg-[#00B893]"></div>)}
                                       </div>
                                   )}
-                                  <button className="text-[6px] font-black uppercase text-slate-400 hover:text-[#00B893]" onClick={() => setShowPin(!showPin)}>
-                                      {showPin ? 'Hide PIN' : 'Reveal PIN'}
+                                  <button className="ml-4 text-slate-400 hover:text-[#00B893] transition-colors" onClick={() => setShowPin(!showPin)}>
+                                      {showPin ? <EyeOff className="h-6 w-6" /> : <Eye className="h-6 w-6" />}
                                   </button>
                               </div>
                           </div>
                       </CardContent>
 
-                      <CardFooter className="p-0 flex flex-col mt-3">
-                          <div 
-                            className="w-full bg-[#0F172A] py-1.5 flex flex-col items-center gap-0.5 cursor-pointer hover:bg-slate-800 transition-colors"
-                            onClick={() => copyToClipboard(ticket.ticketCode)}
-                          >
-                              <div className="flex items-center gap-2">
-                                  <p className="text-[6px] font-black text-slate-500 uppercase tracking-widest">PASSENGER TICKET ID</p>
-                                  <Copy className="h-2 w-2 text-slate-500" />
-                              </div>
-                              <p className="text-xs font-black text-white tracking-[0.15em]">{ticket.ticketCode}</p>
+                      <CardFooter className="p-0 flex flex-col mt-8">
+                          {/* PASSENGER TICKET ID BOX */}
+                          <div className="w-full bg-[#1A1F2E] py-4 flex flex-col items-center gap-1 cursor-pointer hover:bg-[#252C3D] transition-colors" onClick={() => { navigator.clipboard.writeText(ticket.ticketCode); toast({ title: "Copied", description: "Ticket ID copied." }); }}>
+                              <p className="text-[8px] font-black text-slate-500 uppercase tracking-[0.3em]">TICKET NO</p>
+                              <p className="text-xl font-black text-white tracking-[0.1em] font-mono">{ticket.ticketCode}</p>
                           </div>
-                          <Button onClick={handleValidate} className="w-full h-14 bg-[#00B893] hover:bg-[#009e7c] text-base font-black uppercase tracking-[0.1em] rounded-none shadow-2xl" disabled={isLoading}>
-                              {isLoading ? <Loader2 className="animate-spin mr-3 h-5 w-5" /> : <CheckCircle className="mr-3 h-5 w-5" />}
+                          {/* BIG VALIDATION BUTTON */}
+                          <Button onClick={handleValidate} className="w-full h-24 bg-[#00B893] hover:bg-[#009e7c] text-xl font-black uppercase tracking-[0.1em] rounded-none shadow-2xl transition-all active:scale-95" disabled={isLoading}>
+                              {isLoading ? <Loader2 className="animate-spin mr-3 h-8 w-8" /> : <CheckCircle className="mr-4 h-8 w-8" />}
                               VALIDATE BOARDING
                           </Button>
                       </CardFooter>
@@ -299,6 +310,7 @@ export default function VerifyTicketPage() {
           )}
         </main>
 
+        {/* ROUTE SELECTOR DIALOG */}
         <Dialog open={isRouteSelectorOpen} onOpenChange={setRouteSelectorOpen}>
             <DialogContent className="max-w-md rounded-3xl p-0 overflow-hidden border-none">
                 <DialogHeader className="bg-[#00B893] text-white p-6">

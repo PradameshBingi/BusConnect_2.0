@@ -1,4 +1,3 @@
-
 import { NextResponse } from 'next/server';
 import dbConnect, { getTicketModel, getUserModel, getConductorLogModel } from '@/lib/mongodb';
 import { calculateFare } from '@/lib/fare-calculator';
@@ -26,7 +25,7 @@ async function processFareAdjustment(
   conductorId: string
 ) {
   const User = getUserModel();
-  const diff = ticket.totalFare - actualFare; 
+  const diff = ticket.totalFare - actualFare; // (Booked - Actual)
   const phoneVal = (ticket.bookedBy || "").toString().trim();
 
   if (!phoneVal) return;
@@ -45,7 +44,7 @@ async function processFareAdjustment(
   const transition = `${bookedLabel} -> ${boardedLabel}`;
 
   if (diff > 0) {
-    // REFUND (Credit)
+    // REFUND (Booked > Actual) -> Credit to wallet
     const amount = Math.abs(diff);
     const updatedUser = await User.findOneAndUpdate(
       query,
@@ -69,7 +68,7 @@ async function processFareAdjustment(
       ticket.refundedAt = new Date();
     }
   } else if (diff < 0) {
-    // DEDUCTION (Debit)
+    // DEDUCTION (Booked < Actual) -> Debit from wallet if authorized
     const amountToDeduct = Math.abs(diff);
     const user = await User.findOne(query);
 
