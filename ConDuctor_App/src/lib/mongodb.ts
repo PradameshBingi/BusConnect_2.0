@@ -52,7 +52,7 @@ const TicketSchema = new mongoose.Schema({
   to: { type: String, required: true },
   routeNo: String,
   passengers: String,
-  bookedBy: { type: mongoose.Schema.Types.Mixed }, // Flexible for String/Number IDs
+  bookedBy: { type: mongoose.Schema.Types.Mixed }, // String "9999999999" support
   quantities: {
     Men: { type: Number, default: 0 },
     Child: { type: Number, default: 0 },
@@ -85,13 +85,12 @@ const TicketSchema = new mongoose.Schema({
 });
 
 export function getTicketModel() {
-  // Fresh model names to bypass cached collection mappings
   return mongoose.models.FinalPassengerTicket || mongoose.model('FinalPassengerTicket', TicketSchema);
 }
 
 // User/Wallet Schema - Target for financial transactions (Passengers_Wallet)
 const UserSchema = new mongoose.Schema({
-  phone: { type: mongoose.Schema.Types.Mixed, unique: true, required: true }, // Mixed to support Number/String matching
+  phone: { type: mongoose.Schema.Types.Mixed, unique: true, required: true }, // Mixed to support Number 9999999999 matching
   walletBalance: { type: Number, default: 0 },
   autoDeductEnabled: { type: Boolean, default: false },
   transactions: [{

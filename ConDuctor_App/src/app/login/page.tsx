@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -21,7 +22,8 @@ export default function LoginPage() {
     setIsMounted(true);
     const user = localStorage.getItem('currentUser');
     if (user) {
-      router.replace('/');
+      // Standardized redirect to conductor dashboard to avoid loop with root /
+      router.replace('/conductor/dashboard');
     }
   }, [router]);
 
@@ -58,18 +60,18 @@ export default function LoginPage() {
           localStorage.setItem('sessionId', newSessionId);
           
           toast({ title: "Login Successful", description: "Terminal Access Granted." });
-          router.push('/');
+          router.replace('/conductor/dashboard');
         } catch (err) {
           localStorage.setItem('currentUser', phone);
           localStorage.setItem('sessionId', newSessionId);
           toast({ title: "Login Successful", description: "Access Granted." });
-          router.push('/');
+          router.replace('/conductor/dashboard');
         }
       } else {
         toast({ variant: 'destructive', title: "Access Denied", description: "Invalid Credentials." });
         setIsLoading(false);
       }
-    }, 1000);
+    }, 800);
   };
 
   if (!isMounted) return null;
@@ -78,9 +80,8 @@ export default function LoginPage() {
     <div className="min-h-screen bg-[#0A2B70] flex flex-col items-center justify-center p-4">
       <div className="w-full max-w-md space-y-8">
         <div className="flex flex-col items-center gap-6 text-white">
-          {/* TGSRTC Dashboard Style Logo */}
           <div className="bg-white p-2 border-4 border-red-600 rounded-sm shadow-2xl animate-in zoom-in duration-700">
-            <div className="w-20 h-20 flex flex-col items-center justify-center bg-red-600 text-white rounded-sm text-[10px] font-black leading-none uppercase">
+            <div className="w-20 h-20 flex flex-col items-center justify-center bg-red-600 text-white rounded-sm text-[10px] font-black leading-none uppercase text-center">
               <span>TSRTC</span>
               <span className="text-sm mt-1">GAMYAM</span>
               <span className="text-[7px] mt-1 tracking-tighter opacity-80">Track and Active</span>
