@@ -1,4 +1,3 @@
-
 'use client';
 
 import {
@@ -113,7 +112,7 @@ export default function HelpPage() {
             <CardContent className="p-8 text-center space-y-6">
               <div className="space-y-1">
                 <p className="text-[10px] uppercase font-black tracking-[0.3em] text-slate-400">Conceptualized & Developed by</p>
-                <h2 className="text-3xl font-black tracking-tighter">BINGI PRADAMESH</h2>
+                <h2 className="text-2xl font-black tracking-tighter text-[#0A2B70]">Bingi Pradamesh</h2>
               </div>
               <p className="text-xs font-bold text-slate-400 max-w-sm mx-auto leading-relaxed uppercase">
                 Have questions about this prototype or technical inquiries? Reach out via professional channels.

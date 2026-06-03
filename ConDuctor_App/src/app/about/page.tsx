@@ -15,7 +15,7 @@ export default function AboutPage() {
           
           {/* Hero Section */}
           <div className="text-center space-y-3">
-            <h1 className="text-4xl font-black tracking-tight font-headline uppercase text-slate-900 leading-tight">
+            <h1 className="text-4xl font-black tracking-tight font-headline text-slate-900 leading-tight">
               About BusConnect
             </h1>
             <p className="text-sm font-bold text-[#00B893] uppercase tracking-widest">
@@ -162,11 +162,12 @@ export default function AboutPage() {
 
           {/* Author Footer */}
           <div className="text-center space-y-2 pt-10">
-            <h3 className="text-3xl font-black tracking-tighter text-slate-900 uppercase">BusConnect</h3>
-            <p className="text-sm font-bold text-slate-400 uppercase tracking-widest leading-none">
-              Conceptualized and Developed by <span className="text-[#0A2B70]">Bingi Pradamesh</span>
-            </p>
-            <p className="text-[9px] font-bold text-slate-300 uppercase tracking-[0.2em] pt-4">
+            <h3 className="text-3xl font-black tracking-tighter text-slate-900">BusConnect</h3>
+            <div className="pt-2">
+                <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 mb-1">Conceptualized and Developed by</p>
+                <span className="text-[#0A2B70] text-2xl font-black tracking-tight">Bingi Pradamesh</span>
+            </div>
+            <p className="text-[9px] font-bold text-slate-300 uppercase tracking-[0.2em] pt-6">
               (This is a conceptual prototype created for demonstration and innovation purposes)
             </p>
           </div>
