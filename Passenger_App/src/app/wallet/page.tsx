@@ -142,6 +142,7 @@ export default function WalletPage() {
     );
   };
 
+  // Improved Filtering Logic
   const digitalHistory = wallet.transactions.filter(t => 
     t.description.startsWith('Digital Pay:')
   );

@@ -69,8 +69,25 @@ export default function TicketDetailPage() {
   }, [ticketCode]);
 
   const handleCopy = (text: string, fieldName: string) => {
-    navigator.clipboard.writeText(text);
-    toast({ title: "Copied!", description: `${fieldName} copied to clipboard.` });
+    if (typeof navigator !== 'undefined' && navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text)
+        .then(() => {
+          toast({ title: "Copied!", description: `${fieldName} copied to clipboard.` });
+        })
+        .catch(() => {
+          toast({ 
+            variant: 'destructive', 
+            title: "Copy Blocked", 
+            description: "Permissions restricted. Please copy manually." 
+          });
+        });
+    } else {
+      toast({ 
+        variant: 'destructive', 
+        title: "Copy Failed", 
+        description: "Your browser does not support automatic copying." 
+      });
+    }
   };
 
   if (isLoading) {

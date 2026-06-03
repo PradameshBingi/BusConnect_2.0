@@ -77,10 +77,10 @@ export async function POST(request: Request) {
 
     /**
      * TRANSACTION TYPE LOGIC:
+     * 'recharge': Dual History Push + Balance Increment
      * 'credit': +Balance, History: Credit (Green)
      * 'debit': -Balance, History: Debit (Red)
      * 'digital': 0 change, History: Debit (Red) - Bank side debit tracking
-     * 'recharge': Dual History Push + Balance Increment
      */
     if (type === 'recharge') {
         const now = new Date();

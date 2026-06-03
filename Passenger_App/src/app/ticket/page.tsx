@@ -84,16 +84,24 @@ function TicketContent() {
   }, [id]);
   
   const handleCopy = (text: string, fieldName: string) => {
-    if (typeof navigator !== 'undefined' && navigator.clipboard) {
+    if (typeof navigator !== 'undefined' && navigator.clipboard && navigator.clipboard.writeText) {
       navigator.clipboard.writeText(text)
         .then(() => {
           toast({ title: "Copied!", description: `${fieldName} copied to clipboard.` });
         })
         .catch(() => {
-          toast({ variant: 'destructive', title: "Copy Failed", description: "Could not copy to clipboard." });
+          toast({ 
+            variant: 'destructive', 
+            title: "Copy Blocked", 
+            description: "Browser policy prevented the copy action. Please copy manually." 
+          });
         });
     } else {
-      toast({ variant: 'destructive', title: "Copy Failed", description: "Clipboard API not supported in this browser." });
+      toast({ 
+        variant: 'destructive', 
+        title: "Not Supported", 
+        description: "Your browser does not support clipboard operations." 
+      });
     }
   };
 
