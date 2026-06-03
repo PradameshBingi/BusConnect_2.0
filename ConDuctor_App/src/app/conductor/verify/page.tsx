@@ -22,6 +22,13 @@ import { calculateFare } from '@/lib/fare-calculator';
 
 export const dynamic = "force-dynamic";
 
+const normalizeService = (type: string) => {
+  const t = (type || "").toLowerCase();
+  if (t.includes('delux')) return 'Metro Deluxe';
+  if (t.includes('express')) return 'Metro Express';
+  return 'City Ordinary';
+};
+
 export default function VerifyTicketPage() {
     const [routeNo, setRouteNo] = useState('01');
     const [ticketDigits, setTicketDigits] = useState('');
@@ -47,11 +54,11 @@ export default function VerifyTicketPage() {
 
     useEffect(() => {
         if (ticket && actualBusType) {
-            const mappedType = actualBusType.toLowerCase().includes('deluxe') ? 'deluxe' 
+            const mappedSlug = actualBusType.toLowerCase().includes('deluxe') ? 'deluxe' 
                              : actualBusType.toLowerCase().includes('express') ? 'express' 
                              : 'ordinary';
             
-            const newFare = calculateFare(ticket.from, ticket.to, ticket.quantities, mappedType as any);
+            const newFare = calculateFare(ticket.from, ticket.to, ticket.quantities, mappedSlug as any);
             setDynamicFare(newFare);
         }
     }, [actualBusType, ticket]);
@@ -70,16 +77,21 @@ export default function VerifyTicketPage() {
             const response = await fetch(`${API_ENDPOINTS.VERIFY}/${fullCode.toUpperCase()}`);
             if (!response.ok) {
                 if (response.status === 404) { setStatus('not_found'); return; }
-                throw new Error("Server error");
+                throw new Error("Invalid");
             }
             const result = await response.json().catch(() => null);
-            if (!result || !result.ticket) throw new Error("Invalid ticket data received");
+            if (!result || !result.ticket) throw new Error("Invalid");
 
-            setTicket(result.ticket);
-            setActualBusType(result.ticket.busType);
-            setDynamicFare(result.ticket.totalFare);
+            const normalizedTicket = {
+                ...result.ticket,
+                busType: normalizeService(result.ticket.busType)
+            };
+
+            setTicket(normalizedTicket);
+            setActualBusType(normalizedTicket.busType);
+            setDynamicFare(normalizedTicket.totalFare);
             
-            const userRes = await fetch(`/api/user-data?phone=${result.ticket.bookedBy}`);
+            const userRes = await fetch(`/api/user-data?phone=${normalizedTicket.bookedBy}`);
             if (userRes.ok) {
                 const userData = await userRes.json().catch(() => ({}));
                 setPassenger(userData.user || null);
@@ -87,7 +99,8 @@ export default function VerifyTicketPage() {
             
             setStatus('found');
         } catch (error: any) {
-            toast({ variant: 'destructive', title: 'Error', description: error.message || 'Could not connect to database.' });
+            setStatus('not_found');
+            toast({ variant: 'destructive', title: 'Invalid', description: 'Ticket record not found.' });
         } finally {
             setIsLoading(false);
         }
@@ -108,20 +121,20 @@ export default function VerifyTicketPage() {
                 })
             });
 
-            if (!response.ok) {
-                const errData = await response.json().catch(() => ({ message: "Validation failed" }));
-                throw new Error(errData.message || "Validation failed");
-            }
+            if (!response.ok) throw new Error("Validation failed");
             
             const result = await response.json().catch(() => null);
-            if (!result || !result.ticket) throw new Error("Invalid server response");
+            if (!result || !result.ticket) throw new Error("Server Error");
 
-            if (result.refunded) toast({ title: "Refund Issued", description: `₹${result.refunded} credited to passenger wallet.` });
-            if (result.deducted) toast({ title: "Deducted", description: `₹${result.deducted} deducted from passenger wallet.` });
+            if (result.refunded) toast({ title: "Credit Applied", description: `₹${result.refunded} added to passenger wallet.` });
+            if (result.deducted) toast({ title: "Debit Applied", description: `₹${result.deducted} debited from passenger wallet.` });
             
-            setTicket(result.ticket);
+            setTicket({
+                ...result.ticket,
+                busType: normalizeService(result.ticket.busType)
+            });
             setJustValidated(true);
-            toast({ title: "Validated", description: "Boarding confirmed and logged." });
+            toast({ title: "Boarding Validated", description: "Record synchronized." });
         } catch (error: any) {
             toast({ variant: 'destructive', title: 'Error', description: error.message });
         } finally {
@@ -139,8 +152,8 @@ export default function VerifyTicketPage() {
         <main className="flex flex-col items-center p-4 space-y-3 pb-32">
           <Card className="w-full max-w-md shadow-sm border-slate-200">
             <CardHeader className="py-2 px-4 flex-row items-center justify-between">
-                <CardTitle className="font-headline text-[10px] uppercase tracking-[0.2em] text-slate-400">Scan Entry Code</CardTitle>
-                <Badge variant="outline" className="text-[8px] font-black uppercase text-emerald-600 border-emerald-200 bg-emerald-50">Cloud Linked</Badge>
+                <CardTitle className="font-headline text-[9px] uppercase tracking-[0.2em] text-slate-400">Verification Entry</CardTitle>
+                <Badge variant="outline" className="text-[7px] font-black uppercase text-emerald-600 border-emerald-100 bg-emerald-50">Authorized</Badge>
             </CardHeader>
             <CardContent className="px-4 pb-3.5 pt-0">
               <div className="flex items-center gap-2">
@@ -161,10 +174,10 @@ export default function VerifyTicketPage() {
           </Card>
           
           {status === 'not_found' && (
-              <Card className="w-full max-w-md p-6 text-center text-destructive border-destructive/20 bg-white animate-in zoom-in duration-300">
-                  <XCircle className="mx-auto mb-2 h-10 w-10" />
-                  <h3 className="font-black text-xs uppercase tracking-widest">Ticket Record Missing</h3>
-                  <p className="text-[10px] text-slate-500 mt-1 uppercase font-bold">Code TKT-{routeNo}-{ticketDigits} not found in cloud.</p>
+              <Card className="w-full max-w-md p-8 text-center text-destructive border-destructive/20 bg-white animate-in zoom-in duration-300 rounded-[2rem]">
+                  <XCircle className="mx-auto mb-3 h-12 w-12" />
+                  <h3 className="font-black text-sm uppercase tracking-widest">Invalid Ticket</h3>
+                  <p className="text-[10px] text-slate-400 mt-1 uppercase font-bold">Record TKT-{routeNo}-{ticketDigits} not found.</p>
               </Card>
           )}
 
@@ -178,12 +191,12 @@ export default function VerifyTicketPage() {
                       </Button>
                   </div>
               ) : (ticket.status !== 'valid') ? (
-                  <Card className="overflow-hidden bg-white shadow-lg border-slate-200">
+                  <Card className="overflow-hidden bg-white shadow-lg border-slate-200 rounded-[2rem]">
                       <CardHeader className="text-center bg-slate-50 py-16 px-4">
                           <h1 className={cn("text-3xl font-black uppercase tracking-[0.1em]", 
                               ticket.status === 'used' ? "text-slate-300" : "text-red-500"
-                          )}>TICKET {ticket.status}</h1>
-                          <p className="mt-2 text-[10px] font-black text-slate-400 uppercase tracking-widest">BOARDING DENIED</p>
+                          )}>{ticket.status}</h1>
+                          <p className="mt-2 text-[10px] font-black text-slate-400 uppercase tracking-widest">BOARDING REJECTED</p>
                       </CardHeader>
                   </Card>
               ) : (
@@ -193,7 +206,7 @@ export default function VerifyTicketPage() {
                               <RefreshCcw className="absolute right-5 top-5 h-4 w-4 text-slate-300 cursor-pointer hover:text-[#00B893]" onClick={() => {setTicket(null); setStatus('idle');}} />
                               <h2 className="text-xl font-black text-slate-900 tracking-tighter uppercase font-headline">JOURNEY DETAILS</h2>
                               <div className="flex justify-center mt-0.5">
-                                  <Badge className="bg-emerald-500 hover:bg-emerald-600 text-white font-black px-4 py-0.5 rounded-full uppercase text-[8px] tracking-widest border-none">Valid</Badge>
+                                  <Badge className="bg-emerald-500 hover:bg-emerald-600 text-white font-black px-4 py-0.5 rounded-full uppercase text-[8px] tracking-widest border-none">VALID</Badge>
                               </div>
                           </CardHeader>
 
@@ -212,11 +225,11 @@ export default function VerifyTicketPage() {
 
                               <div className="flex justify-between items-center px-1">
                                    <div className="space-y-0.5">
-                                      <p className="font-black text-slate-400 uppercase text-[8px] tracking-widest">ISSUE DATE</p>
+                                      <p className="font-black text-slate-400 uppercase text-[8px] tracking-widest">DATE</p>
                                       <p className="font-black text-slate-800 text-xs">{new Date(ticket.createdAt).toLocaleDateString('en-GB')}</p>
                                    </div>
                                    <div className="space-y-0.5 text-right">
-                                      <p className="font-black text-slate-400 uppercase text-[8px] tracking-widest">ISSUE TIME</p>
+                                      <p className="font-black text-slate-400 uppercase text-[8px] tracking-widest">TIME</p>
                                       <p className="font-black text-slate-800 text-xs">{new Date(ticket.createdAt).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}</p>
                                    </div>
                               </div>
@@ -229,7 +242,7 @@ export default function VerifyTicketPage() {
                                     <p className="font-black text-slate-800 text-xs">{ticket.passengers}</p>
                                   </div>
                                   <div className="text-right">
-                                    <p className="font-black text-slate-400 uppercase text-[8px] tracking-widest mb-0.5">BOOKED SERVICE</p>
+                                    <p className="font-black text-slate-400 uppercase text-[8px] tracking-widest mb-0.5">BOOKED AS</p>
                                     <p className="font-black text-emerald-500 text-xs uppercase tracking-tight">{ticket.busType}</p>
                                   </div>
                               </div>
@@ -241,7 +254,7 @@ export default function VerifyTicketPage() {
                                       <p className="font-black text-slate-400 uppercase text-[8px] tracking-widest">
                                         {isServiceChanged ? "FARE (ADJUSTED)" : "FARE PAID"}
                                       </p>
-                                      <p className="font-black text-[#00B893] text-2xl tracking-tighter leading-none">Rs. {dynamicFare.toFixed(2)}</p>
+                                      <p className="font-black text-[#00B893] text-2xl tracking-tighter leading-none">₹{dynamicFare.toFixed(2)}</p>
                                    </div>
                                    {isServiceChanged && (
                                      <div className="text-right pb-0.5">
@@ -261,40 +274,35 @@ export default function VerifyTicketPage() {
                                           {dynamicFare < ticket.totalFare ? <CreditCard className="h-4 w-4" /> : <ShieldAlert className="h-4 w-4" />}
                                           <div className="leading-tight">
                                               <p className="text-[9px] font-black uppercase tracking-widest mb-0.5">
-                                                  {dynamicFare < ticket.totalFare ? "Refund to Wallet" : 
-                                                   passenger?.autoDeductEnabled ? "Auto-Deduct Wallet" : "Manual Collection"}
+                                                  {dynamicFare < ticket.totalFare ? "REFUND TO WALLET" : 
+                                                   passenger?.autoDeductEnabled ? "AUTO-DEDUCT WALLET" : "MANUAL COLLECTION"}
                                               </p>
-                                              <p className="text-[10px] font-bold">
+                                              <p className="text-[9px] font-bold">
                                                   {dynamicFare < ticket.totalFare ? `₹${Math.abs(ticket.totalFare - dynamicFare).toFixed(2)} will be credited.` :
                                                    passenger?.autoDeductEnabled ? `₹${Math.abs(ticket.totalFare - dynamicFare).toFixed(2)} will be debited.` :
                                                    `Collect ₹${Math.abs(ticket.totalFare - dynamicFare).toFixed(2)} cash.`}
                                               </p>
                                           </div>
                                       </div>
-                                      <div className="flex flex-col items-end">
-                                         <Badge variant="outline" className={cn("font-black text-[9px] border-none px-0", dynamicFare < ticket.totalFare ? "text-emerald-600" : "text-orange-600")}>
-                                             {dynamicFare < ticket.totalFare ? "CREDIT" : passenger?.autoDeductEnabled ? "DEBIT" : "CASH"}
-                                         </Badge>
-                                      </div>
                                   </div>
                               )}
 
                               <div className="pt-0.5">
-                                   <p className="text-[8px] font-black text-slate-400 uppercase mb-1 text-center tracking-[0.2em]">ACTUAL BOARDING SERVICES</p>
+                                   <p className="text-[7px] font-black text-slate-400 uppercase mb-1 text-center tracking-[0.2em]">ACTUAL BOARDING SERVICE</p>
                                    <Select value={actualBusType} onValueChange={setActualBusType}>
                                       <SelectTrigger className="bg-slate-50 border-none h-10 font-black uppercase text-[10px] tracking-widest rounded-xl shadow-inner">
                                           <SelectValue />
                                       </SelectTrigger>
                                       <SelectContent>
-                                          <SelectItem value="City Ordinary" className="font-bold text-xs uppercase">CITY ORDINARY</SelectItem>
-                                          <SelectItem value="Metro Express" className="font-bold text-xs uppercase">METRO EXPRESS</SelectItem>
-                                          <SelectItem value="Metro Deluxe" className="font-bold text-xs uppercase">METRO DELUXE</SelectItem>
+                                          <SelectItem value="City Ordinary" className="font-bold text-xs uppercase">City Ordinary</SelectItem>
+                                          <SelectItem value="Metro Express" className="font-bold text-xs uppercase">Metro Express</SelectItem>
+                                          <SelectItem value="Metro Deluxe" className="font-bold text-xs uppercase">Metro Deluxe</SelectItem>
                                       </SelectContent>
                                    </Select>
                               </div>
 
                               <div className="bg-[#E6F7F3] p-2.5 rounded-2xl flex flex-col items-center border border-[#CCEFED]">
-                                  <p className="text-[8px] font-black text-[#00B893] uppercase tracking-[0.3em] mb-1">SECURITY CODE</p>
+                                  <p className="text-[8px] font-black text-[#00B893] uppercase tracking-[0.3em] mb-1">SECURITY PIN</p>
                                   <div className="flex items-center gap-2">
                                       {showPin ? (
                                           <p className="text-2xl font-mono font-black text-[#0A2B70] tracking-[0.4em] uppercase">{ticket.securityCode}</p>
@@ -311,12 +319,12 @@ export default function VerifyTicketPage() {
                           </CardContent>
                       </Card>
 
-                      <div className="w-full bg-[#1A1F2E] py-2 flex flex-col items-center gap-0.5 rounded-2xl cursor-pointer hover:bg-[#252C3D] transition-colors" onClick={() => { if(ticket.ticketCode) { navigator.clipboard.writeText(ticket.ticketCode); toast({ title: "Copied", description: "Ticket ID copied." }); } }}>
-                          <p className="text-[7px] font-black text-slate-500 uppercase tracking-[0.3em]">TICKET NO</p>
+                      <div className="w-full bg-[#1A1F2E] py-2 flex flex-col items-center gap-0.5 rounded-2xl cursor-pointer" onClick={() => { if(ticket.ticketCode) { navigator.clipboard.writeText(ticket.ticketCode); toast({ title: "Copied", description: "Ticket ID saved." }); } }}>
+                          <p className="text-[7px] font-black text-slate-500 uppercase tracking-[0.3em]">TICKET CODE</p>
                           <p className="text-sm font-black text-white tracking-[0.1em] font-mono">{ticket.ticketCode}</p>
                       </div>
 
-                      <Button onClick={handleValidate} className="w-full h-15 bg-[#00B893] hover:bg-[#009e7c] text-lg font-black uppercase tracking-[0.1em] rounded-2xl shadow-xl transition-all active:scale-95" disabled={isLoading}>
+                      <Button onClick={handleValidate} className="w-full h-15 bg-[#00B893] hover:bg-[#009e7c] text-lg font-black uppercase tracking-[0.1em] rounded-2xl shadow-xl" disabled={isLoading}>
                           {isLoading ? "VALIDATING..." : "VALIDATE BOARDING"}
                       </Button>
                   </div>

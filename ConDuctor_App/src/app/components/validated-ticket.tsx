@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useMemo } from 'react';
@@ -20,6 +21,13 @@ interface Ticket {
 interface ValidatedTicketProps {
   ticket: Ticket;
 }
+
+const normalizeServiceLabel = (type: string) => {
+  const t = (type || "").toLowerCase();
+  if (t.includes('delux')) return 'Metro Deluxe';
+  if (t.includes('express')) return 'Metro Express';
+  return 'City Ordinary';
+};
 
 const TicketWatermark = () => (
     <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-[0.06] pointer-events-none z-0">
@@ -52,7 +60,6 @@ export function ValidatedTicket({ ticket }: ValidatedTicketProps) {
     };
   }, [ticket.ticketCode]);
 
-  // STRICT LOGIC: Issue Time is ONLY the Validation Time if used.
   const displayTime = useMemo(() => {
     const timeToUse = ticket.status === 'used' 
       ? (ticket.validatedAt || ticket.updatedAt || ticket.timestamp) 
@@ -63,6 +70,8 @@ export function ValidatedTicket({ ticket }: ValidatedTicketProps) {
 
   const formattedDate = displayTime.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' });
   const formattedTime = displayTime.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+
+  const serviceLabel = useMemo(() => normalizeServiceLabel(ticket.busType), [ticket.busType]);
 
   const { menRate, childRate, womenRate } = useMemo(() => {
     const fromLocality = hyderabadLocalities.find(l => l.name === ticket.from);
@@ -79,20 +88,18 @@ export function ValidatedTicket({ ticket }: ValidatedTicketProps) {
     let cRate = ordinaryChildFare;
     let wRate = 0;
 
-    const busTypeLower = ticket.busType.toLowerCase();
-
-    if (busTypeLower === 'express' || busTypeLower === 'metro express') {
+    if (serviceLabel === 'Metro Express') {
         mRate += 5;
         cRate = Math.round(ordinaryChildFare + 2.5);
         wRate = 0;
-    } else if (busTypeLower === 'deluxe' || busTypeLower === 'metro deluxe') {
+    } else if (serviceLabel === 'Metro Deluxe') {
         mRate += 10;
         cRate = ordinaryChildFare + 5;
         wRate = ordinaryAdultFare + 10;
     }
 
     return { menRate: mRate, childRate: cRate, womenRate: wRate };
-  }, [ticket.from, ticket.to, ticket.busType]);
+  }, [ticket.from, ticket.to, serviceLabel]);
 
   return (
     <div className="w-full max-w-sm mx-auto bg-white shadow-2xl relative font-mono text-black rounded-sm overflow-hidden border border-gray-200">
@@ -113,7 +120,7 @@ export function ValidatedTicket({ ticket }: ValidatedTicketProps) {
         <div className="text-center relative py-3 mb-3">
           <TicketWatermark />
           <p className="text-[11px] font-black mb-0 relative z-10">Service Number: {stableData.serviceNo}</p>
-          <h2 className="text-2xl font-black uppercase tracking-tighter relative z-10 py-0.5">CITY {ticket.busType.toUpperCase()}</h2>
+          <h2 className="text-2xl font-black uppercase tracking-tighter relative z-10 py-0.5">{serviceLabel.toUpperCase()}</h2>
           <p className="text-[11px] font-black relative z-10">Trip No: {stableData.tripNo}</p>
         </div>
 

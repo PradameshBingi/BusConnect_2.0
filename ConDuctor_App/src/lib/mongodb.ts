@@ -109,7 +109,7 @@ export function getUserModel() {
 // Conductor Schema
 const ConductorSchema = new mongoose.Schema({
   conductorId: { type: String, unique: true, required: true },
-  name: { type: String, default: 'Conductor' }, // Added name field
+  name: { type: String, default: 'Conductor' },
   sessionId: String,
   lastActive: { type: Date, default: Date.now }
 }, { timestamps: true, collection: 'Conductors_Admin' });
@@ -137,7 +137,7 @@ const BusPassSchema = new mongoose.Schema({
   validTill: Date,
   category: String,
   passType: String,
-  status: { type: String, enum: ['valid', 'expired'], default: 'valid' }, // Added status element
+  status: { type: String, enum: ['valid', 'expired'], default: 'valid' },
   busTypes: [String],
   route: {
     from: String,

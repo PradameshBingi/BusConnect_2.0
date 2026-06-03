@@ -22,7 +22,6 @@ export default function LoginPage() {
     setIsMounted(true);
     const user = localStorage.getItem('currentUser');
     if (user) {
-      // Standardized redirect to conductor dashboard to avoid loop with root /
       router.replace('/conductor/dashboard');
     }
   }, [router]);
@@ -37,38 +36,39 @@ export default function LoginPage() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (phone.length !== 10) {
-      toast({ variant: 'destructive', title: "Invalid ID No", description: "Please enter exactly 10 digits ID No." });
+      toast({ variant: 'destructive', title: "Invalid ID", description: "Enter 10-digit ID." });
       return;
     }
     
     setIsLoading(true);
 
-    // Mock Authentication Logic combined with Session Tracking
     setTimeout(async () => {
       if (phone === '9999999999' && password === '54987') {
         const newSessionId = Date.now().toString();
         
         try {
-          // Register session in MongoDB for single-session constraint
-          await fetch('/api/conductor-session', {
+          const res = await fetch('/api/conductor-session', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ id: phone, sessionId: newSessionId })
           });
+          
+          const data = await res.json().catch(() => ({}));
 
           localStorage.setItem('currentUser', phone);
           localStorage.setItem('sessionId', newSessionId);
+          localStorage.setItem('conductorName', data.name || 'Staff Member');
           
-          toast({ title: "Login Successful", description: "Terminal Access Granted." });
+          toast({ title: "Authorized", description: "Terminal Access Granted." });
           router.replace('/conductor/dashboard');
         } catch (err) {
           localStorage.setItem('currentUser', phone);
           localStorage.setItem('sessionId', newSessionId);
-          toast({ title: "Login Successful", description: "Access Granted." });
+          toast({ title: "Authorized", description: "Terminal Online." });
           router.replace('/conductor/dashboard');
         }
       } else {
-        toast({ variant: 'destructive', title: "Access Denied", description: "Invalid Credentials." });
+        toast({ variant: 'destructive', title: "Invalid", description: "Credentials rejected." });
         setIsLoading(false);
       }
     }, 800);
@@ -84,7 +84,7 @@ export default function LoginPage() {
             <div className="w-20 h-20 flex flex-col items-center justify-center bg-red-600 text-white rounded-sm text-[10px] font-black leading-none uppercase text-center">
               <span>TSRTC</span>
               <span className="text-sm mt-1">GAMYAM</span>
-              <span className="text-[7px] mt-1 tracking-tighter opacity-80">Track and Active</span>
+              <span className="text-[7px] mt-1.5 tracking-tighter opacity-90">Track and Active</span>
             </div>
           </div>
           
@@ -97,7 +97,7 @@ export default function LoginPage() {
         <Card className="border-none shadow-2xl rounded-[2.5rem] overflow-hidden">
           <CardHeader className="text-center pb-2 pt-10">
             <CardTitle className="text-2xl font-black font-headline uppercase tracking-tight">Staff Login</CardTitle>
-            <CardDescription className="text-xs font-bold uppercase text-slate-400">Enter secure ID to access dashboard</CardDescription>
+            <CardDescription className="text-xs font-bold uppercase text-slate-400">Secure Access Portal</CardDescription>
           </CardHeader>
           <form onSubmit={handleLogin}>
             <CardContent className="space-y-6 pt-6 px-8">

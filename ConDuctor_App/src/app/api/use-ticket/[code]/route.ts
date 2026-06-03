@@ -1,3 +1,4 @@
+
 import { NextResponse } from 'next/server';
 import dbConnect, { getTicketModel, getUserModel, getConductorLogModel } from '@/lib/mongodb';
 import { calculateFare } from '@/lib/fare-calculator';
@@ -5,33 +6,24 @@ import { calculateFare } from '@/lib/fare-calculator';
 export const dynamic = "force-dynamic";
 
 const getServiceLabel = (type: string) => {
-  const map: Record<string, string> = { 
-    ordinary: "City Ordinary", 
-    express: "Metro Express", 
-    deluxe: "Metro Deluxe",
-    "city ordinary": "City Ordinary",
-    "metro express": "Metro Express",
-    "metro deluxe": "Metro Deluxe"
-  };
-  return map[type.toLowerCase()] || type;
+  const t = (type || "").toLowerCase();
+  if (t.includes('delux')) return 'Metro Deluxe';
+  if (t.includes('express')) return 'Metro Express';
+  return 'City Ordinary';
 };
 
-/**
- * Atomic Fare Adjustment Handler (Handles Type-Insensitive Wallet Search)
- */
 async function processFareAdjustment(
   ticket: any, 
   actualFare: number, 
   conductorId: string
 ) {
   const User = getUserModel();
-  const diff = ticket.totalFare - actualFare; // (Booked - Actual)
+  const diff = ticket.totalFare - actualFare;
   const phoneVal = (ticket.bookedBy || "").toString().trim();
 
   if (!phoneVal) return;
 
   const phoneNum = Number(phoneVal);
-  // Search with $or to match either string ID or numeric ID in MongoDB
   const query = { 
     $or: [
       { phone: phoneVal },
@@ -44,7 +36,6 @@ async function processFareAdjustment(
   const transition = `${bookedLabel} -> ${boardedLabel}`;
 
   if (diff > 0) {
-    // REFUND (Booked > Actual) -> Credit to wallet
     const amount = Math.abs(diff);
     const updatedUser = await User.findOneAndUpdate(
       query,
@@ -68,7 +59,6 @@ async function processFareAdjustment(
       ticket.refundedAt = new Date();
     }
   } else if (diff < 0) {
-    // DEDUCTION (Booked < Actual) -> Debit from wallet if authorized
     const amountToDeduct = Math.abs(diff);
     const user = await User.findOne(query);
 
@@ -111,18 +101,19 @@ export async function POST(
     const ConductorLog = getConductorLogModel();
     
     const ticket = await Ticket.findOne({ ticketCode: code.toUpperCase() });
-    if (!ticket) return NextResponse.json({ message: "Ticket not found" }, { status: 404 });
-    if (ticket.status !== "valid") return NextResponse.json({ message: `Ticket is ${ticket.status}` }, { status: 400 });
+    if (!ticket) return NextResponse.json({ message: "Invalid" }, { status: 404 });
+    if (ticket.status !== "valid") return NextResponse.json({ message: ticket.status.toUpperCase() }, { status: 400 });
 
     const originalFare = ticket.totalFare;
-    const calculatedFare = calculateFare(ticket.from, ticket.to, ticket.quantities, actualBusType);
+    const mappedBusType = normalizeSlug(actualBusType);
+    const calculatedFare = calculateFare(ticket.from, ticket.to, ticket.quantities, mappedBusType as any);
 
-    ticket.actualBusType = actualBusType;
+    ticket.actualBusType = getServiceLabel(actualBusType);
     await processFareAdjustment(ticket, calculatedFare, conductorId);
     
     ticket.status = "used";
     ticket.validatedAt = new Date();
-    ticket.busType = actualBusType;
+    ticket.busType = getServiceLabel(actualBusType);
     ticket.totalFare = calculatedFare;
     await ticket.save();
 
@@ -134,7 +125,7 @@ export async function POST(
           ticketCode: ticket.ticketCode,
           from: ticket.from,
           to: ticket.to,
-          busType: actualBusType,
+          busType: ticket.busType,
           totalFare: calculatedFare,
           originalFare,
           passengers: ticket.passengers,
@@ -153,6 +144,13 @@ export async function POST(
     });
 
   } catch (err: any) {
-    return NextResponse.json({ error: "Server Error", details: err.message }, { status: 500 });
+    return NextResponse.json({ error: "Error", details: err.message }, { status: 500 });
   }
+}
+
+function normalizeSlug(type: string) {
+    const t = (type || "").toLowerCase();
+    if (t.includes('delux')) return 'deluxe';
+    if (t.includes('express')) return 'express';
+    return 'ordinary';
 }

@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useRouter, usePathname } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, LogOut, Bell, Globe, User } from 'lucide-react';
@@ -18,8 +18,12 @@ export default function Header({ title, showBackButton, backHref }: HeaderProps)
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [hasNewNotifications, setHasNewNotifications] = useState(false);
   const [notificationsCount, setNotificationsCount] = useState(0);
+  const [conductorName, setConductorName] = useState('Conductor');
 
   useEffect(() => {
+    const savedName = localStorage.getItem('conductorName');
+    if (savedName) setConductorName(savedName);
+
     const fetchNotifications = async () => {
       try {
         const res = await fetch('/api/notifications');
@@ -39,7 +43,7 @@ export default function Header({ title, showBackButton, backHref }: HeaderProps)
           }
         }
       } catch (err) {
-        // Silent fail for polling errors
+        // Silent fail
       }
     };
 
@@ -51,6 +55,7 @@ export default function Header({ title, showBackButton, backHref }: HeaderProps)
   const handleLogout = () => {
     localStorage.removeItem('currentUser');
     localStorage.removeItem('sessionId');
+    localStorage.removeItem('conductorName');
     router.replace('/login');
   };
 
@@ -85,20 +90,20 @@ export default function Header({ title, showBackButton, backHref }: HeaderProps)
             {!showBackButton && (
               <div className="bg-red-600 p-1 border-[2.5px] border-white rounded-sm shadow-md shrink-0">
                 <div className="w-10 h-10 flex flex-col items-center justify-center text-white text-[6px] font-black leading-none uppercase">
-                  <span className="text-white">TSRTC</span>
-                  <span className="text-white">GAMYAM</span>
-                  <span className="text-[5px] mt-0.5 scale-90 text-white">Track and Active</span>
+                  <span>TSRTC</span>
+                  <span className="mt-0.5">GAMYAM</span>
+                  <span className="text-[5px] mt-1 scale-95 tracking-tighter">Track and Active</span>
                 </div>
               </div>
             )}
             <div>
               {!showBackButton ? (
                 <>
-                  <h1 className="text-2xl font-black tracking-widest font-headline uppercase leading-none text-white">TGSRTC</h1>
+                  <h1 className="text-2xl font-black tracking-widest font-headline uppercase leading-none">TGSRTC</h1>
                   <p className="text-[9px] font-bold text-white/80 uppercase tracking-tighter mt-1">{title || 'Terminal'}</p>
                 </>
               ) : (
-                <h1 className="text-2xl font-black tracking-tight font-headline uppercase leading-none text-white">{title}</h1>
+                <h1 className="text-xl font-black tracking-tight font-headline uppercase leading-none">{title}</h1>
               )}
             </div>
           </div>
@@ -129,13 +134,14 @@ export default function Header({ title, showBackButton, backHref }: HeaderProps)
           <div className="relative">
             <User className="h-6 w-6 text-white/80 cursor-pointer hover:text-white" onClick={() => setShowProfileMenu(!showProfileMenu)} />
             {showProfileMenu && (
-              <div className="absolute right-0 top-10 w-48 bg-white rounded-xl shadow-xl border overflow-hidden z-50 animate-in fade-in zoom-in duration-200">
-                <div className="px-4 py-2 bg-slate-50 border-b">
-                   <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Account</p>
+              <div className="absolute right-0 top-10 w-56 bg-white rounded-xl shadow-xl border overflow-hidden z-50 animate-in fade-in zoom-in duration-200">
+                <div className="px-4 py-3 bg-slate-50 border-b">
+                   <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Logged In As</p>
+                   <p className="text-xs font-black text-slate-800 uppercase truncate">{conductorName}</p>
                 </div>
                 <button
                   onClick={handleLogout}
-                  className="w-full flex items-center gap-2 px-4 py-4 text-red-600 hover:bg-red-50 transition-colors font-bold uppercase text-xs tracking-widest"
+                  className="w-full flex items-center gap-2 px-4 py-4 text-red-600 hover:bg-red-50 transition-colors font-bold uppercase text-[10px] tracking-widest"
                 >
                   <LogOut className="h-4 w-4" />
                   Logout Terminal

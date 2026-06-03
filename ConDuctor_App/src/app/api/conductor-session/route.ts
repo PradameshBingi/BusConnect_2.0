@@ -4,10 +4,6 @@ import dbConnect, { getConductorModel } from '@/lib/mongodb';
 
 export const dynamic = "force-dynamic";
 
-/**
- * Conductor Session API
- * Points to the Conductors_Admin collection for staff authentication.
- */
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const conductorId = searchParams.get('id');
@@ -21,7 +17,8 @@ export async function GET(request: Request) {
 
     return NextResponse.json({ 
       sessionId: conductor?.sessionId || null,
-      lastActive: conductor?.lastActive
+      lastActive: conductor?.lastActive,
+      name: conductor?.name || 'Staff Member'
     });
   } catch (err) {
     return NextResponse.json({ error: "DB Error" }, { status: 500 });
@@ -34,13 +31,16 @@ export async function POST(request: Request) {
     const { id, sessionId } = await request.json();
     const Conductor = getConductorModel();
 
-    await Conductor.findOneAndUpdate(
+    const updated = await Conductor.findOneAndUpdate(
       { conductorId: id },
       { sessionId, lastActive: new Date() },
       { upsert: true, new: true }
     );
 
-    return NextResponse.json({ status: "success" });
+    return NextResponse.json({ 
+      status: "success", 
+      name: updated?.name || 'Staff Member' 
+    });
   } catch (err) {
     return NextResponse.json({ error: "DB Error" }, { status: 500 });
   }
