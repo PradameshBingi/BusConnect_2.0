@@ -36,6 +36,7 @@ async function processFareAdjustment(
   const transition = `${bookedLabel} -> ${boardedLabel}`;
 
   if (diff > 0) {
+    // REFUND = DOWNGRADE
     const amount = Math.abs(diff);
     const updatedUser = await User.findOneAndUpdate(
       query,
@@ -44,7 +45,7 @@ async function processFareAdjustment(
         $push: { 
           transactions: {
             type: 'credit',
-            description: `Conductor: Ticket Upgradation (${transition}) ${ticket.ticketCode}`,
+            description: `Conductor: Ticket Downgrade (${transition}) ${ticket.ticketCode}`,
             amount: amount,
             date: new Date()
           }
@@ -59,6 +60,7 @@ async function processFareAdjustment(
       ticket.refundedAt = new Date();
     }
   } else if (diff < 0) {
+    // DEDUCTION = UPGRADATION
     const amountToDeduct = Math.abs(diff);
     const user = await User.findOne(query);
 
