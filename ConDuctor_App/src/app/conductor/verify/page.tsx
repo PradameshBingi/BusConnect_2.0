@@ -143,6 +143,12 @@ export default function VerifyTicketPage() {
     };
 
     const isServiceChanged = ticket && actualBusType !== ticket.busType;
+    
+    // Logic for Auto-Deduct vs Manual Collection (Deduction Case Only)
+    const fareDiff = Math.abs((ticket?.totalFare || 0) - dynamicFare);
+    const isRefund = dynamicFare < (ticket?.totalFare || 0);
+    const hasSufficientBalance = (passenger?.walletBalance || 0) >= fareDiff;
+    const canAutoDeduct = passenger?.autoDeductEnabled && hasSufficientBalance;
 
   return (
     <AuthGuard>  
@@ -176,7 +182,7 @@ export default function VerifyTicketPage() {
           {status === 'not_found' && (
               <Card className="w-full max-w-md p-8 text-center text-destructive border-destructive/20 bg-white animate-in zoom-in duration-300 rounded-[2rem]">
                   <XCircle className="mx-auto mb-3 h-12 w-12" />
-                  <h3 className="font-black text-sm uppercase tracking-widest">Invalid Ticket</h3>
+                  <h3 className="font-black text-sm uppercase tracking-widest">INVALID</h3>
                   <p className="text-[10px] text-slate-400 mt-1 uppercase font-bold">Record TKT-{routeNo}-{ticketDigits} not found.</p>
               </Card>
           )}
@@ -259,8 +265,8 @@ export default function VerifyTicketPage() {
                                    {isServiceChanged && (
                                      <div className="text-right pb-0.5">
                                         <p className="font-black text-slate-400 uppercase text-[8px] tracking-widest">DIFFERENCE</p>
-                                        <p className={cn("font-black text-sm", dynamicFare < ticket.totalFare ? "text-emerald-600" : "text-orange-600")}>
-                                            {dynamicFare < ticket.totalFare ? '-' : '+'}₹{Math.abs(ticket.totalFare - dynamicFare).toFixed(2)}
+                                        <p className={cn("font-black text-sm", isRefund ? "text-emerald-600" : "text-orange-600")}>
+                                            {isRefund ? '-' : '+'}₹{fareDiff.toFixed(2)}
                                         </p>
                                      </div>
                                    )}
@@ -268,19 +274,21 @@ export default function VerifyTicketPage() {
 
                               {isServiceChanged && (
                                   <div className={cn("p-2.5 rounded-xl flex items-center justify-between border-2 animate-in slide-in-from-top-1 duration-300", 
-                                      dynamicFare < ticket.totalFare ? "bg-emerald-50 border-emerald-100 text-emerald-700" : "bg-orange-50 border-orange-100 text-orange-700"
+                                      isRefund ? "bg-emerald-50 border-emerald-100 text-emerald-700" : "bg-orange-50 border-orange-100 text-orange-700"
                                   )}>
                                       <div className="flex items-center gap-2">
-                                          {dynamicFare < ticket.totalFare ? <CreditCard className="h-4 w-4" /> : <ShieldAlert className="h-4 w-4" />}
+                                          {isRefund ? <CreditCard className="h-4 w-4" /> : <ShieldAlert className="h-4 w-4" />}
                                           <div className="leading-tight">
                                               <p className="text-[9px] font-black uppercase tracking-widest mb-0.5">
-                                                  {dynamicFare < ticket.totalFare ? "REFUND TO WALLET" : 
-                                                   passenger?.autoDeductEnabled ? "AUTO-DEDUCT WALLET" : "MANUAL COLLECTION"}
+                                                  {isRefund ? "REFUND TO WALLET" : 
+                                                   canAutoDeduct ? "AUTO-DEDUCT WALLET" : "MANUAL COLLECTION"}
                                               </p>
                                               <p className="text-[9px] font-bold">
-                                                  {dynamicFare < ticket.totalFare ? `₹${Math.abs(ticket.totalFare - dynamicFare).toFixed(2)} will be credited.` :
-                                                   passenger?.autoDeductEnabled ? `₹${Math.abs(ticket.totalFare - dynamicFare).toFixed(2)} will be debited.` :
-                                                   `Collect ₹${Math.abs(ticket.totalFare - dynamicFare).toFixed(2)} cash.`}
+                                                  {isRefund ? `₹${fareDiff.toFixed(2)} will be credited.` :
+                                                   canAutoDeduct ? `₹${fareDiff.toFixed(2)} will be debited.` :
+                                                   passenger?.autoDeductEnabled && !hasSufficientBalance
+                                                   ? `Insufficient Funds. Collect ₹${fareDiff.toFixed(2)} cash.`
+                                                   : `Collect ₹${fareDiff.toFixed(2)} cash.`}
                                               </p>
                                           </div>
                                       </div>
@@ -337,6 +345,7 @@ export default function VerifyTicketPage() {
             <DialogContent className="max-w-md rounded-3xl p-0 overflow-hidden border-none">
                 <DialogHeader className="bg-[#00B893] text-white p-6">
                     <DialogTitle className="font-headline uppercase tracking-tight text-xl">Select Bus Route</DialogTitle>
+                    <DialogDescription className="hidden">Choose route to filter tickets</DialogDescription>
                 </DialogHeader>
                 <Command className="rounded-none">
                     <CommandInput placeholder="Search routes (e.g. 01 or Mehdipatnam)..." onValueChange={setSearchQuery} className="h-14 font-medium" />
