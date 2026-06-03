@@ -24,10 +24,15 @@ export function NotificationsSheet({ trigger, onOpen }: { trigger: React.ReactNo
     setIsLoading(true);
     try {
       const res = await fetch('/api/notifications');
-      const data = await res.json();
+      if (!res.ok) throw new Error("Network error");
+      
+      const data = await res.json().catch(() => null);
+      if (!data) throw new Error("Invalid response format");
+      
       setNotifications(data.notifications || []);
     } catch (err) {
       console.error("Failed to load conductor alerts");
+      setNotifications([]);
     } finally {
       setIsLoading(false);
     }
@@ -70,8 +75,8 @@ export function NotificationsSheet({ trigger, onOpen }: { trigger: React.ReactNo
         <SheetPrimitive.Content className="fixed inset-y-0 right-0 z-50 w-full max-w-sm h-full bg-slate-50 shadow-2xl border-l flex flex-col outline-none animate-in slide-in-from-right duration-300">
           <div className="p-6 bg-[#00B893] text-white flex justify-between items-center shrink-0">
             <div className="space-y-1">
-              <h2 className="text-xl font-black uppercase tracking-tight">Staff Alerts</h2>
-              <p className="text-[10px] font-bold text-white/60 uppercase tracking-widest">Operational Updates</p>
+              <SheetPrimitive.Title className="text-xl font-black uppercase tracking-tight">Staff Alerts</SheetPrimitive.Title>
+              <SheetPrimitive.Description className="text-[10px] font-bold text-white/60 uppercase tracking-widest">Operational Updates</SheetPrimitive.Description>
             </div>
             <SheetPrimitive.Close className="rounded-full bg-white/20 p-2 hover:bg-white/30 transition-colors">
               <X className="h-5 w-5" />

@@ -39,12 +39,16 @@ export async function GET() {
           createdAt: new Date(Date.now() - 86400000)
         }
       ];
-      await Notification.insertMany(seedData);
-      notifications = await Notification.find({}).sort({ createdAt: -1 });
+      try {
+        await Notification.insertMany(seedData);
+        notifications = await Notification.find({}).sort({ createdAt: -1 });
+      } catch (seedErr) {
+        console.warn("Seeding failed but continuing...");
+      }
     }
 
-    return NextResponse.json({ notifications });
+    return NextResponse.json({ notifications: notifications || [] });
   } catch (err: any) {
-    return NextResponse.json({ error: "DB Error", details: err.message }, { status: 500 });
+    return NextResponse.json({ notifications: [], error: "DB Error", details: err.message }, { status: 500 });
   }
 }

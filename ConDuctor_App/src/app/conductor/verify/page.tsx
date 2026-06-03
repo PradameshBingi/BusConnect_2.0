@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
@@ -46,7 +47,6 @@ export default function VerifyTicketPage() {
 
     useEffect(() => {
         if (ticket && actualBusType) {
-            // Map the Title Case bus service names (selector/db) to lowercase identifiers used by the calculator
             const mappedType = actualBusType.toLowerCase().includes('deluxe') ? 'deluxe' 
                              : actualBusType.toLowerCase().includes('express') ? 'express' 
                              : 'ordinary';
@@ -72,19 +72,22 @@ export default function VerifyTicketPage() {
                 if (response.status === 404) { setStatus('not_found'); return; }
                 throw new Error("Server error");
             }
-            const result = await response.json();
+            const result = await response.json().catch(() => null);
+            if (!result || !result.ticket) throw new Error("Invalid ticket data received");
+
             setTicket(result.ticket);
-            setActualBusType(result.ticket.busType); // Default to the booked bus type from database
+            setActualBusType(result.ticket.busType);
             setDynamicFare(result.ticket.totalFare);
             
-            // Fetch passenger's wallet authorization status in real-time
             const userRes = await fetch(`/api/user-data?phone=${result.ticket.bookedBy}`);
-            const userData = await userRes.json();
-            setPassenger(userData.user);
+            if (userRes.ok) {
+                const userData = await userRes.json().catch(() => ({}));
+                setPassenger(userData.user || null);
+            }
             
             setStatus('found');
-        } catch (error) {
-            toast({ variant: 'destructive', title: 'Error', description: 'Could not connect to database.' });
+        } catch (error: any) {
+            toast({ variant: 'destructive', title: 'Error', description: error.message || 'Could not connect to database.' });
         } finally {
             setIsLoading(false);
         }
@@ -106,11 +109,13 @@ export default function VerifyTicketPage() {
             });
 
             if (!response.ok) {
-                const errData = await response.json();
+                const errData = await response.json().catch(() => ({ message: "Validation failed" }));
                 throw new Error(errData.message || "Validation failed");
             }
             
-            const result = await response.json();
+            const result = await response.json().catch(() => null);
+            if (!result || !result.ticket) throw new Error("Invalid server response");
+
             if (result.refunded) toast({ title: "Refund Issued", description: `₹${result.refunded} credited to passenger wallet.` });
             if (result.deducted) toast({ title: "Deducted", description: `₹${result.deducted} deducted from passenger wallet.` });
             
@@ -132,7 +137,6 @@ export default function VerifyTicketPage() {
         <Header showBackButton={true} backHref="/conductor/dashboard" title="Ticket Verification" />
         
         <main className="flex flex-col items-center p-4 space-y-3 pb-32">
-          {/* SCAN ENTRY CODE CARD */}
           <Card className="w-full max-w-md shadow-sm border-slate-200">
             <CardHeader className="py-2 px-4 flex-row items-center justify-between">
                 <CardTitle className="font-headline text-[10px] uppercase tracking-[0.2em] text-slate-400">Scan Entry Code</CardTitle>
@@ -183,7 +187,6 @@ export default function VerifyTicketPage() {
                       </CardHeader>
                   </Card>
               ) : (
-                  /* HIGH FIDELITY JOURNEY PREVIEW - OPTIMIZED SPACE */
                   <div className="space-y-3 animate-in slide-in-from-bottom-2 duration-400">
                       <Card className="overflow-hidden shadow-xl bg-white border-none rounded-[1.8rem] border-t-8 border-t-[#00B893]">
                           <CardHeader className="text-center py-3.5 px-6 relative">
@@ -195,7 +198,6 @@ export default function VerifyTicketPage() {
                           </CardHeader>
 
                           <CardContent className="space-y-2.5 px-6 pt-0 pb-5">
-                              {/* FROM - TO SECTION (COMPACT) */}
                               <div className="flex justify-between items-center p-3 bg-slate-50/50 rounded-2xl border border-slate-100">
                                   <div className="text-center flex-1">
                                       <p className="text-[7px] font-black text-slate-400 uppercase tracking-widest mb-0.5">FROM</p>
@@ -208,7 +210,6 @@ export default function VerifyTicketPage() {
                                   </div>
                               </div>
 
-                              {/* ISSUE INFO SECTION */}
                               <div className="flex justify-between items-center px-1">
                                    <div className="space-y-0.5">
                                       <p className="font-black text-slate-400 uppercase text-[8px] tracking-widest">ISSUE DATE</p>
@@ -222,7 +223,6 @@ export default function VerifyTicketPage() {
 
                               <Separator className="bg-slate-100" />
 
-                              {/* PASSENGERS SECTION */}
                               <div className="px-1 flex justify-between items-center">
                                   <div>
                                     <p className="font-black text-slate-400 uppercase text-[8px] tracking-widest mb-0.5">PASSENGERS</p>
@@ -236,7 +236,6 @@ export default function VerifyTicketPage() {
 
                               <Separator className="bg-slate-100 border-dashed" />
 
-                              {/* FARE & CATEGORY SECTION */}
                               <div className="flex justify-between items-end px-1">
                                    <div className="space-y-0.5">
                                       <p className="font-black text-slate-400 uppercase text-[8px] tracking-widest">
@@ -254,7 +253,6 @@ export default function VerifyTicketPage() {
                                    )}
                               </div>
 
-                              {/* DIFFERENCE LOGIC BANNER (THE TAB) */}
                               {isServiceChanged && (
                                   <div className={cn("p-2.5 rounded-xl flex items-center justify-between border-2 animate-in slide-in-from-top-1 duration-300", 
                                       dynamicFare < ticket.totalFare ? "bg-emerald-50 border-emerald-100 text-emerald-700" : "bg-orange-50 border-orange-100 text-orange-700"
@@ -281,7 +279,6 @@ export default function VerifyTicketPage() {
                                   </div>
                               )}
 
-                              {/* ACTUAL BOARDING SELECTOR (COMPACT) */}
                               <div className="pt-0.5">
                                    <p className="text-[8px] font-black text-slate-400 uppercase mb-1 text-center tracking-[0.2em]">ACTUAL BOARDING SERVICES</p>
                                    <Select value={actualBusType} onValueChange={setActualBusType}>
@@ -296,7 +293,6 @@ export default function VerifyTicketPage() {
                                    </Select>
                               </div>
 
-                              {/* SECURITY PIN SECTION (COMPACT) */}
                               <div className="bg-[#E6F7F3] p-2.5 rounded-2xl flex flex-col items-center border border-[#CCEFED]">
                                   <p className="text-[8px] font-black text-[#00B893] uppercase tracking-[0.3em] mb-1">SECURITY CODE</p>
                                   <div className="flex items-center gap-2">
@@ -315,13 +311,11 @@ export default function VerifyTicketPage() {
                           </CardContent>
                       </Card>
 
-                      {/* TICKET ID STRIP */}
-                      <div className="w-full bg-[#1A1F2E] py-2 flex flex-col items-center gap-0.5 rounded-2xl cursor-pointer hover:bg-[#252C3D] transition-colors" onClick={() => { navigator.clipboard.writeText(ticket.ticketCode); toast({ title: "Copied", description: "Ticket ID copied." }); }}>
+                      <div className="w-full bg-[#1A1F2E] py-2 flex flex-col items-center gap-0.5 rounded-2xl cursor-pointer hover:bg-[#252C3D] transition-colors" onClick={() => { if(ticket.ticketCode) { navigator.clipboard.writeText(ticket.ticketCode); toast({ title: "Copied", description: "Ticket ID copied." }); } }}>
                           <p className="text-[7px] font-black text-slate-500 uppercase tracking-[0.3em]">TICKET NO</p>
                           <p className="text-sm font-black text-white tracking-[0.1em] font-mono">{ticket.ticketCode}</p>
                       </div>
 
-                      {/* SEPARATE VALIDATION BUTTON */}
                       <Button onClick={handleValidate} className="w-full h-15 bg-[#00B893] hover:bg-[#009e7c] text-lg font-black uppercase tracking-[0.1em] rounded-2xl shadow-xl transition-all active:scale-95" disabled={isLoading}>
                           {isLoading ? "VALIDATING..." : "VALIDATE BOARDING"}
                       </Button>
@@ -331,7 +325,6 @@ export default function VerifyTicketPage() {
           )}
         </main>
 
-        {/* ROUTE SELECTOR DIALOG */}
         <Dialog open={isRouteSelectorOpen} onOpenChange={setRouteSelectorOpen}>
             <DialogContent className="max-w-md rounded-3xl p-0 overflow-hidden border-none">
                 <DialogHeader className="bg-[#00B893] text-white p-6">

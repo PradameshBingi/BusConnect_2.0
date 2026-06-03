@@ -23,8 +23,12 @@ export default function Header({ title, showBackButton, backHref }: HeaderProps)
     const fetchNotifications = async () => {
       try {
         const res = await fetch('/api/notifications');
-        const data = await res.json();
-        const notifications = data.notifications || [];
+        if (!res.ok) return;
+        
+        const data = await res.json().catch(() => null);
+        if (!data || !data.notifications) return;
+
+        const notifications = data.notifications;
         setNotificationsCount(notifications.length);
 
         const lastRead = localStorage.getItem('lastReadConductorNotification');
@@ -35,7 +39,7 @@ export default function Header({ title, showBackButton, backHref }: HeaderProps)
           }
         }
       } catch (err) {
-        console.error("Failed to fetch notifications");
+        // Silent fail for polling errors
       }
     };
 
