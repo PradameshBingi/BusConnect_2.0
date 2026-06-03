@@ -134,7 +134,7 @@ export default function VerifyTicketPage() {
   return (
     <AuthGuard>  
       <div className="flex flex-col min-h-screen bg-slate-50">
-        <Header showBackButton={true} backHref="/conductor/dashboard" title="Ticket Verification" />
+        <Header showBackButton={true} backHref="/conductor/dashboard" title="Ticket Tool" />
         
         <main className="flex flex-col items-center p-4 space-y-3 pb-32">
           <Card className="w-full max-w-md shadow-sm border-slate-200">

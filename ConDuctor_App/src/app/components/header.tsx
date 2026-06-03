@@ -44,7 +44,7 @@ export default function Header({ title, showBackButton, backHref }: HeaderProps)
     };
 
     fetchNotifications();
-    const interval = setInterval(fetchNotifications, 60000); // Polling for new alerts
+    const interval = setInterval(fetchNotifications, 60000); 
     return () => clearInterval(interval);
   }, []);
 
@@ -82,16 +82,24 @@ export default function Header({ title, showBackButton, backHref }: HeaderProps)
           )}
           
           <div className="flex items-center gap-4 cursor-pointer hover:opacity-90" onClick={goToDashboard}>
-            <div className="bg-red-600 p-1 border-2 border-white rounded-sm shadow-inner shrink-0">
-              <div className="w-10 h-10 flex flex-col items-center justify-center text-white text-[6px] font-bold leading-none uppercase">
-                <span>TSRTC</span>
-                <span>GAMYAM</span>
-                <span className="text-[5px] mt-0.5 scale-90">Track and Active</span>
+            {!showBackButton && (
+              <div className="bg-red-600 p-1 border-[2.5px] border-white rounded-sm shadow-md shrink-0">
+                <div className="w-10 h-10 flex flex-col items-center justify-center text-white text-[6px] font-black leading-none uppercase">
+                  <span className="text-white">TSRTC</span>
+                  <span className="text-white">GAMYAM</span>
+                  <span className="text-[5px] mt-0.5 scale-90 text-white">Track and Active</span>
+                </div>
               </div>
-            </div>
+            )}
             <div>
-              <h1 className="text-2xl font-black tracking-widest font-headline uppercase leading-none">TGSRTC</h1>
-              <p className="text-[9px] font-bold text-white/70 uppercase tracking-tighter mt-1">{title || 'Terminal'}</p>
+              {!showBackButton ? (
+                <>
+                  <h1 className="text-2xl font-black tracking-widest font-headline uppercase leading-none text-white">TGSRTC</h1>
+                  <p className="text-[9px] font-bold text-white/80 uppercase tracking-tighter mt-1">{title || 'Terminal'}</p>
+                </>
+              ) : (
+                <h1 className="text-2xl font-black tracking-tight font-headline uppercase leading-none text-white">{title}</h1>
+              )}
             </div>
           </div>
         </div>
