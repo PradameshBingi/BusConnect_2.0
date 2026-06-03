@@ -107,14 +107,17 @@ export function getUserModel() {
 }
 
 // Production Conductors Schema (Conductors_Admin)
-// STRICT FORMAT MATCH: handles String and Number inputs seamlessly
+// This structure strictly handles the format provided including ID, Password, and Session tracking.
 const ConductorSchema = new mongoose.Schema({
   conductorId: { type: mongoose.Schema.Types.Mixed, unique: true, required: true },
   name: { type: String, required: true },
   password: { type: mongoose.Schema.Types.Mixed, required: true },
   sessionId: String,
   lastActive: { type: Date, default: Date.now }
-}, { timestamps: true, collection: 'Conductors_Admin' });
+}, { 
+  timestamps: true, // Automatically handles createdAt and updatedAt
+  collection: 'Conductors_Admin' 
+});
 
 export function getConductorModel() {
   return mongoose.models.FinalConductorAdmin || mongoose.model('FinalConductorAdmin', ConductorSchema);
