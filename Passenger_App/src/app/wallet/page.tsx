@@ -12,6 +12,7 @@ import { cn } from '@/lib/utils';
 import { SimulatedPayment } from '@/components/simulated-payment';
 import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 export const dynamic = "force-dynamic";
 
@@ -114,32 +115,33 @@ export default function WalletPage() {
       return <div className="p-10 text-center text-muted-foreground bg-slate-50/50 rounded-2xl border border-dashed">No records in this category.</div>;
     }
     return (
-      <div className="space-y-3">
-        {txs.map((tx, index) => (
-          <Card key={index} className="border-none shadow-sm rounded-xl overflow-hidden bg-white">
-            <CardContent className="p-4 flex justify-between items-center">
-              <div className="flex items-center gap-3">
-                <div className={cn("p-2 rounded-lg", tx.type === 'credit' ? "bg-green-50" : "bg-red-50")}>
-                  {tx.type === 'credit' ? <ArrowDown className="h-4 w-4 text-green-600"/> : <ArrowUp className="h-4 w-4 text-red-600"/>}
+      <ScrollArea className="h-[400px] pr-4">
+        <div className="space-y-3">
+          {txs.map((tx, index) => (
+            <Card key={index} className="border-none shadow-sm rounded-xl overflow-hidden bg-white">
+              <CardContent className="p-4 flex justify-between items-center">
+                <div className="flex items-center gap-3">
+                  <div className={cn("p-2 rounded-lg", tx.type === 'credit' ? "bg-green-50" : "bg-red-50")}>
+                    {tx.type === 'credit' ? <ArrowDown className="h-4 w-4 text-green-600"/> : <ArrowUp className="h-4 w-4 text-red-600"/>}
+                  </div>
+                  <div>
+                    <p className="font-bold text-slate-800 text-[11px] leading-tight">{tx.description}</p>
+                    <p className="text-[9px] text-muted-foreground font-bold mt-0.5" suppressHydrationWarning>
+                      {isHydrated ? `${new Date(tx.date).toLocaleDateString()} • ${new Date(tx.date).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}` : '...'}
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <p className="font-bold text-slate-800 text-xs">{tx.description}</p>
-                  <p className="text-[9px] text-muted-foreground font-bold mt-0.5" suppressHydrationWarning>
-                    {isHydrated ? `${new Date(tx.date).toLocaleDateString()} • ${new Date(tx.date).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}` : '...'}
-                  </p>
-                </div>
-              </div>
-              <p className={cn("font-black text-sm", tx.type === 'credit' ? "text-green-600" : "text-red-600")}>
-                ₹{Math.round(tx.amount)}
-              </p>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+                <p className={cn("font-black text-xs shrink-0 ml-2", tx.type === 'credit' ? "text-green-600" : "text-red-600")}>
+                  ₹{Math.round(tx.amount)}
+                </p>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </ScrollArea>
     );
   };
 
-  // Refined filtering logic for transaction history
   const digitalHistory = wallet.transactions.filter(t => 
     t.description.toLowerCase().includes('digital pay') || 
     t.description.toLowerCase().includes('online payment')
@@ -170,12 +172,12 @@ export default function WalletPage() {
                 <p className="text-5xl font-black tracking-tighter" suppressHydrationWarning>Rs. {wallet.walletBalance.toFixed(2)}</p>
                 <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mt-4">Wallet ID: {phone}</p>
                 <div className="mt-8 pt-6 border-t border-white/10 flex items-center justify-between">
-                    <div className="flex flex-col">
+                    <div className="flex flex-col pr-4">
                         <p className="text-xs font-bold text-white flex items-center gap-2">
                             <ShieldCheck className="h-4 w-4 text-primary" /> Auto Deduct for Conductor Use
                         </p>
-                        <p className="text-[9px] text-white/40 ml-6 mt-0.5 font-medium leading-tight italic">
-                            Enables staff to validate boarding instantly without secondary security PIN verification.
+                        <p className="text-[9px] text-white/40 ml-6 mt-1 font-medium leading-relaxed italic">
+                            Enables conductors to deduct fare differences directly from your wallet for inter-category upgrades during boarding.
                         </p>
                     </div>
                     <Switch checked={wallet.autoDeductEnabled} onCheckedChange={handleToggleAutoDeduct} disabled={isUpdatingSettings} />

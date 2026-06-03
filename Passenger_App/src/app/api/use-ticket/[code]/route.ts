@@ -48,7 +48,23 @@ export async function POST(
     } else if (isUpgradation) {
         transitionMsg = `Upgradation (${originalBusType} → ${newBusType})`;
     } else if (isModification) {
-        transitionMsg = "Modification (Details Updated)";
+        // Detailed Modification tracking
+        const changes = [];
+        if (updateData.from !== undefined || updateData.to !== undefined) {
+            if (updateData.from !== ticket.from || updateData.to !== ticket.to) {
+                changes.push("Route Changed");
+            }
+        }
+        if (updateData.quantities) {
+            const oldTotal = Object.values(ticket.quantities || {}).reduce((a: any, b: any) => a + (b || 0), 0);
+            const newTotal = Object.values(updateData.quantities).reduce((a: any, b: any) => a + (b || 0), 0);
+            if (newTotal > oldTotal) changes.push("Passengers Added");
+            else if (newTotal < oldTotal) changes.push("Passengers Removed");
+            else changes.push("Passengers Updated");
+        }
+        
+        const details = changes.length > 0 ? ` (${changes.join(" & ")})` : "";
+        transitionMsg = `Modification${details}`;
     }
 
     // 3. Financial Processing Logic (Refunds for modifications)
@@ -92,7 +108,7 @@ export async function POST(
         ticket.serviceTransition.push(transitionMsg);
     }
 
-    // Update Issue Date if modified or upgraded as requested
+    // Update Issue Date if modified or upgraded
     if (isModification || isUpgradation) {
         ticket.createdAt = new Date();
     }
@@ -101,7 +117,6 @@ export async function POST(
     if (updateData.status) {
         ticket.status = updateData.status;
     } else if (isValidation && ticket.status === 'valid' && !updateData.from && !updateData.busType) {
-        // Only auto-mark as used if it's a validation call without changes
         ticket.status = 'used';
     }
 
