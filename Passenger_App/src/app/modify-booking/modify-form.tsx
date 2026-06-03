@@ -13,6 +13,7 @@ import { calculateFare } from '@/lib/fare-calculator';
 import { SimulatedPayment } from '@/components/simulated-payment';
 import { API_ENDPOINTS } from '@/lib/api-config';
 import { Separator } from '@/components/ui/separator';
+import { AuthGuard } from '@/components/auth-guard';
 
 type PassengerType = 'Men' | 'Child' | 'Women';
 
@@ -183,7 +184,7 @@ export function ModifyForm({ ticket, onReset }: { ticket: any, onReset: () => vo
     }
   };
 
-  return (
+  return (    <AuthGuard>
     <>
       <Card className="w-full max-w-md border-none shadow-2xl rounded-3xl overflow-hidden">
         <CardHeader className="bg-primary text-white p-6">
@@ -290,6 +291,6 @@ export function ModifyForm({ ticket, onReset }: { ticket: any, onReset: () => vo
            amount={fareDifference}
         />
       )}
-    </>
+    </>    </AuthGuard>
   );
 }

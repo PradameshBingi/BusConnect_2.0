@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { API_ENDPOINTS } from '@/lib/api-config';
 import { cn } from '@/lib/utils';
+import { AuthGuard } from '@/components/auth-guard';
 
 type TicketDetails = {
   ticketCode: string;
@@ -94,21 +95,19 @@ export default function TicketDetailPage() {
   }
 
   const isUsed = ticket.status === 'used';
-  
-  // STRICT: Use validation time for used tickets, creation time otherwise
   const displayDate = isUsed && ticket.validatedAt 
     ? new Date(ticket.validatedAt) 
     : new Date(ticket.createdAt);
 
   if (isUsed) {
     return (
-      <>
+      <AuthGuard>
         <Header showBackButton backHref="/booking-history" title="Validated Ticket" />
         <div className="p-4 md:p-8 flex flex-col items-center space-y-6 pb-32">
           <ValidatedTicket ticket={{ ...ticket, timestamp: ticket.validatedAt || ticket.createdAt }} />
           <Button asChild variant="ghost" className="w-full h-12 rounded-xl text-slate-500 font-bold"><Link href="/booking-history">Back to History</Link></Button>
         </div>
-      </>
+      </AuthGuard>
     );
   }
 
@@ -118,7 +117,7 @@ export default function TicketDetailPage() {
   const displayStatus = isCurrentlyExpired ? 'expired' : ticket.status;
 
   return (
-    <>
+    <AuthGuard>
       <Header showBackButton backHref="/booking-history" title="Ticket Details" />
       <div className="flex flex-col items-center p-4 md:p-8 space-y-6 pb-32">
         <Card className={cn("w-full max-w-md border-t-8 shadow-xl rounded-3xl", {
@@ -235,6 +234,6 @@ export default function TicketDetailPage() {
           </CardFooter>
         </Card>
       </div>
-    </>
+    </AuthGuard>
   );
 }

@@ -9,6 +9,7 @@ import { History, User, RefreshCw, ChevronRight, ArrowRight, Loader2 } from 'luc
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+import { AuthGuard } from '@/components/auth-guard';
 
 export const dynamic = "force-dynamic";
 
@@ -62,7 +63,7 @@ export default function BookingHistoryPage() {
   };
 
   return (
-    <>
+    <AuthGuard>
       <Header showBackButton={true} backHref="/" title="Booking History" />
       <div className="p-4 md:p-8 max-w-2xl mx-auto pb-32">
         <div className="flex items-center justify-between mb-6">
@@ -127,6 +128,6 @@ export default function BookingHistoryPage() {
           </div>
         )}
       </div>
-    </>
+    </AuthGuard>
   );
 }

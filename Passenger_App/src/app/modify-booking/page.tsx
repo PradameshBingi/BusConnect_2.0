@@ -12,6 +12,7 @@ import { Search, Loader2, Edit3, Info, Lock } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { API_ENDPOINTS } from '@/lib/api-config';
 import { ModifyForm } from './modify-form';
+import { AuthGuard } from '@/components/auth-guard';
 import { cn } from '@/lib/utils';
 
 export const dynamic = "force-dynamic";
@@ -67,7 +68,7 @@ function ModifyBookingContent() {
     fetchTicket(ticketCode);
   };
 
-  return (
+  return (    <AuthGuard>
     <div className="p-4 md:p-8 flex flex-col items-center gap-6 min-h-[calc(100vh-4rem)] bg-slate-50/50">
       {!ticket ? (
         <Card className="w-full max-w-md shadow-xl border-none rounded-3xl overflow-hidden">
@@ -119,17 +120,17 @@ function ModifyBookingContent() {
       ) : (
         <ModifyForm ticket={ticket} onReset={() => {setTicket(null); setTicketCode(''); setIsPreFilled(false);}} />
       )}
-    </div>
+    </div>  </AuthGuard>
   );
 }
 
 export default function ModifyBookingPage() {
-  return (
+  return (    <AuthGuard>
     <>
       <Header showBackButton={true} backHref="/select-ticket-type" title="Modification Portal" />
       <Suspense fallback={<div className="p-20 text-center"><Loader2 className="animate-spin mx-auto h-10 w-10 text-primary" /></div>}>
         <ModifyBookingContent />
       </Suspense>
-    </>
+    </>    </AuthGuard>
   );
 }

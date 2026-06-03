@@ -14,6 +14,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useToast } from '@/hooks/use-toast';
+import { NotificationsSheet } from './notifications-sheet';
 
 export default function Header({ showBackButton = false, backHref, title }: { showBackButton?: boolean; backHref?: string; title?: string }) {
   const router = useRouter();
@@ -105,6 +106,13 @@ export default function Header({ showBackButton = false, backHref, title }: { sh
         </div>
 
         <div className="flex items-center gap-4">
+          <NotificationsSheet>
+             <div className="relative group cursor-pointer">
+                <Bell className="h-5 w-5 text-white group-hover:opacity-80 transition-opacity" />
+                <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full border border-white animate-pulse"></span>
+             </div>
+          </NotificationsSheet>
+          
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon" className="h-10 w-10 rounded-full text-white hover:bg-white/10">
@@ -125,7 +133,6 @@ export default function Header({ showBackButton = false, backHref, title }: { sh
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-          <Bell className="h-5 w-5 cursor-pointer hover:opacity-80 hidden md:block" />
           <MessageSquare className="h-5 w-5 cursor-pointer hover:opacity-80 hidden md:block" />
           <Globe className="h-5 w-5 cursor-pointer hover:opacity-80 hidden md:block" />
         </div>

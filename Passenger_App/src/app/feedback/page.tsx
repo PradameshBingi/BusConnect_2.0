@@ -11,6 +11,7 @@ import { Star, Send, Loader2, CheckCircle2, MessageSquare } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
+import { AuthGuard } from '@/components/auth-guard';
 
 export default function FeedbackPage() {
   const [rating, setRating] = useState(0);
@@ -75,7 +76,7 @@ export default function FeedbackPage() {
     );
   }
 
-  return (
+  return (    <AuthGuard>
     <>
       <Header showBackButton backHref="/" title="Send Feedback" />
       <div className="p-4 md:p-8 flex justify-center bg-slate-50/50 min-h-[calc(100vh-4rem)]">
@@ -155,6 +156,6 @@ export default function FeedbackPage() {
           </CardContent>
         </Card>
       </div>
-    </>
+    </>  </AuthGuard>
   );
 }
