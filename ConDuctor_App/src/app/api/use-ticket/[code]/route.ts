@@ -17,7 +17,7 @@ const getServiceLabel = (type: string) => {
 };
 
 /**
- * Atomic Fare Adjustment Handler
+ * Atomic Fare Adjustment Handler (Refined with specific transaction descriptions)
  */
 async function processFareAdjustment(
   ticket: any, 
@@ -30,31 +30,31 @@ async function processFareAdjustment(
 
   const bookedLabel = getServiceLabel(ticket.busType);
   const boardedLabel = getServiceLabel(ticket.actualBusType || ticket.busType);
-  const transition = `${bookedLabel} → ${boardedLabel}`;
+  const transition = `${bookedLabel} -> ${boardedLabel}`;
 
   if (diff > 0) {
-    // REFUND (Credit) - Atomic update with walletBalance
+    // REFUND (Credit) - Conductor initiated refund for lower category boarding
+    const amount = Math.abs(diff);
     await User.findOneAndUpdate(
       { phone: phone },
       { 
-        $inc: { walletBalance: diff },
+        $inc: { walletBalance: amount },
         $push: { 
           transactions: {
             type: 'credit',
-            description: `Fare Difference Refund (${transition}) ${ticket.ticketCode}`,
-            amount: diff,
+            description: `Conductor: Ticket Upgradation (${transition}) ${ticket.ticketCode}`,
+            amount: amount,
             date: new Date()
           }
-        },
-        $unset: { wallet: "" } // Cleanup legacy field if present
+        }
       },
       { upsert: true }
     );
-    ticket.refundAmount = diff;
+    ticket.refundAmount = amount;
     ticket.refundProcessed = true;
     ticket.refundedAt = new Date();
   } else if (diff < 0) {
-    // DEDUCTION (Debit) - ONLY IF AUTHORIZED
+    // DEDUCTION (Debit) - ONLY IF AUTHORIZED by passenger
     const amountToDeduct = Math.abs(diff);
     const user = await User.findOne({ phone });
 
@@ -66,7 +66,7 @@ async function processFareAdjustment(
           $push: { 
             transactions: {
               type: 'debit',
-              description: `Fare Difference Deducted (${transition}) ${ticket.ticketCode}`,
+              description: `Conductor: Ticket Upgradation (${transition}) ${ticket.ticketCode}`,
               amount: amountToDeduct,
               date: new Date()
             }
@@ -79,7 +79,7 @@ async function processFareAdjustment(
   }
 
   ticket.boardingChanged = diff !== 0;
-  ticket.serviceTransition = transition;
+  ticket.serviceTransition = `Modification (${transition})`;
 }
 
 export async function POST(
@@ -102,7 +102,7 @@ export async function POST(
     const originalFare = ticket.totalFare;
     const calculatedFare = calculateFare(ticket.from, ticket.to, ticket.quantities, actualBusType);
 
-    // Apply adjustments
+    // Apply adjustments with precise logic
     ticket.actualBusType = actualBusType;
     await processFareAdjustment(ticket, calculatedFare, conductorId);
     
@@ -113,7 +113,7 @@ export async function POST(
     ticket.totalFare = calculatedFare;
     await ticket.save();
 
-    // CLOUD SYNC: Log to Conductor Verification Stats
+    // CLOUD SYNC: Log to Conductor Verification History
     if (conductorId) {
       await new ConductorLog({
         conductorId,

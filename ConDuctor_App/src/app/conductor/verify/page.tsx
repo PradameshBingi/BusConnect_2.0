@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Command, CommandInput, CommandEmpty, CommandGroup, CommandItem, CommandList } from '@/components/ui/command';
-import { Search, CheckCircle, XCircle, Loader2, ArrowRight, RefreshCcw, Calendar, Clock, CreditCard, ShieldAlert } from 'lucide-react';
+import { Search, CheckCircle, XCircle, Loader2, ArrowRight, RefreshCcw, Calendar, Clock, CreditCard, ShieldAlert, Copy } from 'lucide-react';
 import Header from '@/app/components/header';
 import { useToast } from "@/hooks/use-toast";
 import { API_ENDPOINTS } from '@/lib/api-config';
@@ -72,7 +72,7 @@ export default function VerifyTicketPage() {
             setActualBusType(result.ticket.busType);
             setDynamicFare(result.ticket.totalFare);
             
-            // Check passenger's auto-deduct authorization
+            // Check passenger's auto-deduct authorization from cloud wallet
             const userRes = await fetch(`/api/user-data?phone=${result.ticket.bookedBy}`);
             const userData = await userRes.json();
             setPassenger(userData.user);
@@ -119,13 +119,18 @@ export default function VerifyTicketPage() {
         }
     };
 
+    const copyToClipboard = (text: string) => {
+        navigator.clipboard.writeText(text);
+        toast({ title: "Copied", description: "Ticket code copied to clipboard." });
+    };
+
   return (
     <AuthGuard>  
       <div className="flex flex-col min-h-screen bg-slate-50">
         <Header showBackButton={true} backHref="/conductor/dashboard" title="Ticket Verification" />
         
         <main className="flex flex-col items-center p-4 space-y-4 pb-32">
-          {/* PERSISTENT SEARCH BAR */}
+          {/* SCAN ENTRY CARD */}
           <Card className="w-full max-w-md shadow-sm border-slate-200">
             <CardHeader className="py-2 px-4 flex-row items-center justify-between">
                 <CardTitle className="font-headline text-[10px] uppercase tracking-[0.2em] text-slate-400">Scan Entry Code</CardTitle>
@@ -141,6 +146,7 @@ export default function VerifyTicketPage() {
                   value={ticketDigits} 
                   onChange={(e) => setTicketDigits(e.target.value.replace(/\D/g, '').slice(0, 5))} 
                   className="font-mono text-base h-10 tracking-[0.2em] rounded-lg border-2 border-slate-200 focus:border-[#00B893] text-center font-black" 
+                  suppressHydrationWarning
                 />
                 <Button onClick={() => handleVerification()} disabled={isLoading || ticketDigits.length !== 5} className="h-10 w-12 bg-[#00B893] hover:bg-[#009e7c] rounded-lg shrink-0">
                     {isLoading ? <Loader2 className="animate-spin h-4 w-4" /> : <Search className="h-4 w-4" />}
@@ -176,7 +182,7 @@ export default function VerifyTicketPage() {
                       </CardHeader>
                   </Card>
               ) : (
-                  /* COMPACT JOURNEY PREVIEW */
+                  /* JOURNEY PREVIEW */
                   <Card className="overflow-hidden shadow-xl bg-white border-none rounded-[1.5rem] border-t-4 border-t-[#00B893] animate-in slide-in-from-bottom-2 duration-400">
                       <CardHeader className="text-center py-2 px-6 relative border-b border-slate-50">
                           <RefreshCcw className="absolute right-4 top-4 h-3 w-3 text-slate-300 cursor-pointer hover:text-[#00B893]" onClick={() => {setTicket(null); setStatus('idle');}} />
@@ -222,12 +228,21 @@ export default function VerifyTicketPage() {
                                </div>
                           </div>
 
+                          {/* WALLET AUTHORIZATION DISPLAY */}
                           {dynamicFare > ticket.totalFare && (
-                              <div className={cn("p-1.5 rounded-lg flex items-center gap-2", passenger?.autoDeductEnabled ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700")}>
-                                  {passenger?.autoDeductEnabled ? <CreditCard className="h-3 w-3" /> : <ShieldAlert className="h-3 w-3" />}
-                                  <p className="text-[7px] font-black uppercase tracking-wider">
-                                      {passenger?.autoDeductEnabled ? "Auto-Deduct Authorized" : "Manual Collection Needed"}
-                                  </p>
+                              <div className={cn("p-2 rounded-lg flex items-center gap-2 border", 
+                                passenger?.autoDeductEnabled ? "bg-emerald-50 text-emerald-700 border-emerald-100" : "bg-amber-50 text-amber-700 border-amber-100"
+                              )}>
+                                  {passenger?.autoDeductEnabled ? <CreditCard className="h-4 w-4" /> : <ShieldAlert className="h-4 w-4" />}
+                                  <div className="flex-1">
+                                      <p className="text-[8px] font-black uppercase tracking-wider leading-none">
+                                          {passenger?.autoDeductEnabled ? "Auto-Deduct Authorized" : "Manual Collection Needed"}
+                                      </p>
+                                      <p className="text-[7px] font-bold opacity-60 mt-0.5">
+                                          {passenger?.autoDeductEnabled ? `Wallet Balance: ₹${passenger.walletBalance.toLocaleString()}` : "Collect cash from passenger for upgrade"}
+                                      </p>
+                                  </div>
+                                  {passenger?.autoDeductEnabled && <Badge variant="secondary" className="bg-emerald-600 text-white text-[7px] font-black h-4">ACTIVE</Badge>}
                               </div>
                           )}
 
@@ -263,8 +278,14 @@ export default function VerifyTicketPage() {
                       </CardContent>
 
                       <CardFooter className="p-0 flex flex-col mt-3">
-                          <div className="w-full bg-[#0F172A] py-1.5 flex flex-col items-center gap-0.5">
-                              <p className="text-[6px] font-black text-slate-500 uppercase tracking-widest">PASSENGER TICKET ID</p>
+                          <div 
+                            className="w-full bg-[#0F172A] py-1.5 flex flex-col items-center gap-0.5 cursor-pointer hover:bg-slate-800 transition-colors"
+                            onClick={() => copyToClipboard(ticket.ticketCode)}
+                          >
+                              <div className="flex items-center gap-2">
+                                  <p className="text-[6px] font-black text-slate-500 uppercase tracking-widest">PASSENGER TICKET ID</p>
+                                  <Copy className="h-2 w-2 text-slate-500" />
+                              </div>
                               <p className="text-xs font-black text-white tracking-[0.15em]">{ticket.ticketCode}</p>
                           </div>
                           <Button onClick={handleValidate} className="w-full h-14 bg-[#00B893] hover:bg-[#009e7c] text-base font-black uppercase tracking-[0.1em] rounded-none shadow-2xl" disabled={isLoading}>
