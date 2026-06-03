@@ -35,6 +35,7 @@ export default function WalletPage() {
   const [addAmount, setAddAmount] = useState('');
   const [showPayment, setShowPayment] = useState(false);
   const [phone, setPhone] = useState('');
+  const [isHydrated, setIsHydrated] = useState(false);
   const { toast } = useToast();
 
   const fetchWallet = async (userPhone: string) => {
@@ -55,6 +56,7 @@ export default function WalletPage() {
   };
 
   useEffect(() => {
+    setIsHydrated(true);
     const user = localStorage.getItem('currentUser');
     if (user) {
       setPhone(user);
@@ -122,7 +124,9 @@ export default function WalletPage() {
                 </div>
                 <div>
                   <p className="font-bold text-slate-800 text-xs">{tx.description}</p>
-                  <p className="text-[9px] text-muted-foreground font-bold mt-0.5">{new Date(tx.date).toLocaleDateString()} • {new Date(tx.date).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</p>
+                  <p className="text-[9px] text-muted-foreground font-bold mt-0.5" suppressHydrationWarning>
+                    {isHydrated ? `${new Date(tx.date).toLocaleDateString()} • ${new Date(tx.date).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}` : '...'}
+                  </p>
                 </div>
               </div>
               <p className={cn("font-black text-sm", tx.type === 'credit' ? "text-green-600" : "text-red-600")}>
@@ -153,7 +157,7 @@ export default function WalletPage() {
             </CardHeader>
             <CardContent className="p-8 pt-0 -mt-6">
               <div className="bg-slate-900 rounded-3xl p-6 border border-white/5">
-                <p className="text-5xl font-black tracking-tighter">Rs. {wallet.walletBalance.toFixed(2)}</p>
+                <p className="text-5xl font-black tracking-tighter" suppressHydrationWarning>Rs. {wallet.walletBalance.toFixed(2)}</p>
                 <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mt-4">Wallet ID: {phone}</p>
                 <div className="mt-8 pt-6 border-t border-white/10 flex items-center justify-between">
                     <p className="text-xs font-bold text-white flex items-center gap-2"><ShieldCheck className="h-4 w-4 text-primary" /> Auto Deduct</p>

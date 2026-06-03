@@ -63,9 +63,20 @@ export function GeneratedTicket({ ticket, refundCode }: GeneratedTicketProps) {
         return { menRate: mRate, childRate: cRate, womenRate: wRate };
     }, [ticket.from, ticket.to, ticket.busType]);
 
-    const serviceNumber = "MEAB" + (Math.floor(Math.random() * 90) + 10);
-    const waybill = Math.floor(10000000 + Math.random() * 90000000);
-    const busNo = "TS11UA" + (Math.floor(1000 + Math.random() * 9000));
+    // Stable randomized data generation based on ticketCode to prevent hydration errors
+    const { serviceNumber, waybill, busNo, tripNo } = useMemo(() => {
+        const seed = ticket.ticketCode.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+        const rnd = (min: number, max: number, offset: number) => {
+            const val = Math.abs(Math.sin(seed + offset) * 10000);
+            return Math.floor(min + (val % (max - min + 1)));
+        };
+        return {
+            serviceNumber: "MEAB" + rnd(10, 99, 100),
+            waybill: rnd(10000000, 99999999, 200),
+            busNo: "TS11UA" + rnd(1000, 9999, 300),
+            tripNo: rnd(1, 5, 400)
+        };
+    }, [ticket.ticketCode]);
 
     return (
         <div className="bg-white text-black p-8 font-mono max-w-sm mx-auto shadow-lg rounded-sm border border-gray-200 relative overflow-hidden">
@@ -86,7 +97,7 @@ export function GeneratedTicket({ ticket, refundCode }: GeneratedTicketProps) {
                     <BusStamp />
                     <p className="text-[11px] font-bold">Service Number: {serviceNumber}</p>
                     <p className="font-black text-2xl uppercase tracking-tighter">{ticket.busType.toUpperCase()}</p>
-                    <p className="text-[11px] font-bold">Trip No: {Math.floor(Math.random() * 5) + 1}</p>
+                    <p className="text-[11px] font-bold">Trip No: {tripNo}</p>
                 </div>
 
                 <div className="flex justify-between items-center font-bold text-sm px-1 my-4">

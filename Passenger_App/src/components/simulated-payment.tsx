@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   CreditCard, 
@@ -45,20 +45,25 @@ export function SimulatedPayment({ isOpen, onClose, onComplete, amount }: Simula
   const [stepIndex, setStepIndex] = useState(0);
   const [walletBalance, setWalletBalance] = useState(0);
   const [useWallet, setUseWallet] = useState(false);
+  const [orderId, setOrderId] = useState('');
 
   useEffect(() => {
-    const fetchWallet = async () => {
-      const phone = localStorage.getItem('currentUser');
-      if (!phone) return;
-      try {
-        const res = await fetch(`/api/user?phone=${phone}`);
-        if (res.ok) {
-          const data = await res.json();
-          setWalletBalance(data.walletBalance || 0);
-        }
-      } catch (e) {}
-    };
-    if (isOpen) fetchWallet();
+    if (isOpen) {
+      setOrderId(Math.random().toString(36).substr(2, 6).toUpperCase());
+      
+      const fetchWallet = async () => {
+        const phone = localStorage.getItem('currentUser');
+        if (!phone) return;
+        try {
+          const res = await fetch(`/api/user?phone=${phone}`);
+          if (res.ok) {
+            const data = await res.json();
+            setWalletBalance(data.walletBalance || 0);
+          }
+        } catch (e) {}
+      };
+      fetchWallet();
+    }
   }, [isOpen]);
 
   useEffect(() => {
@@ -126,7 +131,7 @@ export function SimulatedPayment({ isOpen, onClose, onComplete, amount }: Simula
               <motion.div key="idle" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex-1 flex flex-col p-8">
                 <div className="mb-6">
                   <h2 className="text-3xl font-black text-slate-900 tracking-tighter">Rs. {amount.toFixed(2)}</h2>
-                  <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">Order #TKT-{Math.random().toString(36).substr(2, 6).toUpperCase()}</p>
+                  <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">Order #TKT-{orderId || '......'}</p>
                 </div>
 
                 <div className="flex-1 space-y-6">
