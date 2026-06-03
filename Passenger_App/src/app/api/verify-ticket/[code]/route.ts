@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import dbConnect, { getTicketModel, getUserModel } from '@/lib/mongodb';
+import dbConnect, { getTicketModel, getWalletModel } from '@/lib/mongodb';
 
 export const dynamic = "force-dynamic";
 
@@ -34,22 +34,33 @@ export async function GET(
 
         if (now > expiryTime) {
             ticket.status = 'expired';
-            const totalPaid = ticket.totalFare || 0;
-            refundAmount = Math.max(0, totalPaid - Math.round(totalPaid * 0.10));
+            // Full Refund Policy for Expired Tickets
+            refundAmount = ticket.totalFare || 0;
             await ticket.save();
 
-            // Credit cloud wallet for expired ticket
-            const User = getUserModel();
-            const user = await User.findOne({ phone: ticket.bookedBy });
-            if (user) {
-                user.walletBalance += refundAmount;
-                user.transactions.push({
-                    type: 'credit',
-                    description: `Automatic Refund (Expired): ${ticketCode}`,
-                    amount: refundAmount,
-                    date: new Date()
-                });
-                await user.save();
+            // Credit cloud wallet for expired ticket (Type-Robust)
+            const Wallet = getWalletModel();
+            const phone = ticket.bookedBy;
+            if (phone) {
+                const phoneNum = Number(phone);
+                const query = {
+                  $or: [
+                    { phone: phone.toString() },
+                    { phone: !isNaN(phoneNum) ? phoneNum : null }
+                  ].filter(c => c.phone !== null)
+                };
+
+                await Wallet.findOneAndUpdate(query, {
+                    $inc: { walletBalance: refundAmount },
+                    $push: {
+                        transactions: {
+                            type: 'credit',
+                            description: `Full Refund (Expired): ${ticketCode}`,
+                            amount: refundAmount,
+                            date: new Date()
+                        }
+                    }
+                }, { upsert: true });
             }
         }
     }
@@ -63,7 +74,7 @@ export async function GET(
   } catch (err: any) {
     console.error("❌ API /verify-ticket Error:", err);
     return NextResponse.json({ 
-      error: "Database Unreachable", 
+      error: "Internal Server Error", 
       details: err.message 
     }, { status: 500 });
   }

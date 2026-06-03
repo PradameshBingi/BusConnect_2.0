@@ -3,7 +3,7 @@ export const dynamic = 'force-dynamic';
 
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { ArrowRightLeft, BusFront, Baby, Ticket, Wallet, Loader2 } from 'lucide-react';
+import { ArrowRightLeft, BusFront, Baby, Ticket, Loader2 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -25,7 +25,6 @@ import { hyderabadLocalities } from '@/lib/locations';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { calculateFare } from '@/lib/fare-calculator';
-import { Switch } from '@/components/ui/switch';
 import { SimulatedPayment } from '@/components/simulated-payment';
 import { API_ENDPOINTS } from '@/lib/api-config';
 
@@ -65,42 +64,11 @@ export function BookingForm() {
   const { toast } = useToast();
   const searchParams = useSearchParams();
 
-  const [walletBalance, setWalletBalance] = useState(0);
-  const [useWallet, setUseWallet] = useState(false);
-  const [finalFare, setFinalFare] = useState(0);
-
-  // Fetch Wallet Balance from Database
   useEffect(() => {
-    const fetchWallet = async () => {
-      const phone = localStorage.getItem('currentUser');
-      if (!phone) return;
-      try {
-        const res = await fetch(`/api/user?phone=${phone}`);
-        if (res.ok) {
-          const data = await res.json();
-          setWalletBalance(data.walletBalance || 0);
-        }
-      } catch (e) {
-        console.error("Failed to fetch wallet for booking form");
-      }
-    };
-    fetchWallet();
-  }, []);
-
-  useEffect(() => {
-    const busType = (searchParams.get('type') as any) || 'ordinary';
+    const busType = (searchParams.get('type') as any) || 'City Ordinary';
     const newFare = calculateFare(from, to, quantities, busType);
     setTotalFare(newFare);
   }, [from, to, quantities, searchParams]);
-
-  useEffect(() => {
-    if (useWallet && walletBalance > 0) {
-      const remainingFare = Math.max(0, totalFare - walletBalance);
-      setFinalFare(remainingFare);
-    } else {
-      setFinalFare(totalFare);
-    }
-  }, [totalFare, walletBalance, useWallet]);
 
   const handleSwap = () => {
     const temp = from;
@@ -136,7 +104,7 @@ export function BookingForm() {
       toast({ 
         variant: 'destructive', 
         title: 'Attention', 
-        description: 'Source and Destination cannot be the same. Please select a valid route.' 
+        description: 'Source and Destination cannot be the same.' 
       });
       return;
     }
@@ -150,17 +118,13 @@ export function BookingForm() {
       return;
     }
 
-    if (finalFare > 0) {
-      setShowPayment(true);
-    } else {
-      finalizeBooking();
-    }
+    setShowPayment(true);
   };
 
-  const finalizeBooking = async () => {
+  const finalizeBooking = async (paymentData?: { walletUsed: number, digitalPaid: number }) => {
     setIsLoading(true);
     try {
-      const busType = searchParams.get('type') || 'ordinary';
+      const busType = searchParams.get('type') || 'City Ordinary';
       const routeNo = hyderabadLocalities.find(l => l.name === from)?.routeNumber || "00";
       const currentUserId = localStorage.getItem('currentUser') || 'GUEST';
       
@@ -169,7 +133,7 @@ export function BookingForm() {
         .map(([type, count]) => `${type}: ${count}`)
         .join(', ');
 
-      const walletAmountUsed = useWallet ? Math.min(totalFare, walletBalance) : 0;
+      const walletAmountUsed = paymentData?.walletUsed || 0;
 
       const bookingData = {
         from,
@@ -178,7 +142,7 @@ export function BookingForm() {
         passengers: passengerSummary,
         quantities,
         totalFare,
-        fare: finalFare,
+        fare: paymentData?.digitalPaid ?? totalFare,
         walletAmountUsed,
         securityCode,
         busType,
@@ -193,13 +157,13 @@ export function BookingForm() {
 
       if (!response.ok) {
         const errData = await response.json().catch(() => ({}));
-        throw new Error(errData.details || errData.error || "Server failed to process booking request.");
+        throw new Error(errData.details || errData.error || "Server failed to process booking.");
       }
       
       const result = await response.json();
       const ticket = result.ticket;
 
-      // Deduct wallet in Database if used
+      // Log Wallet Deductions
       if (walletAmountUsed > 0) {
           await fetch('/api/user', {
               method: 'POST',
@@ -208,18 +172,31 @@ export function BookingForm() {
                   phone: currentUserId,
                   amount: walletAmountUsed,
                   type: 'debit',
-                  description: `Ticket booking ${ticket.ticketCode}`
+                  description: `Wallet Payment: Ticket ${ticket.ticketCode}`
+              })
+          });
+      }
+
+      // Log Digital Pay records if any
+      if (paymentData && paymentData.digitalPaid > 0) {
+          await fetch('/api/user', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                  phone: currentUserId,
+                  amount: paymentData.digitalPaid,
+                  type: 'debit',
+                  description: `Digital Pay: Ticket ${ticket.ticketCode}`
               })
           });
       }
 
       router.push(`/ticket/${ticket.ticketCode}`);
     } catch (error: any) {
-      console.error("Booking Finalization Error:", error);
       toast({ 
         variant: 'destructive', 
         title: 'Booking Failed', 
-        description: error.message || 'Could not communicate with the ticketing server.' 
+        description: error.message 
       });
     } finally {
       setIsLoading(false);
@@ -278,19 +255,6 @@ export function BookingForm() {
                   </div>
                 ))}
             </div>
-            
-            {walletBalance > 0 && (
-              <div className="flex items-center justify-between rounded-2xl border p-4 bg-primary/5 border-primary/20">
-                  <div className="flex items-center gap-3">
-                      <Wallet className="h-6 w-6 text-primary" />
-                      <div className="text-xs">
-                          <p className="font-bold text-slate-800">Use Wallet</p>
-                          <p className="text-muted-foreground">Bal: Rs. {walletBalance.toFixed(2)}</p>
-                      </div>
-                  </div>
-                  <Switch checked={useWallet} onCheckedChange={setUseWallet} />
-              </div>
-            )}
 
             <div>
               <Label className="text-[10px] uppercase font-black text-slate-600">Security Code (5 characters)</Label>
@@ -307,12 +271,12 @@ export function BookingForm() {
 
              <div className="flex justify-between items-center rounded-2xl bg-slate-900 text-white p-5 shadow-inner">
                 <span className="font-bold opacity-60">Total Fare:</span>
-                <span className="text-3xl font-black">Rs. {finalFare}</span>
+                <span className="text-3xl font-black">Rs. {totalFare}</span>
               </div>
           </CardContent>
           <CardFooter className="p-6">
             <Button type="submit" className="w-full h-14 text-lg font-bold rounded-2xl" disabled={isLoading}>
-              {isLoading ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <><Ticket className="mr-2 h-5 w-5" /> Confirm & Generate</>}
+              {isLoading ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <><Ticket className="mr-2 h-5 w-5" /> Select Payment</>}
             </Button>
           </CardFooter>
         </form>
@@ -321,8 +285,8 @@ export function BookingForm() {
       <SimulatedPayment 
         isOpen={showPayment}
         onClose={() => setShowPayment(false)}
-        onComplete={finalizeBooking}
-        amount={finalFare}
+        onComplete={(data) => finalizeBooking(data)}
+        amount={totalFare}
       />
     </>
   );
