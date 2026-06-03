@@ -13,31 +13,31 @@ export default function ConductorDashboardPage() {
     {
       href: '/conductor/verify',
       title: 'Ticket Tool',
-      description: 'Direct Verification And Service Adjustments',
+      description: 'Direct verification and service adjustments',
       icon: <Ticket className="h-6 w-6 text-[#00B893]" />,
     },
     {
       href: '/conductor/bus-pass',
       title: 'Bus Pass Verification',
-      description: 'Validate Student And Citizen Bus Passes',
+      description: 'Validate student and citizen bus passes',
       icon: <BookUser className="h-6 w-6 text-[#0A2B70]" />,
     },
     {
       href: '/conductor/stats',
       title: 'Verification Insights',
-      description: 'Real-Time Analytics For Tickets And Bus Passes',
+      description: 'Real-time analytics for tickets and bus passes',
       icon: <BarChart3 className="h-6 w-6 text-indigo-600" />,
     },
     { 
       href: '/help', 
-      title: 'Help & Faqs', 
-      description: 'Find Answers To Your Questions', 
+      title: 'Help & FAQs', 
+      description: 'Find answers to your questions', 
       icon: <HelpCircle className="h-6 w-6 text-slate-500" />,
     },
     { 
       href: '/about', 
       title: 'About', 
-      description: 'Learn More About This App', 
+      description: 'Learn more about this app', 
       icon: <Info className="h-6 w-6 text-blue-500" />,
     },
   ];

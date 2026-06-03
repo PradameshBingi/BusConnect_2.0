@@ -284,18 +284,18 @@ export default function ConductorStatsPage() {
                   </CardTitle>
                   <CardDescription className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Routes with the highest ticket verification density.</CardDescription>
                 </CardHeader>
-                <CardContent className="h-[250px] p-4">
+                <CardContent className="h-[280px] p-4">
                   {stats?.topRoutes && stats.topRoutes.length > 0 ? (
                     <ChartContainer config={chartConfig}>
                       <ResponsiveContainer width="100%" height="100%">
-                        <BarChart data={stats.topRoutes} layout="vertical" margin={{ left: 20 }}>
+                        <BarChart data={stats.topRoutes} layout="vertical" margin={{ left: 60, right: 30, top: 10, bottom: 10 }}>
                           <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} />
                           <XAxis type="number" hide />
                           <YAxis 
                             dataKey="route" 
                             type="category" 
-                            width={100} 
-                            fontSize={8} 
+                            width={130} 
+                            fontSize={7} 
                             tick={{ fill: '#64748b', fontWeight: 'bold' }}
                             axisLine={false}
                             tickLine={false}

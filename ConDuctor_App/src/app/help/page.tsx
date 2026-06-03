@@ -59,7 +59,7 @@ export default function HelpPage() {
   return (
     <AuthGuard>
       <div className="min-h-screen bg-slate-50 flex flex-col">
-        <Header showBackButton={true} backHref="/" title="Help & Faqs" />
+        <Header showBackButton={true} backHref="/" title="Help & FAQs" />
         <main className="p-4 md:p-8 max-w-3xl mx-auto space-y-8 flex-grow pb-24">
           <div className="flex items-center gap-3 mb-2">
             <HelpCircle className="h-8 w-8 text-[#00B893]" />
@@ -112,14 +112,17 @@ export default function HelpPage() {
           <Card className="border-none shadow-xl rounded-3xl overflow-hidden bg-slate-900 text-white">
             <CardContent className="p-8 text-center space-y-6">
               <div className="space-y-1">
-                <p className="text-[10px] uppercase font-black tracking-[0.3em] text-slate-400">Technical Inquiries</p>
+                <p className="text-[10px] uppercase font-black tracking-[0.3em] text-slate-400">Conceptualized & Developed by</p>
                 <h2 className="text-3xl font-black tracking-tighter">BINGI PRADAMESH</h2>
               </div>
+              <p className="text-xs font-bold text-slate-400 max-w-sm mx-auto leading-relaxed uppercase">
+                Have questions about this prototype or technical inquiries? Reach out via professional channels.
+              </p>
               <div className="flex flex-wrap justify-center gap-3">
                 <Button variant="outline" className="bg-white/5 border-white/10 hover:bg-white/10 text-white rounded-xl h-12 px-6" asChild>
                   <a href="mailto:pradameshbingi043@gmail.com" target="_blank" rel="noopener noreferrer">
                     <Mail className="mr-2 h-4 w-4 text-primary" />
-                    Email
+                    Email Me
                   </a>
                 </Button>
                 <Button variant="outline" className="bg-white/5 border-white/10 hover:bg-white/10 text-white rounded-xl h-12 px-6" asChild>
@@ -129,6 +132,9 @@ export default function HelpPage() {
                   </a>
                 </Button>
               </div>
+              <p className="text-[10px] font-black tracking-[0.2em] text-emerald-500 uppercase pt-4">
+                Thank You For Visiting. 😎👍
+              </p>
             </CardContent>
           </Card>
         </main>
