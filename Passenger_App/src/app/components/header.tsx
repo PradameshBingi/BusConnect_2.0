@@ -20,6 +20,8 @@ export default function Header({ showBackButton = false, backHref, title }: { sh
   const router = useRouter();
   const { toast } = useToast();
   const [userInfo, setUserInfo] = useState({ id: '', name: '' });
+  const [hasNotifications, setHasNotifications] = useState(false);
+  const [showDot, setShowDot] = useState(false);
 
   const handleLogout = useCallback(() => {
     localStorage.removeItem('currentUser');
@@ -28,7 +30,7 @@ export default function Header({ showBackButton = false, backHref, title }: { sh
     router.replace('/login');
   }, [router]);
 
-  // Session Validation Heartbeat and Profile Loading
+  // Session Validation and Notification Logic
   useEffect(() => {
     const phone = localStorage.getItem('currentUser');
     const name = localStorage.getItem('userName');
@@ -38,33 +40,49 @@ export default function Header({ showBackButton = false, backHref, title }: { sh
       setUserInfo({ id: phone, name: name || 'Passenger' });
     }
 
-    const validateSession = async () => {
+    const checkState = async () => {
+      // 1. Session Heartbeat
       if (phone && localSessionId) {
         try {
           const res = await fetch(`/api/user?phone=${phone}`);
           if (res.ok) {
             const data = await res.json();
             if (data.sessionId && data.sessionId !== localSessionId) {
-              toast({
-                variant: 'destructive',
-                title: 'Session Expired',
-                description: 'Logged in from another device. Please login again.'
-              });
+              toast({ variant: 'destructive', title: 'Session Expired', description: 'Logged in from another device.' });
               handleLogout();
             }
-          } else {
-            console.warn(`Session check returned status: ${res.status}`);
           }
-        } catch (e) {
-          console.error("Session heartbeat failed:", e);
-        }
+        } catch (e) {}
       }
+
+      // 2. Notifications Check
+      try {
+        const nRes = await fetch('/api/notifications');
+        if (nRes.ok) {
+          const updates = await nRes.json();
+          if (updates.length > 0) {
+            setHasNotifications(true);
+            const lastRead = localStorage.getItem('lastReadNotification');
+            const latestTimestamp = new Date(updates[0].createdAt).getTime();
+            if (!lastRead || parseInt(lastRead) < latestTimestamp) {
+              setShowDot(true);
+            }
+          } else {
+            setHasNotifications(false);
+          }
+        }
+      } catch (e) {}
     };
 
-    validateSession();
-    const interval = setInterval(validateSession, 30000);
+    checkState();
+    const interval = setInterval(checkState, 30000);
     return () => clearInterval(interval);
   }, [handleLogout, toast]);
+
+  const handleBellCheck = () => {
+    setShowDot(false);
+    localStorage.setItem('lastReadNotification', Date.now().toString());
+  };
 
   const handleBack = () => {
     if (backHref) {
@@ -106,12 +124,16 @@ export default function Header({ showBackButton = false, backHref, title }: { sh
         </div>
 
         <div className="flex items-center gap-4">
-          <NotificationsSheet>
-             <div className="relative group cursor-pointer">
-                <Bell className="h-5 w-5 text-white group-hover:opacity-80 transition-opacity" />
-                <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full border border-white animate-pulse"></span>
-             </div>
-          </NotificationsSheet>
+          {hasNotifications && (
+            <NotificationsSheet onOpen={handleBellCheck}>
+               <div className="relative group cursor-pointer">
+                  <Bell className="h-5 w-5 text-white group-hover:opacity-80 transition-opacity" />
+                  {showDot && (
+                    <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-primary animate-pulse"></span>
+                  )}
+               </div>
+            </NotificationsSheet>
+          )}
           
           <DropdownMenu>
             <DropdownMenuTrigger asChild>

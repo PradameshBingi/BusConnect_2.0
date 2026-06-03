@@ -155,7 +155,7 @@ const NotificationSchema = new mongoose.Schema({
   description: { type: String, required: true },
   iconType: { type: String, default: 'info' }, // info, ticket, zap, wallet
   category: { type: String, default: 'system' }, // emerald, purple, amber, blue
-  isNew: { type: Boolean, default: true },
+  isLatest: { type: Boolean, default: true }, // Renamed from isNew to avoid reserved keyword warning
   createdAt: { type: Date, default: Date.now }
 }, { 
   collection: 'Notifications'

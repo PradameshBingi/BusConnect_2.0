@@ -18,7 +18,7 @@ export async function GET() {
           description: "Zero-fare travel is now active for all women and girls in TGSRTC City Ordinary and Metro Express services.",
           iconType: "zap",
           category: "emerald",
-          isNew: true,
+          isLatest: true,
           createdAt: new Date()
         },
         {
@@ -26,7 +26,7 @@ export async function GET() {
           description: "Change your route or update passenger counts directly from the 'Modify Booking' portal for any valid ticket.",
           iconType: "ticket",
           category: "purple",
-          isNew: true,
+          isLatest: true,
           createdAt: new Date(Date.now() - 1000 * 60 * 60) // 1 hour ago
         },
         {
@@ -34,7 +34,7 @@ export async function GET() {
           description: "Unused tickets that expire (10 mins after booking) are now automatically 100% refunded to your cloud wallet.",
           iconType: "wallet",
           category: "blue",
-          isNew: true,
+          isLatest: true,
           createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24) // 1 day ago
         }
       ]);

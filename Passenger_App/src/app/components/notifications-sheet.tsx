@@ -21,7 +21,7 @@ type Notification = {
   description: string;
   iconType: string;
   category: string;
-  isNew: boolean;
+  isLatest: boolean;
   createdAt: string;
 };
 
@@ -54,7 +54,7 @@ const getBorderClass = (category: string) => {
   }
 };
 
-export function NotificationsSheet({ children }: { children: React.ReactNode }) {
+export function NotificationsSheet({ children, onOpen }: { children: React.ReactNode, onOpen?: () => void }) {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -77,7 +77,9 @@ export function NotificationsSheet({ children }: { children: React.ReactNode }) 
   }, []);
 
   return (
-    <Sheet>
+    <Sheet onOpenChange={(open) => {
+        if (open && onOpen) onOpen();
+    }}>
       <SheetTrigger asChild>
         {children}
       </SheetTrigger>
@@ -109,8 +111,8 @@ export function NotificationsSheet({ children }: { children: React.ReactNode }) 
                 <div key={update._id} className="relative group">
                   <div className={cn(
                     "p-5 rounded-2xl border border-slate-100 transition-all hover:shadow-md bg-white", 
-                    update.isNew && "border-l-4",
-                    update.isNew && getBorderClass(update.category)
+                    update.isLatest && "border-l-4",
+                    update.isLatest && getBorderClass(update.category)
                   )}>
                     <div className="flex items-start gap-4">
                       <div className={cn("p-2 rounded-xl shrink-0", getColorClass(update.category))}>
@@ -126,7 +128,7 @@ export function NotificationsSheet({ children }: { children: React.ReactNode }) 
                         <p className="text-xs text-slate-500 leading-relaxed">
                           {update.description}
                         </p>
-                        {update.isNew && (
+                        {update.isLatest && (
                           <Badge className="bg-primary/10 text-primary hover:bg-primary/10 border-none text-[8px] font-black tracking-widest uppercase mt-2">New Update</Badge>
                         )}
                       </div>
