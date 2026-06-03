@@ -110,7 +110,7 @@ export function getUserModel() {
 const ConductorSchema = new mongoose.Schema({
   conductorId: { type: mongoose.Schema.Types.Mixed, unique: true, required: true },
   name: { type: String, required: true },
-  password: { type: String, required: true },
+  password: { type: mongoose.Schema.Types.Mixed, required: true },
   sessionId: String,
   lastActive: { type: Date, default: Date.now }
 }, { timestamps: true, collection: 'Conductors_Admin' });

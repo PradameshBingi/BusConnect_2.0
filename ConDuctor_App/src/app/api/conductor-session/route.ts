@@ -21,7 +21,7 @@ export async function GET(request: Request) {
         { conductorId: conductorId },
         { conductorId: isNaN(Number(conductorId)) ? conductorId : Number(conductorId) }
       ] 
-    });
+    }).lean();
 
     return NextResponse.json({ 
       sessionId: conductor?.sessionId || null,
@@ -47,25 +47,26 @@ export async function POST(request: Request) {
     const searchId = id.toString().trim();
     const searchPwd = password.toString().trim();
 
-    // Precise matching logic for Conductors_Admin
+    // Use .lean() to ensure we get the raw document data without Mongoose casting interference
     const conductor = await Conductor.findOne({ 
       $or: [
         { conductorId: searchId },
+        { conductorId: Number(searchId) },
         { conductorId: isNaN(Number(searchId)) ? searchId : Number(searchId) }
       ] 
-    });
+    }).lean();
 
     if (!conductor) {
       return NextResponse.json({ status: "error", message: "Conductor ID Not Found" }, { status: 401 });
     }
 
-    // Strict string comparison for password security
+    // Direct string comparison from the raw database object
     const dbPassword = String(conductor.password || "").trim();
     if (dbPassword !== searchPwd) {
       return NextResponse.json({ status: "error", message: "Invalid Security PIN" }, { status: 401 });
     }
 
-    // Authorized - Update Session State
+    // Authorized - Update Session State using the raw ID
     const updated = await Conductor.findOneAndUpdate(
       { _id: conductor._id },
       { sessionId, lastActive: new Date() },
