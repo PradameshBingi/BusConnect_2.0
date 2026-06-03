@@ -177,7 +177,7 @@ export function BookingForm() {
           });
       }
 
-      // Log Digital Pay records if any
+      // Log Digital Pay record (History Only, No Deduction)
       if (paymentData && paymentData.digitalPaid > 0) {
           await fetch('/api/user', {
               method: 'POST',
@@ -185,7 +185,7 @@ export function BookingForm() {
               body: JSON.stringify({
                   phone: currentUserId,
                   amount: paymentData.digitalPaid,
-                  type: 'debit',
+                  type: 'digital',
                   description: `Digital Pay: Ticket ${ticket.ticketCode}`
               })
           });

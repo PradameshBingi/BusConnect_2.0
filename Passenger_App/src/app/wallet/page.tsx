@@ -153,7 +153,8 @@ export default function WalletPage() {
   );
   const refundHistory = wallet.transactions.filter(t => 
     t.description.toLowerCase().includes('refund') || 
-    t.description.toLowerCase().includes('reimbursement')
+    t.description.toLowerCase().includes('reimbursement') ||
+    t.type === 'credit' && t.description.toLowerCase().includes('conductor')
   );
 
   return (

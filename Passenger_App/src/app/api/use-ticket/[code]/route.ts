@@ -79,6 +79,7 @@ export async function POST(
         const newFare = updateData.totalFare !== undefined ? updateData.totalFare : oldFare;
         const diff = oldFare - newFare;
         
+        // If old > new, it's a refund (diff is positive)
         if (diff > 0) {
             const phoneNum = Number(phone);
             const walletQuery = {

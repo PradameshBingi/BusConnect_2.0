@@ -78,11 +78,15 @@ export async function POST(request: Request) {
     const wallet = await Wallet.findOne(query);
     if (!wallet) return NextResponse.json({ error: "Wallet not found" }, { status: 404 });
 
-    if (type === 'debit' && wallet.walletBalance < amount) {
+    // Digital payments record history but DON'T adjust balance
+    const isExternalDigital = type === 'digital';
+    
+    if (type === 'debit' && !isExternalDigital && wallet.walletBalance < amount) {
       return NextResponse.json({ error: "Insufficient balance" }, { status: 400 });
     }
 
-    const adjustment = (type === 'credit' ? amount : -amount);
+    // Adjustment logic: Credits add, Debits subtract, Digital/Other is 0
+    const adjustment = type === 'credit' ? amount : (isExternalDigital ? 0 : -amount);
     
     // Atomic update
     const updatedWallet = await Wallet.findOneAndUpdate(
@@ -91,7 +95,7 @@ export async function POST(request: Request) {
             $inc: { walletBalance: adjustment },
             $push: { 
                 transactions: { 
-                    type, 
+                    type: (isExternalDigital || type === 'debit') ? 'debit' : 'credit', 
                     amount, 
                     description, 
                     date: new Date() 
