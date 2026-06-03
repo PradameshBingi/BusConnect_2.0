@@ -33,7 +33,7 @@ export async function POST(
     const originalBusType = normalizeBusType(ticket.busType);
     const newBusType = updateData.busType ? normalizeBusType(updateData.busType) : originalBusType;
     
-    // 2. Determine Transition Type & Label
+    // 2. Determine Transition Type & Granular Labeling
     let transitionMsg = "";
     const isValidation = updateData.status === 'used' || (Object.keys(updateData).length === 0 && ticket.status === 'valid');
     const isModification = (updateData.from || updateData.to || updateData.quantities) && !updateData.busType;
@@ -48,19 +48,35 @@ export async function POST(
     } else if (isUpgradation) {
         transitionMsg = `Upgradation (${originalBusType} → ${newBusType})`;
     } else if (isModification) {
-        // Detailed Modification tracking
+        // Detailed Modification tracking (High Fidelity)
         const changes = [];
-        if (updateData.from !== undefined || updateData.to !== undefined) {
-            if (updateData.from !== ticket.from || updateData.to !== ticket.to) {
-                changes.push("Route Changed");
+        
+        // Route Logic
+        if (updateData.from || updateData.to) {
+            const finalFrom = updateData.from || ticket.from;
+            const finalTo = updateData.to || ticket.to;
+            if (finalFrom !== ticket.from || finalTo !== ticket.to) {
+                changes.push(`Route Changed (${finalFrom} -> ${finalTo})`);
             }
         }
+        
+        // Passenger Logic
         if (updateData.quantities) {
-            const oldTotal = Object.values(ticket.quantities || {}).reduce((a: any, b: any) => a + (b || 0), 0);
-            const newTotal = Object.values(updateData.quantities).reduce((a: any, b: any) => a + (b || 0), 0);
-            if (newTotal > oldTotal) changes.push("Passengers Added");
-            else if (newTotal < oldTotal) changes.push("Passengers Removed");
-            else changes.push("Passengers Updated");
+            const pChanges = [];
+            const types = ['Men', 'Child', 'Women'] as const;
+            let totalDiff = 0;
+            types.forEach(type => {
+                const diff = (updateData.quantities[type] || 0) - (ticket.quantities[type] || 0);
+                if (diff !== 0) {
+                    pChanges.push(`${type}: ${diff > 0 ? '+' : ''}${diff}`);
+                }
+                totalDiff += diff;
+            });
+            
+            if (pChanges.length > 0) {
+                const action = totalDiff > 0 ? "Added" : totalDiff < 0 ? "Removed" : "Updated";
+                changes.push(`Passengers ${action} (${pChanges.join(', ')})`);
+            }
         }
         
         const details = changes.length > 0 ? ` (${changes.join(" & ")})` : "";
@@ -99,7 +115,7 @@ export async function POST(
         }
     }
 
-    // 4. Update Ticket Document (Defensive initialization for push)
+    // 4. Update Ticket Document
     if (!ticket.serviceTransition || !Array.isArray(ticket.serviceTransition)) {
         ticket.serviceTransition = [];
     }

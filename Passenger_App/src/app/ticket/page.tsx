@@ -204,9 +204,14 @@ function TicketContent() {
               </div>
             )}
 
-            <div className="text-center p-4 bg-slate-900 text-white rounded-2xl cursor-pointer hover:bg-slate-800 transition-colors shadow-inner" onClick={() => handleCopy(ticket.ticketCode, 'Ticket No')}>
-                <p className="text-[10px] uppercase text-slate-400 mb-1 font-black tracking-widest">Ticket No</p>
+            <div 
+              className="text-center p-4 bg-slate-900 text-white rounded-2xl cursor-pointer hover:bg-slate-800 active:scale-[0.98] transition-all shadow-inner group" 
+              onClick={() => handleCopy(ticket.ticketCode, 'Ticket No')}
+              title="Tap to Copy"
+            >
+                <p className="text-[10px] uppercase text-slate-400 mb-1 font-black tracking-widest group-hover:text-primary transition-colors">Ticket No</p>
                 <p className="font-mono text-xl font-bold break-all tracking-wider">{ticket.ticketCode}</p>
+                <p className="text-[8px] text-slate-500 font-bold uppercase mt-1 opacity-0 group-hover:opacity-100 transition-opacity">Tap to Copy</p>
             </div>
 
             {displayStatus === 'valid' && (
