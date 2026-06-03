@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Command, CommandInput, CommandEmpty, CommandGroup, CommandItem, CommandList } from '@/components/ui/command';
-import { Search, CheckCircle, XCircle, Loader2, ArrowRight, RefreshCcw, Calendar, Clock, CreditCard, ShieldAlert, Copy, Eye, EyeOff } from 'lucide-react';
+import { Search, CheckCircle, XCircle, Loader2, ArrowRight, RefreshCcw, Calendar, Clock, CreditCard, ShieldAlert, Eye, EyeOff } from 'lucide-react';
 import Header from '@/app/components/header';
 import { useToast } from "@/hooks/use-toast";
 import { API_ENDPOINTS } from '@/lib/api-config';
@@ -69,7 +69,7 @@ export default function VerifyTicketPage() {
             }
             const result = await response.json();
             setTicket(result.ticket);
-            setActualBusType(result.ticket.busType);
+            setActualBusType(result.ticket.busType); // Default to booked bus
             setDynamicFare(result.ticket.totalFare);
             
             // Fetch passenger's wallet authorization status
@@ -176,135 +176,137 @@ export default function VerifyTicketPage() {
                       </CardHeader>
                   </Card>
               ) : (
-                  /* HIGH FIDELITY JOURNEY PREVIEW (AS PER IMAGE) */
-                  <Card className="overflow-hidden shadow-2xl bg-white border-none rounded-[2rem] border-t-8 border-t-[#00B893] animate-in slide-in-from-bottom-2 duration-400">
-                      <CardHeader className="text-center py-6 px-6 relative">
-                          <RefreshCcw className="absolute right-6 top-6 h-5 w-5 text-slate-300 cursor-pointer hover:text-[#00B893]" onClick={() => {setTicket(null); setStatus('idle');}} />
-                          <h2 className="text-2xl font-black text-slate-900 tracking-tighter uppercase font-headline">JOURNEY DETAILS</h2>
-                          <div className="flex justify-center mt-3">
-                              <Badge className="bg-emerald-500 hover:bg-emerald-600 text-white font-black px-6 py-1 rounded-full uppercase text-[10px] tracking-widest border-none">Valid</Badge>
-                          </div>
-                      </CardHeader>
-
-                      <CardContent className="space-y-6 px-8 pt-2 pb-0">
-                          {/* FROM - TO SECTION */}
-                          <div className="flex justify-between items-center p-6 bg-slate-50/50 rounded-[1.5rem] border border-slate-100">
-                              <div className="text-center flex-1">
-                                  <p className="text-[8px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">FROM</p>
-                                  <p className="font-black text-slate-800 text-lg uppercase tracking-tight">{ticket.from}</p>
+                  /* HIGH FIDELITY JOURNEY PREVIEW - OPTIMIZED SPACE */
+                  <div className="space-y-4 animate-in slide-in-from-bottom-2 duration-400">
+                      <Card className="overflow-hidden shadow-xl bg-white border-none rounded-[2rem] border-t-8 border-t-[#00B893]">
+                          <CardHeader className="text-center py-4 px-6 relative">
+                              <RefreshCcw className="absolute right-6 top-5 h-4 w-4 text-slate-300 cursor-pointer hover:text-[#00B893]" onClick={() => {setTicket(null); setStatus('idle');}} />
+                              <h2 className="text-xl font-black text-slate-900 tracking-tighter uppercase font-headline">JOURNEY DETAILS</h2>
+                              <div className="flex justify-center mt-1">
+                                  <Badge className="bg-emerald-500 hover:bg-emerald-600 text-white font-black px-4 py-0.5 rounded-full uppercase text-[9px] tracking-widest border-none">Valid</Badge>
                               </div>
-                              <ArrowRight className="h-5 w-5 text-[#00B893] mx-4" />
-                              <div className="text-center flex-1">
-                                  <p className="text-[8px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">TO</p>
-                                  <p className="font-black text-slate-800 text-lg uppercase tracking-tight">{ticket.to}</p>
-                              </div>
-                          </div>
+                          </CardHeader>
 
-                          {/* ISSUE INFO SECTION */}
-                          <div className="flex justify-between items-center px-2">
-                               <div className="space-y-1">
-                                  <p className="font-black text-slate-400 uppercase text-[9px] tracking-widest">ISSUE DATE</p>
-                                  <p className="font-black text-slate-800 text-base">{new Date(ticket.createdAt).toLocaleDateString('en-GB')}</p>
-                               </div>
-                               <div className="space-y-1 text-right">
-                                  <p className="font-black text-slate-400 uppercase text-[9px] tracking-widest">ISSUE TIME</p>
-                                  <p className="font-black text-slate-800 text-base">{new Date(ticket.createdAt).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}</p>
-                               </div>
-                          </div>
-
-                          <Separator className="bg-slate-100" />
-
-                          {/* PASSENGERS SECTION */}
-                          <div className="px-2">
-                              <p className="font-black text-slate-400 uppercase text-[9px] tracking-widest mb-1">PASSENGERS</p>
-                              <p className="font-black text-slate-800 text-base">{ticket.passengers}</p>
-                          </div>
-
-                          <Separator className="bg-slate-100 border-dashed" />
-
-                          {/* FARE & CATEGORY SECTION */}
-                          <div className="flex justify-between items-end px-2">
-                               <div className="space-y-1">
-                                  <p className="font-black text-slate-400 uppercase text-[9px] tracking-widest">FARE (ADJUSTED)</p>
-                                  <p className="font-black text-[#00B893] text-2xl tracking-tighter">Rs. {dynamicFare.toFixed(2)}</p>
-                               </div>
-                               <div className="space-y-1 text-right">
-                                  <p className="font-black text-slate-400 uppercase text-[9px] tracking-widest">BOOKED SERVICE</p>
-                                  <p className="font-black text-emerald-500 text-lg uppercase tracking-tight">{ticket.busType}</p>
-                               </div>
-                          </div>
-
-                          {/* DIFFERENCE LOGIC BANNER */}
-                          {dynamicFare !== ticket.totalFare && (
-                              <div className={cn("p-4 rounded-2xl flex items-center justify-between border-2", 
-                                  dynamicFare < ticket.totalFare ? "bg-emerald-50 border-emerald-100 text-emerald-700" : "bg-orange-50 border-orange-100 text-orange-700"
-                              )}>
-                                  <div className="flex items-center gap-3">
-                                      {dynamicFare < ticket.totalFare ? <CreditCard className="h-5 w-5" /> : <ShieldAlert className="h-5 w-5" />}
-                                      <div>
-                                          <p className="text-[10px] font-black uppercase tracking-widest leading-none">
-                                              {dynamicFare < ticket.totalFare ? "Difference: Credit to Wallet" : 
-                                               passenger?.autoDeductEnabled ? "Difference: Auto-Deduct" : "Difference: Manual Collection"}
-                                          </p>
-                                          <p className="text-xs font-bold mt-1">
-                                              {dynamicFare < ticket.totalFare ? `Rs. ${Math.abs(ticket.totalFare - dynamicFare).toFixed(2)} will be refunded.` :
-                                               passenger?.autoDeductEnabled ? `Rs. ${Math.abs(ticket.totalFare - dynamicFare).toFixed(2)} from passenger wallet.` :
-                                               `Collect Rs. ${Math.abs(ticket.totalFare - dynamicFare).toFixed(2)} in cash.`}
-                                          </p>
-                                      </div>
+                          <CardContent className="space-y-4 px-6 pt-0 pb-6">
+                              {/* FROM - TO SECTION (COMPACT) */}
+                              <div className="flex justify-between items-center p-4 bg-slate-50/50 rounded-2xl border border-slate-100">
+                                  <div className="text-center flex-1">
+                                      <p className="text-[7px] font-black text-slate-400 uppercase tracking-widest mb-0.5">FROM</p>
+                                      <p className="font-black text-slate-800 text-base uppercase tracking-tight">{ticket.from}</p>
                                   </div>
-                                  <Badge variant="outline" className={cn("font-black", dynamicFare < ticket.totalFare ? "border-emerald-200 text-emerald-600" : "border-orange-200 text-orange-600")}>
-                                      ₹{Math.abs(ticket.totalFare - dynamicFare).toFixed(2)}
-                                  </Badge>
+                                  <ArrowRight className="h-4 w-4 text-[#00B893] mx-2" />
+                                  <div className="text-center flex-1">
+                                      <p className="text-[7px] font-black text-slate-400 uppercase tracking-widest mb-0.5">TO</p>
+                                      <p className="font-black text-slate-800 text-base uppercase tracking-tight">{ticket.to}</p>
+                                  </div>
                               </div>
-                          )}
 
-                          {/* ACTUAL BOARDING SELECTOR */}
-                          <div className="pt-2">
-                               <p className="text-[9px] font-black text-slate-400 uppercase mb-2 text-center tracking-[0.2em]">ACTUAL BOARDING SERVICES</p>
-                               <Select value={actualBusType} onValueChange={setActualBusType}>
-                                  <SelectTrigger className="bg-slate-50 border-none h-14 font-black uppercase text-xs tracking-widest rounded-xl shadow-inner">
-                                      <SelectValue />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                      <SelectItem value="ordinary" className="font-bold text-xs uppercase">CITY ORDINARY</SelectItem>
-                                      <SelectItem value="express" className="font-bold text-xs uppercase">METRO EXPRESS</SelectItem>
-                                      <SelectItem value="deluxe" className="font-bold text-xs uppercase">METRO DELUXE</SelectItem>
-                                  </SelectContent>
-                               </Select>
-                          </div>
+                              {/* ISSUE INFO SECTION */}
+                              <div className="flex justify-between items-center px-2">
+                                   <div className="space-y-0.5">
+                                      <p className="font-black text-slate-400 uppercase text-[8px] tracking-widest">ISSUE DATE</p>
+                                      <p className="font-black text-slate-800 text-sm">{new Date(ticket.createdAt).toLocaleDateString('en-GB')}</p>
+                                   </div>
+                                   <div className="space-y-0.5 text-right">
+                                      <p className="font-black text-slate-400 uppercase text-[8px] tracking-widest">ISSUE TIME</p>
+                                      <p className="font-black text-slate-800 text-sm">{new Date(ticket.createdAt).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}</p>
+                                   </div>
+                              </div>
 
-                          {/* SECURITY PIN SECTION */}
-                          <div className="bg-[#E6F7F3] p-6 rounded-[1.5rem] flex flex-col items-center border border-[#CCEFED]">
-                              <p className="text-[9px] font-black text-[#00B893] uppercase tracking-[0.3em] mb-4">SECURITY CODE</p>
-                              <div className="flex items-center gap-4">
-                                  {showPin ? (
-                                      <p className="text-3xl font-mono font-black text-[#0A2B70] tracking-[0.4em] uppercase">{ticket.securityCode}</p>
-                                  ) : (
-                                      <div className="flex gap-4">
-                                          {[1,2,3,4,5].map(i => <div key={i} className="w-3 h-3 rounded-full bg-[#00B893]"></div>)}
+                              <Separator className="bg-slate-100" />
+
+                              {/* PASSENGERS SECTION */}
+                              <div className="px-2">
+                                  <p className="font-black text-slate-400 uppercase text-[8px] tracking-widest mb-0.5">PASSENGERS</p>
+                                  <p className="font-black text-slate-800 text-sm">{ticket.passengers}</p>
+                              </div>
+
+                              <Separator className="bg-slate-100 border-dashed" />
+
+                              {/* FARE & CATEGORY SECTION */}
+                              <div className="flex justify-between items-end px-2">
+                                   <div className="space-y-0.5">
+                                      <p className="font-black text-slate-400 uppercase text-[8px] tracking-widest">
+                                        {actualBusType !== ticket.busType ? "FARE (ADJUSTED)" : "FARE PAID"}
+                                      </p>
+                                      <p className="font-black text-[#00B893] text-2xl tracking-tighter">Rs. {dynamicFare.toFixed(2)}</p>
+                                   </div>
+                                   <div className="space-y-0.5 text-right">
+                                      <p className="font-black text-slate-400 uppercase text-[8px] tracking-widest">BOOKED SERVICE</p>
+                                      <p className="font-black text-emerald-500 text-base uppercase tracking-tight">{ticket.busType}</p>
+                                   </div>
+                              </div>
+
+                              {/* DIFFERENCE LOGIC BANNER */}
+                              {dynamicFare !== ticket.totalFare && (
+                                  <div className={cn("p-3 rounded-xl flex items-center justify-between border-2", 
+                                      dynamicFare < ticket.totalFare ? "bg-emerald-50 border-emerald-100 text-emerald-700" : "bg-orange-50 border-orange-100 text-orange-700"
+                                  )}>
+                                      <div className="flex items-center gap-2">
+                                          {dynamicFare < ticket.totalFare ? <CreditCard className="h-4 w-4" /> : <ShieldAlert className="h-4 w-4" />}
+                                          <div>
+                                              <p className="text-[9px] font-black uppercase tracking-widest leading-none">
+                                                  {dynamicFare < ticket.totalFare ? "Difference: Credit to Wallet" : 
+                                                   passenger?.autoDeductEnabled ? "Difference: Auto-Deduct" : "Difference: Manual Collection"}
+                                              </p>
+                                              <p className="text-[10px] font-bold mt-0.5">
+                                                  {dynamicFare < ticket.totalFare ? `Rs. ${Math.abs(ticket.totalFare - dynamicFare).toFixed(2)} will be refunded.` :
+                                                   passenger?.autoDeductEnabled ? `Rs. ${Math.abs(ticket.totalFare - dynamicFare).toFixed(2)} from passenger wallet.` :
+                                                   `Collect Rs. ${Math.abs(ticket.totalFare - dynamicFare).toFixed(2)} in cash.`}
+                                              </p>
+                                          </div>
                                       </div>
-                                  )}
-                                  <button className="ml-4 text-slate-400 hover:text-[#00B893] transition-colors" onClick={() => setShowPin(!showPin)}>
-                                      {showPin ? <EyeOff className="h-6 w-6" /> : <Eye className="h-6 w-6" />}
-                                  </button>
-                              </div>
-                          </div>
-                      </CardContent>
+                                      <Badge variant="outline" className={cn("font-black text-[10px]", dynamicFare < ticket.totalFare ? "border-emerald-200 text-emerald-600" : "border-orange-200 text-orange-600")}>
+                                          ₹{Math.abs(ticket.totalFare - dynamicFare).toFixed(2)}
+                                      </Badge>
+                                  </div>
+                              )}
 
-                      <CardFooter className="p-0 flex flex-col mt-8">
-                          {/* PASSENGER TICKET ID BOX */}
-                          <div className="w-full bg-[#1A1F2E] py-4 flex flex-col items-center gap-1 cursor-pointer hover:bg-[#252C3D] transition-colors" onClick={() => { navigator.clipboard.writeText(ticket.ticketCode); toast({ title: "Copied", description: "Ticket ID copied." }); }}>
-                              <p className="text-[8px] font-black text-slate-500 uppercase tracking-[0.3em]">TICKET NO</p>
-                              <p className="text-xl font-black text-white tracking-[0.1em] font-mono">{ticket.ticketCode}</p>
-                          </div>
-                          {/* BIG VALIDATION BUTTON */}
-                          <Button onClick={handleValidate} className="w-full h-24 bg-[#00B893] hover:bg-[#009e7c] text-xl font-black uppercase tracking-[0.1em] rounded-none shadow-2xl transition-all active:scale-95" disabled={isLoading}>
-                              {isLoading ? <Loader2 className="animate-spin mr-3 h-8 w-8" /> : <CheckCircle className="mr-4 h-8 w-8" />}
-                              VALIDATE BOARDING
-                          </Button>
-                      </CardFooter>
-                  </Card>
+                              {/* ACTUAL BOARDING SELECTOR (COMPACT) */}
+                              <div className="pt-1">
+                                   <p className="text-[8px] font-black text-slate-400 uppercase mb-1.5 text-center tracking-[0.2em]">ACTUAL BOARDING SERVICES</p>
+                                   <Select value={actualBusType} onValueChange={setActualBusType}>
+                                      <SelectTrigger className="bg-slate-50 border-none h-11 font-black uppercase text-[10px] tracking-widest rounded-xl shadow-inner">
+                                          <SelectValue />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                          <SelectItem value="City Ordinary" className="font-bold text-xs uppercase">CITY ORDINARY</SelectItem>
+                                          <SelectItem value="Metro Express" className="font-bold text-xs uppercase">METRO EXPRESS</SelectItem>
+                                          <SelectItem value="Metro Deluxe" className="font-bold text-xs uppercase">METRO DELUXE</SelectItem>
+                                      </SelectContent>
+                                   </Select>
+                              </div>
+
+                              {/* SECURITY PIN SECTION (COMPACT) */}
+                              <div className="bg-[#E6F7F3] p-4 rounded-2xl flex flex-col items-center border border-[#CCEFED]">
+                                  <p className="text-[8px] font-black text-[#00B893] uppercase tracking-[0.3em] mb-2">SECURITY CODE</p>
+                                  <div className="flex items-center gap-3">
+                                      {showPin ? (
+                                          <p className="text-2xl font-mono font-black text-[#0A2B70] tracking-[0.4em] uppercase">{ticket.securityCode}</p>
+                                      ) : (
+                                          <div className="flex gap-3">
+                                              {[1,2,3,4,5].map(i => <div key={i} className="w-2 h-2 rounded-full bg-[#00B893]"></div>)}
+                                          </div>
+                                      )}
+                                      <button className="ml-2 text-slate-400 hover:text-[#00B893] transition-colors" onClick={() => setShowPin(!showPin)}>
+                                          {showPin ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                                      </button>
+                                  </div>
+                              </div>
+                          </CardContent>
+                      </Card>
+
+                      {/* TICKET ID STRIP */}
+                      <div className="w-full bg-[#1A1F2E] py-2.5 flex flex-col items-center gap-0.5 rounded-2xl cursor-pointer hover:bg-[#252C3D] transition-colors" onClick={() => { navigator.clipboard.writeText(ticket.ticketCode); toast({ title: "Copied", description: "Ticket ID copied." }); }}>
+                          <p className="text-[7px] font-black text-slate-500 uppercase tracking-[0.3em]">TICKET NO</p>
+                          <p className="text-base font-black text-white tracking-[0.1em] font-mono">{ticket.ticketCode}</p>
+                      </div>
+
+                      {/* SEPARATE VALIDATION BUTTON */}
+                      <Button onClick={handleValidate} className="w-full h-16 bg-[#00B893] hover:bg-[#009e7c] text-lg font-black uppercase tracking-[0.1em] rounded-2xl shadow-xl transition-all active:scale-95" disabled={isLoading}>
+                          {isLoading ? "VALIDATING..." : "VALIDATE BOARDING"}
+                      </Button>
+                  </div>
               )}
             </div>
           )}
