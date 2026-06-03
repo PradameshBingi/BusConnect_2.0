@@ -4,6 +4,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { Ticket, BookUser, ChevronRight, BarChart3, HelpCircle, Info } from 'lucide-react';
 import AuthGuard from '@/app/components/AuthGuard';
 import Header from '@/app/components/header';
@@ -69,6 +70,22 @@ export default function ConductorDashboardPage() {
                 </Card>
               </Link>
             ))}
+
+            {/* Quick Actions (Non-functional placeholders) */}
+            <div className="grid grid-cols-2 gap-4 pt-4">
+              <Button 
+                variant="outline" 
+                className="h-16 rounded-2xl border-none font-black uppercase tracking-widest text-[10px] text-white bg-[#0A2B70] hover:bg-[#0A2B70] cursor-default shadow-md"
+              >
+                Flag a Bus
+              </Button>
+              <Button 
+                variant="destructive" 
+                className="h-16 rounded-2xl border-none font-black uppercase tracking-widest text-[10px] shadow-lg cursor-default bg-red-600 hover:bg-red-600 text-white"
+              >
+                Emergency?
+              </Button>
+            </div>
           </div>
         </main>
       </div>

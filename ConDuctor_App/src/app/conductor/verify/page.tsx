@@ -200,7 +200,8 @@ export default function VerifyTicketPage() {
                   <Card className="overflow-hidden bg-white shadow-lg border-slate-200 rounded-[2rem]">
                       <CardHeader className="text-center bg-slate-50 py-16 px-4">
                           <h1 className={cn("text-3xl font-black uppercase tracking-[0.1em]", 
-                              ticket.status === 'used' ? "text-slate-300" : "text-red-500"
+                              ticket.status === 'used' ? "text-slate-300" : 
+                              ticket.status === 'expired' ? "text-yellow-500" : "text-red-500"
                           )}>{ticket.status}</h1>
                           <p className="mt-2 text-[10px] font-black text-slate-400 uppercase tracking-widest">BOARDING REJECTED</p>
                       </CardHeader>
