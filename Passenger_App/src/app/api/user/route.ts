@@ -99,7 +99,7 @@ export async function POST(request: Request) {
         historyType = 'debit';
     } else if (type === 'recharge') {
         adjustment = amount;
-        historyType = 'debit'; // Special requirement: Red color (debit from bank) for recharge
+        historyType = 'debit'; 
     }
     
     const updatedWallet = await Wallet.findOneAndUpdate(

@@ -6,12 +6,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Search, Loader2, Tag, ArrowDown, ArrowUp, XCircle, CheckCircle, ArrowRight, User } from 'lucide-react';
+import { Search, Loader2, Bus, ArrowUp, XCircle, CheckCircle, ArrowRight, ShieldCheck, Wallet } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { calculateFare } from '@/lib/fare-calculator';
-import { Separator } from '@/components/ui/separator';
 import { API_ENDPOINTS } from '@/lib/api-config';
-import { cn } from '@/lib/utils';
 import { ValidatedTicket } from '@/app/components/validated-ticket';
 
 type BusType = 'ordinary' | 'express' | 'deluxe';
@@ -21,6 +19,7 @@ export default function FareAdjTab() {
   const [actualBusType, setActualBusType] = useState<BusType | ''>('');
   const [status, setStatus] = useState<'idle' | 'loading' | 'found' | 'validated' | 'not_found' | 'error'>('idle');
   const [ticketDetails, setTicketDetails] = useState<any | null>(null);
+  const [passengerWallet, setPassengerWallet] = useState<any | null>(null);
   const [fareDifference, setFareDifference] = useState(0);
   const [calculatedTotal, setCalculatedTotal] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
@@ -32,6 +31,7 @@ export default function FareAdjTab() {
     
     setStatus('loading');
     setTicketDetails(null);
+    setPassengerWallet(null);
 
     try {
         const response = await fetch(`${API_ENDPOINTS.VERIFY}/${ticketCode.trim().toUpperCase()}`);
@@ -45,6 +45,14 @@ export default function FareAdjTab() {
         if (foundTicket.status === 'valid') {
             const actualFare = calculateFare(foundTicket.from, foundTicket.to, foundTicket.quantities, actualBusType as BusType);
             const currentTotalPaid = foundTicket.totalFare || (foundTicket.fare + (foundTicket.walletAmountUsed || 0));
+            
+            // Also fetch passenger wallet to check auto-deduct balance
+            const walletRes = await fetch(`/api/user?phone=${foundTicket.bookedBy}`);
+            if (walletRes.ok) {
+                const walletData = await walletRes.json();
+                setPassengerWallet(walletData);
+            }
+
             setFareDifference(actualFare - currentTotalPaid);
             setCalculatedTotal(actualFare);
             setTicketDetails(foundTicket);
@@ -61,8 +69,25 @@ export default function FareAdjTab() {
   const handleValidation = async () => {
     if (!ticketDetails || !actualBusType) return;
     setIsLoading(true);
+
+    const isAutoDeductPossible = passengerWallet?.autoDeductEnabled && passengerWallet.walletBalance >= fareDifference;
     
     try {
+        // 1. Perform balance deduction if auto-deduct is active
+        if (fareDifference > 0 && isAutoDeductPossible) {
+             await fetch('/api/user', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    phone: ticketDetails.bookedBy,
+                    amount: fareDifference,
+                    type: 'debit',
+                    description: `Wallet Payment (Auto-Deduct): Ticket ${ticketDetails.ticketCode}`
+                })
+            });
+        }
+
+        // 2. Sync ticket status
         const response = await fetch(`${API_ENDPOINTS.USE}/${ticketDetails.ticketCode}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -102,6 +127,7 @@ export default function FareAdjTab() {
     setActualBusType('');
     setStatus('idle');
     setTicketDetails(null);
+    setPassengerWallet(null);
   }
 
   return (
@@ -152,8 +178,8 @@ export default function FareAdjTab() {
                             <div className="bg-orange-100 p-4 rounded-full mb-4">
                                 <ArrowUp className="h-10 w-10 text-orange-600" />
                             </div>
-                            <h3 className="text-2xl font-black text-slate-900 uppercase">Collect Rs. {fareDifference.toFixed(2)}</h3>
-                            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Upgrade Difference (Cash)</p>
+                            <h3 className="text-2xl font-black text-slate-900 uppercase">Rs. {fareDifference.toFixed(2)}</h3>
+                            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Upgrade Difference</p>
                         </div>
                     ) : (
                         <div className="flex flex-col items-center">
@@ -165,8 +191,8 @@ export default function FareAdjTab() {
                         </div>
                     )}
                 </CardHeader>
-                <CardContent className="p-10">
-                     <div className="grid grid-cols-3 items-center gap-4 text-center">
+                <CardContent className="p-8">
+                     <div className="grid grid-cols-3 items-center gap-4 text-center mb-8">
                         <div className="space-y-1">
                              <p className="text-[10px] font-black text-slate-400 uppercase">Booked</p>
                              <p className="font-black text-blue-800 uppercase text-xs">{ticketDetails.busType}</p>
@@ -177,6 +203,27 @@ export default function FareAdjTab() {
                              <p className="font-black text-emerald-600 uppercase text-xs">{actualBusType}</p>
                         </div>
                      </div>
+
+                     {fareDifference > 0 && (
+                        <div className={cn(
+                            "p-2.5 rounded-xl flex items-center justify-between border-2 animate-in slide-in-from-top-1 duration-300",
+                            passengerWallet?.autoDeductEnabled && passengerWallet.walletBalance >= fareDifference 
+                                ? "bg-orange-50 border-orange-100 text-orange-700" 
+                                : "bg-red-50 border-red-100 text-red-700"
+                        )}>
+                            <div className="flex items-center gap-2 font-bold text-[10px] uppercase">
+                                <ShieldCheck className="h-4 w-4 shrink-0" />
+                                {passengerWallet?.autoDeductEnabled && passengerWallet.walletBalance >= fareDifference 
+                                    ? "Auto-Deduct Wallet" 
+                                    : "Manual Cash Collection"}
+                            </div>
+                            <div className="text-xs font-black">
+                                {passengerWallet?.autoDeductEnabled && passengerWallet.walletBalance >= fareDifference 
+                                    ? `₹${fareDifference.toFixed(2)} will be debited.` 
+                                    : `₹${fareDifference.toFixed(2)} cash required (Low Balance).`}
+                            </div>
+                        </div>
+                     )}
                 </CardContent>
                 <CardFooter className="p-0">
                     <Button onClick={handleValidation} className="w-full h-20 bg-[#0A2B70] hover:bg-[#08215c] font-black uppercase tracking-widest text-lg rounded-none" disabled={isLoading}>

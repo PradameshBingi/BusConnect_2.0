@@ -97,8 +97,8 @@ export default function WalletPage() {
         body: JSON.stringify({
           phone,
           amount,
-          type: 'recharge', // Special type for Red UI + Balance Increment
-          description: 'Digital Pay: Wallet Recharge'
+          type: 'recharge',
+          description: 'Digital Pay (Debited) → Wallet (Credited)'
         })
       });
       const result = await response.json();
@@ -148,13 +148,11 @@ export default function WalletPage() {
     t.description.toLowerCase().includes('online payment')
   );
   const walletUsageHistory = wallet.transactions.filter(t => 
-    t.description.toLowerCase().includes('wallet payment') || 
-    (t.type === 'debit' && !t.description.toLowerCase().includes('digital pay') && !t.description.toLowerCase().includes('online payment'))
+    t.description.toLowerCase().includes('wallet')
   );
   const refundHistory = wallet.transactions.filter(t => 
     t.description.toLowerCase().includes('refund') || 
-    t.description.toLowerCase().includes('reimbursement') ||
-    (t.type === 'credit' && t.description.toLowerCase().includes('conductor'))
+    t.description.toLowerCase().includes('reimbursement')
   );
 
   return (
