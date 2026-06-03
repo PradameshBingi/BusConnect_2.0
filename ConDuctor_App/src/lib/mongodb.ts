@@ -1,3 +1,4 @@
+
 import mongoose from 'mongoose';
 
 const MONGODB_URI = "mongodb+srv://BusConnect:T15i8Mk8qFDyfVfl@cluster1.27qrhbu.mongodb.net/test?appName=Cluster1";
@@ -45,20 +46,20 @@ async function dbConnect() {
 
 export default dbConnect;
 
-// Ticket Schema
+// Ticket Schema - Primary source for verification
 const TicketSchema = new mongoose.Schema({
   from: { type: String, required: true },
   to: { type: String, required: true },
   routeNo: String,
   passengers: String,
-  bookedBy: String, // Passenger Mobile No (Wallet ID)
+  bookedBy: String, 
   quantities: {
     Men: { type: Number, default: 0 },
     Child: { type: Number, default: 0 },
     Women: { type: Number, default: 0 }
   },
-  totalFare: { type: Number, required: true }, // Amount originally paid
-  fare: { type: Number, required: true },      // Base fare
+  totalFare: { type: Number, required: true },
+  fare: { type: Number, required: true },
   ticketCode: { type: String, unique: true, required: true },
   securityCode: { type: String, required: true },
   status: { 
@@ -70,28 +71,28 @@ const TicketSchema = new mongoose.Schema({
   busType: { type: String, required: true },
   validatedAt: Date,
   walletAmountUsed: { type: Number, default: 0 },
-  
-  // Refund & Service Transition Tracking
   actualFare: { type: Number },
   refundAmount: { type: Number, default: 0 },
   refundProcessed: { type: Boolean, default: false },
   refundedAt: { type: Date },
+  deductionAmount: { type: Number, default: 0 },
+  deductionProcessed: { type: Boolean, default: false },
   boardingChanged: { type: Boolean, default: false },
   serviceTransition: { type: String }
 }, { 
   timestamps: true,
-  collection: 'tickets'
+  collection: 'Passengers_Ticket'
 });
 
 export function getTicketModel() {
   return mongoose.models.Ticket || mongoose.model('Ticket', TicketSchema);
 }
 
-// User Schema for Wallet Refunds (Source of Truth)
+// User/Wallet Schema - Target for refunds and auto-deduct
 const UserSchema = new mongoose.Schema({
   phone: { type: String, unique: true, required: true },
   walletBalance: { type: Number, default: 0 },
-  autoDeductEnabled: { type: Boolean, default: false }, // Authorization toggle
+  autoDeductEnabled: { type: Boolean, default: false },
   transactions: [{
     type: { type: String, enum: ['credit', 'debit'] },
     description: String,
@@ -99,24 +100,24 @@ const UserSchema = new mongoose.Schema({
     date: { type: Date, default: Date.now }
   }],
   sessionId: String
-}, { timestamps: true, collection: 'users' });
+}, { timestamps: true, collection: 'Passengers_Wallet' });
 
 export function getUserModel() {
   return mongoose.models.User || mongoose.model('User', UserSchema);
 }
 
-// Conductor Schema for Session Management
+// Conductor Schema - Staff Admin management
 const ConductorSchema = new mongoose.Schema({
   conductorId: { type: String, unique: true, required: true },
   sessionId: String,
   lastActive: { type: Date, default: Date.now }
-}, { timestamps: true, collection: 'conductors' });
+}, { timestamps: true, collection: 'Conductors_Admin' });
 
 export function getConductorModel() {
   return mongoose.models.Conductor || mongoose.model('Conductor', ConductorSchema);
 }
 
-// Conductor Log Schema for Verification Stats
+// Conductor Log Schema - Verification Insights
 const ConductorLogSchema = new mongoose.Schema({
   conductorId: { type: String, required: true },
   type: { type: String, enum: ['ticket', 'pass'], required: true },
@@ -128,7 +129,7 @@ export function getConductorLogModel() {
   return mongoose.models.ConductorLog || mongoose.model('ConductorLog', ConductorLogSchema);
 }
 
-// Bus Pass Schema
+// Bus Pass Schema - Passenger Pass Data
 const BusPassSchema = new mongoose.Schema({
   passCode: { type: String, unique: true, required: true },
   name: String,
@@ -142,10 +143,24 @@ const BusPassSchema = new mongoose.Schema({
   }
 }, { 
   timestamps: true,
-  collection: 'bus_passes',
+  collection: 'Passengers_Bus_Pass_Data',
   strict: false
 });
 
 export function getBusPassModel() {
   return mongoose.models.BusPass || mongoose.model('BusPass', BusPassSchema);
+}
+
+// Notifications Collection
+const NotificationSchema = new mongoose.Schema({
+  title: { type: String, required: true },
+  description: { type: String, required: true },
+  iconType: { type: String, default: 'info' },
+  category: { type: String, default: 'blue' },
+  isLatest: { type: Boolean, default: true },
+  createdAt: { type: Date, default: Date.now }
+}, { timestamps: true, collection: 'Notifications' });
+
+export function getNotificationModel() {
+  return mongoose.models.Notification || mongoose.model('Notification', NotificationSchema);
 }

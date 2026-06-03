@@ -1,8 +1,13 @@
+
 import { NextResponse } from 'next/server';
 import dbConnect, { getConductorModel } from '@/lib/mongodb';
 
 export const dynamic = "force-dynamic";
 
+/**
+ * Conductor Session API
+ * Points to the Conductors_Admin collection for staff authentication.
+ */
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const conductorId = searchParams.get('id');
