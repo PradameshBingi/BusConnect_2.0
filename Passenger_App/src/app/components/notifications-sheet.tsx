@@ -28,9 +28,9 @@ type Notification = {
 const getIcon = (type: string) => {
   switch (type) {
     case 'ticket': return <Ticket className="h-4 w-4 text-purple-600" />;
-    case 'zap': return <Zap className="h-4 w-4 text-amber-600" />;
+    case 'zap': return <Zap className="h-4 w-4 text-emerald-600" />;
     case 'wallet': return <Wallet className="h-4 w-4 text-blue-600" />;
-    default: return <Info className="h-4 w-4 text-emerald-600" />;
+    default: return <Info className="h-4 w-4 text-slate-600" />;
   }
 };
 
@@ -87,7 +87,7 @@ export function NotificationsSheet({ children }: { children: React.ReactNode }) 
              <div className="bg-primary/20 p-2 rounded-lg">
                 <Bell className="h-6 w-6 text-primary" />
              </div>
-             <div>
+             <div className="text-left">
                 <SheetTitle className="text-2xl font-black uppercase tracking-tight text-white">System Updates</SheetTitle>
                 <SheetDescription className="text-slate-400">Stay informed about TGSRTC services.</SheetDescription>
              </div>
