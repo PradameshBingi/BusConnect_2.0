@@ -1,168 +1,177 @@
-'use client'
+'use client';
 
 import Header from '@/app/components/header';
 import { Separator } from '@/components/ui/separator';
-import { Info, Leaf } from 'lucide-react';
+import { Info, Leaf, ShieldCheck, Zap, Globe, ShieldAlert, Cpu } from 'lucide-react';
 import { AuthGuard } from '@/components/auth-guard';
+import { Card, CardContent } from '@/components/ui/card';
 
 export default function AboutPage() {
-  const whyPoints = [
-    "Delays caused by cash handling and QR-based payments",
-    "Mobile network issues during ticket scanning",
-    "Safety risks for passengers boarding overcrowded buses",
-    "Time-consuming and difficult bus-pass verification",
-    "Fare disputes when passengers change bus types",
-    "Environmental impact of thousands of discarded physical paper tickets"
-  ];
-  
-  const whatWeDoPoints = [
-    "Passenger Dashboard for booking, upgrading, modifying, and managing cloud-synced refunds",
-    "Conductor Dashboard for rapid ticket verification, fare adjustment, and bus-pass validation",
-    "High-density boarding optimization using alphanumeric codes instead of unreliable QR scans"
-  ];
-
-  const howItWorksPoints = [
-    "Passengers book tickets digitally and receive a short, unique ticket code (e.g., TKT-01-12345)",
-    "Travel and financial data are securely stored in a cloud database (MongoDB) for multi-device access",
-    "Conductors verify tickets by entering the code — no scanning or cash handling required",
-    "Ticket status automatically updates in real-time as Valid, Used, Expired, or Cancelled",
-    "Bus passes are validated instantly using alphanumeric pass codes with holder photo verification",
-    "Refunds and fare differences are managed transparently through a real-time database-backed wallet"
-  ];
-
-  const keyFeatures = [
-    "Smart digital ticket code system with route-based identification",
-    "Alphanumeric security PINs (supporting letters, numbers, and words) for robust identity check",
-    "Cloud-based data persistence (MongoDB) for absolute balance and history security",
-    "Single-session security constraint (one login per account at a time across devices)",
-    "Ticket upgrade and modification support with automated fare calculations",
-    "Automatic full refunds for expired tickets and 90% refunds for cancellations",
-    "Real-time conductor verification tools with secondary PIN validation to prevent fraud",
-    "Integrated feedback portal with star ratings and suggestion capture for system improvement",
-    "Fraud-resistant bus-pass validation with real-time photo and validity status display"
-  ];
-
   return (
     <AuthGuard>
-      <Header showBackButton={true} backHref="/" title="About BusConnect" />
-      <div className="bg-background text-foreground max-w-4xl mx-auto p-4 md:p-8 space-y-10">
-        
-        <div className="text-center">
-          <h1 className="text-4xl font-bold tracking-tight font-headline sm:text-5xl">
-            About BusConnect
-          </h1>
-          <p className="text-base font-normal text-muted-foreground mt-2">
-            A Conceptual Digital Ticketing Platform for TGSRTC
-          </p>
-        </div>
-
-        <div>
-          <h2 className="text-3xl font-bold font-headline text-card-foreground">
-            Who We Are
-          </h2>
-          <p className="mt-4 text-lg text-muted-foreground">
-            BusConnect is a conceptual smart mobility platform designed to modernize the public bus transport experience in Hyderabad. The platform focuses on bridging the real-world operational gap between passengers and conductors, particularly during peak-hour and high-density travel conditions.
-          </p>
-        </div>
-        
-        <Separator />
-
-        <div>
-          <h2 className="text-3xl font-bold font-headline text-card-foreground">
-            Why We Built This
-          </h2>
-          <p className="mt-4 text-lg text-muted-foreground">
-            Public bus transport in Hyderabad faces several daily operational challenges. BusConnect was developed to address these challenges through a fast, simple, and fraud-resistant digital ticketing approach.
-          </p>
-          <ul className="mt-4 list-disc list-inside space-y-2 text-lg text-muted-foreground">
-            {whyPoints.map((item, index) => <li key={index}>{item}</li>)}
-          </ul>
+      <div className="min-h-screen bg-slate-50 flex flex-col">
+        <Header showBackButton={true} backHref="/" title="About" />
+        <main className="max-w-4xl mx-auto p-4 md:p-8 space-y-12 flex-grow pb-32">
           
-          <div className="mt-8 bg-green-50 p-6 rounded-2xl border border-green-100 flex gap-4 items-start">
-            <Leaf className="h-6 w-6 text-green-600 shrink-0 mt-1" />
-            <div>
-                <h4 className="font-bold text-green-900">Sustainability First</h4>
-                <p className="text-green-800 text-sm mt-1">
-                    By adopting digital tickets, we significantly reduce physical paper usage and minimize the environmental waste generated by traditional ticketing systems.
-                </p>
-            </div>
+          {/* Hero Section */}
+          <div className="text-center space-y-3">
+            <h1 className="text-4xl font-black tracking-tight font-headline text-slate-900 leading-tight">
+              About BusConnect
+            </h1>
+            <p className="text-sm font-bold text-[#00B893] uppercase tracking-widest">
+              A Conceptual Digital Ticketing Platform for TGSRTC
+            </p>
           </div>
-        </div>
-        
-        <Separator />
 
-        <div>
-          <h2 className="text-3xl font-bold font-headline text-card-foreground">
-            What We Do
-          </h2>
-          <p className="mt-4 text-lg text-muted-foreground">
-            The platform replaces traditional paper tickets with a smart digital ticket code (for example: TK-01-56485) and introduces a dual-dashboard system:
-          </p>
-          <ul className="mt-4 list-disc list-inside space-y-2 text-lg text-muted-foreground">
-            {whatWeDoPoints.map((item, index) => <li key={index}>{item}</li>)}
-          </ul>
-           <p className="mt-4 text-lg text-muted-foreground">
-            The system is specifically designed to operate efficiently in real-world, crowded bus environments where QR scanning often fails.
-          </p>
-        </div>
-
-        <Separator />
-
-        <div>
-          <h2 className="text-3xl font-bold font-headline text-card-foreground">
-            How It Works (In Simple Terms)
-          </h2>
-          <ul className="mt-4 list-disc list-inside space-y-2 text-lg text-muted-foreground">
-            {howItWorksPoints.map((item, index) => <li key={index}>{item}</li>)}
-          </ul>
-        </div>
-        
-        <Separator />
-        
-        <div>
-          <h2 className="text-3xl font-bold font-headline text-card-foreground">
-            Key Features
-          </h2>
-          <ul className="mt-4 list-disc list-inside space-y-2 text-lg text-muted-foreground">
-            {keyFeatures.map((item, index) => <li key={index}>{item}</li>)}
-          </ul>
-        </div>
-        
-        <Separator />
-        
-        <div>
-          <h2 className="text-3xl font-bold font-headline text-card-foreground">
-            Our Vision
-          </h2>
-          <p className="mt-4 text-lg text-muted-foreground">
-            To support TGSRTC Telangana in building a faster, safer, and fully digital public transport ecosystem by reducing operational friction, improving passenger trust, and enhancing conductor efficiency.
-          </p>
-        </div>
-
-        <Separator />
-
-        <div className="bg-destructive/10 p-6 rounded-lg text-destructive border border-destructive/20">
-           <h2 className="text-2xl font-bold font-headline flex items-center gap-3">
-              <Info className="h-7 w-7" />
-              Disclaimer
+          {/* Who We Are */}
+          <section className="space-y-4">
+            <h2 className="text-2xl font-black font-headline uppercase text-slate-900 flex items-center gap-3">
+              <Globe className="h-6 w-6 text-blue-600" /> Who We Are
             </h2>
-           <p className="mt-2 text-destructive/90">
-            BusConnect is a prototype and conceptual project developed for demonstration and innovation purposes only. All ticketing, payment, and verification processes are simulated to showcase system functionality and workflow design.
-          </p>
-        </div>
+            <p className="text-lg text-slate-600 leading-relaxed font-medium">
+              BusConnect is a conceptual smart mobility platform designed to modernize the public bus transport experience in Hyderabad. The platform focuses on bridging the real-world operational gap between passengers and conductors, particularly during peak-hour and high-density travel conditions.
+            </p>
+          </section>
 
-        <Separator />
+          <Separator className="bg-slate-200" />
 
-        <div className="text-center space-y-2 pt-4 pb-12">
-          <h3 className="text-3xl font-bold">BusConnect</h3>
-          <p className="text-xl">
-            Conceptualized and Developed by{' '}
-            <span className="font-bold text-2xl" style={{ color: 'hsl(var(--footer-name-color))' }}>
-              Bingi Pradamesh
-            </span>
-          </p>
-          <p className="text-sm text-muted-foreground">(This is a conceptual prototype created for demonstration and innovation purposes)</p>
-        </div>
+          {/* Why We Built This */}
+          <section className="space-y-6">
+            <h2 className="text-2xl font-black font-headline uppercase text-slate-900 flex items-center gap-3">
+              <ShieldAlert className="h-6 w-6 text-amber-500" /> Why We Built This
+            </h2>
+            <p className="text-slate-600 font-medium">
+              Public bus transport in Hyderabad faces several daily operational challenges. BusConnect was developed to address these challenges through a fast, simple, and fraud-resistant digital ticketing approach:
+            </p>
+            <ul className="grid gap-3 text-sm font-bold text-slate-500 uppercase tracking-tight">
+              <li className="flex gap-3 items-start"><div className="w-1.5 h-1.5 rounded-full bg-slate-300 mt-1.5 shrink-0" /> Delays caused by cash handling and QR-based payments</li>
+              <li className="flex gap-3 items-start"><div className="w-1.5 h-1.5 rounded-full bg-slate-300 mt-1.5 shrink-0" /> Mobile network issues during ticket scanning</li>
+              <li className="flex gap-3 items-start"><div className="w-1.5 h-1.5 rounded-full bg-slate-300 mt-1.5 shrink-0" /> Safety risks for passengers boarding overcrowded buses</li>
+              <li className="flex gap-3 items-start"><div className="w-1.5 h-1.5 rounded-full bg-slate-300 mt-1.5 shrink-0" /> Time-consuming and difficult bus-pass verification</li>
+              <li className="flex gap-3 items-start"><div className="w-1.5 h-1.5 rounded-full bg-slate-300 mt-1.5 shrink-0" /> Fare disputes when passengers change bus types</li>
+              <li className="flex gap-3 items-start"><div className="w-1.5 h-1.5 rounded-full bg-slate-300 mt-1.5 shrink-0" /> Environmental impact of thousands of discarded physical paper tickets</li>
+            </ul>
+
+            <div className="bg-emerald-50 p-6 rounded-3xl border border-emerald-100 flex items-center gap-4">
+              <Leaf className="h-8 w-8 text-emerald-600 shrink-0" />
+              <div>
+                <h3 className="font-black text-emerald-900 text-xs uppercase tracking-widest mb-1">Sustainability First</h3>
+                <p className="text-xs text-emerald-700 font-medium leading-relaxed uppercase">
+                  By adopting digital tickets, we significantly reduce physical paper usage and minimize the environmental waste generated by traditional ticketing systems.
+                </p>
+              </div>
+            </div>
+          </section>
+
+          <Separator className="bg-slate-200" />
+
+          {/* What We Do */}
+          <section className="space-y-4">
+            <h2 className="text-2xl font-black font-headline uppercase text-slate-900 flex items-center gap-3">
+              <Zap className="h-6 w-6 text-purple-600" /> What We Do
+            </h2>
+            <p className="text-slate-600 font-medium">
+              The platform replaces traditional paper tickets with a smart digital ticket code (for example: TK-01-56485) and introduces a dual-dashboard system:
+            </p>
+            <div className="grid gap-4 md:grid-cols-2">
+              <Card className="border-none shadow-sm bg-white rounded-2xl">
+                <CardContent className="p-5 space-y-2">
+                  <p className="font-black text-xs text-slate-800 uppercase tracking-widest">Passenger Dashboard</p>
+                  <p className="text-[10px] text-slate-400 font-medium uppercase leading-relaxed">Booking, upgrading, modifying, and managing cloud-synced refunds.</p>
+                </CardContent>
+              </Card>
+              <Card className="border-none shadow-sm bg-white rounded-2xl">
+                <CardContent className="p-5 space-y-2">
+                  <p className="font-black text-xs text-slate-800 uppercase tracking-widest">Conductor Dashboard</p>
+                  <p className="text-[10px] text-slate-400 font-medium uppercase leading-relaxed">Rapid ticket verification, fare adjustment, and bus-pass validation.</p>
+                </CardContent>
+              </Card>
+            </div>
+            <p className="text-xs font-bold text-slate-400 leading-relaxed uppercase">
+              High-density boarding optimization using alphanumeric codes instead of unreliable QR scans. The system is specifically designed to operate efficiently in real-world, crowded bus environments where QR scanning often fails.
+            </p>
+          </section>
+
+          <Separator className="bg-slate-200" />
+
+          {/* How It Works */}
+          <section className="space-y-4">
+            <h2 className="text-2xl font-black font-headline uppercase text-slate-900 flex items-center gap-3">
+              <Cpu className="h-6 w-6 text-slate-700" /> How It Works (In Simple Terms)
+            </h2>
+            <div className="space-y-3">
+              {[
+                "Passengers book tickets digitally and receive a short, unique ticket code (e.g., TKT-01-12345)",
+                "Travel and financial data are securely stored in a cloud database (MongoDB) for multi-device access",
+                "Conductors verify tickets by entering the code — no scanning or cash handling required",
+                "Ticket status automatically updates in real-time as Valid, Used, Expired, or Cancelled",
+                "Bus passes are validated instantly using alphanumeric pass codes with holder photo verification",
+                "Refunds and fare differences are managed transparently through a real-time database-backed wallet"
+              ].map((step, i) => (
+                <div key={i} className="flex gap-4 items-start bg-white p-4 rounded-2xl shadow-sm border border-slate-100">
+                  <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-slate-900 text-white font-black text-[10px]">
+                    {i + 1}
+                  </div>
+                  <p className="text-[11px] font-bold text-slate-500 uppercase leading-relaxed">{step}</p>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          <Separator className="bg-slate-200" />
+
+          {/* Key Features */}
+          <section className="space-y-4">
+            <h2 className="text-2xl font-black font-headline uppercase text-slate-900 flex items-center gap-3">
+              <ShieldCheck className="h-6 w-6 text-[#0A2B70]" /> Key Features
+            </h2>
+            <ul className="grid gap-3 text-sm font-bold text-slate-500 uppercase tracking-tight">
+              <li className="flex gap-3 items-start"><div className="w-1.5 h-1.5 rounded-full bg-[#0A2B70] mt-1.5 shrink-0" /> Smart digital ticket code system with route-based identification</li>
+              <li className="flex gap-3 items-start"><div className="w-1.5 h-1.5 rounded-full bg-[#0A2B70] mt-1.5 shrink-0" /> Alphanumeric security PINs (supporting letters, numbers, and words) for robust identity check</li>
+              <li className="flex gap-3 items-start"><div className="w-1.5 h-1.5 rounded-full bg-[#0A2B70] mt-1.5 shrink-0" /> Cloud-based data persistence (MongoDB) for absolute balance and history security</li>
+              <li className="flex gap-3 items-start"><div className="w-1.5 h-1.5 rounded-full bg-[#0A2B70] mt-1.5 shrink-0" /> Single-session security constraint (one login per account at a time across devices)</li>
+              <li className="flex gap-3 items-start"><div className="w-1.5 h-1.5 rounded-full bg-[#0A2B70] mt-1.5 shrink-0" /> Ticket upgrade and modification support with automated fare calculations</li>
+              <li className="flex gap-3 items-start"><div className="w-1.5 h-1.5 rounded-full bg-[#0A2B70] mt-1.5 shrink-0" /> Automatic full refunds for expired tickets and 90% refunds for cancellations</li>
+              <li className="flex gap-3 items-start"><div className="w-1.5 h-1.5 rounded-full bg-[#0A2B70] mt-1.5 shrink-0" /> Real-time conductor verification tools with secondary PIN validation to prevent fraud</li>
+              <li className="flex gap-3 items-start"><div className="w-1.5 h-1.5 rounded-full bg-[#0A2B70] mt-1.5 shrink-0" /> Integrated feedback portal with star ratings and suggestion capture for system improvement</li>
+              <li className="flex gap-3 items-start"><div className="w-1.5 h-1.5 rounded-full bg-[#0A2B70] mt-1.5 shrink-0" /> Fraud-resistant bus-pass validation with real-time photo and validity status display</li>
+            </ul>
+          </section>
+
+          <Separator className="bg-slate-200" />
+
+          {/* Our Vision */}
+          <section className="space-y-4 text-center px-4">
+            <h2 className="text-2xl font-black font-headline uppercase text-slate-900 tracking-tight">
+              Our Vision
+            </h2>
+            <p className="text-lg text-slate-600 leading-relaxed font-medium uppercase max-w-3xl mx-auto">
+              To support TGSRTC Telangana in building a faster, safer, and fully digital public transport ecosystem by reducing operational friction, improving passenger trust, and enhancing conductor efficiency.
+            </p>
+          </section>
+
+          {/* Disclaimer */}
+          <div className="bg-destructive/5 p-10 rounded-[2.5rem] border border-destructive/10 text-center space-y-4 mx-4">
+             <h2 className="text-xl font-black font-headline flex items-center justify-center gap-3 text-destructive uppercase tracking-widest">
+                <Info className="h-6 w-6" /> Disclaimer
+              </h2>
+             <p className="text-xs font-bold text-destructive/50 max-w-2xl mx-auto leading-relaxed uppercase">
+              BusConnect is a prototype and conceptual project developed for demonstration and innovation purposes only. All ticketing, payment, and verification processes are simulated to showcase system functionality and workflow design.
+            </p>
+          </div>
+
+          {/* Author Footer */}
+          <div className="text-center space-y-2 pt-10">
+            <h3 className="text-3xl font-black tracking-tighter text-slate-900">BusConnect</h3>
+            <div className="pt-2">
+                <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 mb-1">Conceptualized and Developed by</p>
+                <span className="text-[#0A2B70] text-2xl font-black tracking-tight">Bingi Pradamesh</span>
+            </div>
+            <p className="text-[9px] font-bold text-slate-300 uppercase tracking-[0.2em] pt-6">
+              (This is a conceptual prototype created for demonstration and innovation purposes)
+            </p>
+          </div>
+        </main>
       </div>
     </AuthGuard>
   );
