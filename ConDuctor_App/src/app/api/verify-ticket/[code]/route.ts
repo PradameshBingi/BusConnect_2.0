@@ -1,3 +1,4 @@
+
 import { NextResponse } from 'next/server';
 import dbConnect, { getTicketModel } from '@/lib/mongodb';
 
@@ -20,30 +21,33 @@ export async function GET(
     const ticketCode = code.toUpperCase();
 
     const Ticket = getTicketModel();
-    const ticket = await Ticket.findOne({ ticketCode });
+    // Use Case-Insensitive search to ensure robust matching
+    const ticket = await Ticket.findOne({ 
+      ticketCode: { $regex: new RegExp(`^${ticketCode}$`, 'i') } 
+    });
     
     if (!ticket) {
+      console.log(`🔍 Ticket not found in Passengers_Ticket: ${ticketCode}`);
       return NextResponse.json({ status: "invalid", message: "Ticket not found" }, { status: 404 });
     }
 
     let refundAmount = 0;
     let currentStatus = ticket.status;
 
-    // Re-implemented Auto-expiry logic
+    // Auto-expiry logic (10-minute window)
     if (currentStatus === 'valid') {
         const now = new Date();
         const createdAt = new Date(ticket.createdAt);
         const expiryTime = new Date(createdAt.getTime() + 10 * 60 * 1000);
 
         if (now > expiryTime) {
-            // Automatically update database status to expired
             ticket.status = 'expired';
             await ticket.save();
             currentStatus = 'expired';
 
-            // Calculate potential refund
+            // Calculate potential refund (assuming 100% refund on expiry policy)
             const totalPaid = ticket.totalFare || (ticket.fare + (ticket.walletAmountUsed || 0)) || 0;
-            refundAmount = Math.max(0, totalPaid - Math.round(totalPaid * 0.10));
+            refundAmount = totalPaid;
         }
     }
 

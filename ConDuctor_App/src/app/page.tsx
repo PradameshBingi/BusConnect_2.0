@@ -3,8 +3,8 @@ import { redirect } from 'next/navigation';
 
 /**
  * Root Entry Point
- * Consolidated to redirect to the secure Conductor Dashboard.
+ * Redirects to the login page. AuthGuard will handle subsequent dashboard access.
  */
 export default function HomePage() {
-  redirect('/conductor/dashboard');
+  redirect('/login');
 }

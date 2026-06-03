@@ -46,7 +46,7 @@ async function dbConnect() {
 
 export default dbConnect;
 
-// Ticket Schema - Primary source for verification
+// Ticket Schema - Primary source for verification (Passengers_Ticket)
 const TicketSchema = new mongoose.Schema({
   from: { type: String, required: true },
   to: { type: String, required: true },
@@ -85,10 +85,11 @@ const TicketSchema = new mongoose.Schema({
 });
 
 export function getTicketModel() {
-  return mongoose.models.Ticket || mongoose.model('Ticket', TicketSchema);
+  // Using unique model name to avoid caching conflicts
+  return mongoose.models.PassengerTicket || mongoose.model('PassengerTicket', TicketSchema);
 }
 
-// User/Wallet Schema - Target for refunds and auto-deduct
+// User/Wallet Schema - Target for financial transactions (Passengers_Wallet)
 const UserSchema = new mongoose.Schema({
   phone: { type: String, unique: true, required: true },
   walletBalance: { type: Number, default: 0 },
@@ -103,10 +104,10 @@ const UserSchema = new mongoose.Schema({
 }, { timestamps: true, collection: 'Passengers_Wallet' });
 
 export function getUserModel() {
-  return mongoose.models.User || mongoose.model('User', UserSchema);
+  return mongoose.models.PassengerWallet || mongoose.model('PassengerWallet', UserSchema);
 }
 
-// Conductor Schema - Staff Admin management
+// Conductor Schema - Staff Admin (Conductors_Admin)
 const ConductorSchema = new mongoose.Schema({
   conductorId: { type: String, unique: true, required: true },
   sessionId: String,
@@ -114,10 +115,10 @@ const ConductorSchema = new mongoose.Schema({
 }, { timestamps: true, collection: 'Conductors_Admin' });
 
 export function getConductorModel() {
-  return mongoose.models.Conductor || mongoose.model('Conductor', ConductorSchema);
+  return mongoose.models.ConductorAdmin || mongoose.model('ConductorAdmin', ConductorSchema);
 }
 
-// Conductor Log Schema - Verification Insights
+// Conductor Log Schema - Verification Insights (conductor_logs)
 const ConductorLogSchema = new mongoose.Schema({
   conductorId: { type: String, required: true },
   type: { type: String, enum: ['ticket', 'pass'], required: true },
@@ -129,7 +130,7 @@ export function getConductorLogModel() {
   return mongoose.models.ConductorLog || mongoose.model('ConductorLog', ConductorLogSchema);
 }
 
-// Bus Pass Schema - Passenger Pass Data
+// Bus Pass Schema - Passenger Pass Data (Passengers_Bus_Pass_Data)
 const BusPassSchema = new mongoose.Schema({
   passCode: { type: String, unique: true, required: true },
   name: String,
@@ -148,7 +149,7 @@ const BusPassSchema = new mongoose.Schema({
 });
 
 export function getBusPassModel() {
-  return mongoose.models.BusPass || mongoose.model('BusPass', BusPassSchema);
+  return mongoose.models.PassengerBusPass || mongoose.model('PassengerBusPass', BusPassSchema);
 }
 
 // Notifications Collection
