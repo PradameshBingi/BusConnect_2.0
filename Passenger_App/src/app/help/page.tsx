@@ -1,3 +1,5 @@
+'use client';
+
 import {
   Accordion,
   AccordionContent,
@@ -5,9 +7,10 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import Header from '@/app/components/header';
-import { HelpCircle, User, Zap, Edit3, ShieldCheck, Linkedin , Mail, Globe, Cloud, Smartphone } from "lucide-react";
+import { HelpCircle, User, Zap, Edit3, ShieldCheck, Linkedin , Mail } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { AuthGuard } from '@/components/auth-guard';
 
 const passengerFaqs = [
   {
@@ -64,7 +67,7 @@ const howItWorksSteps = [
 
 export default function HelpPage() {
   return (
-    <>
+    <AuthGuard>
       <Header showBackButton={true} backHref="/" title="Help & FAQs" />
       <div className="p-4 md:p-8 max-w-3xl mx-auto space-y-8 pb-32">
         <div className="flex items-center gap-3 mb-2">
@@ -72,7 +75,6 @@ export default function HelpPage() {
           <h1 className="text-2xl font-bold font-headline">Passenger Support</h1>
         </div>
 
-        {/* System Highlights */}
         <div className="grid gap-4 md:grid-cols-3">
           {howItWorksSteps.map((step, index) => (
             <Card key={index} className="border-none shadow-sm bg-slate-50">
@@ -108,7 +110,6 @@ export default function HelpPage() {
           </CardContent>
         </Card>
 
-        {/* Developer Contact Card */}
         <Card className="border-none shadow-xl rounded-3xl overflow-hidden bg-slate-900 text-white">
           <CardContent className="p-8 text-center space-y-6">
             <div className="space-y-1">
@@ -141,6 +142,6 @@ export default function HelpPage() {
           </CardContent>
         </Card>
       </div>
-    </>
+    </AuthGuard>
   );
 }

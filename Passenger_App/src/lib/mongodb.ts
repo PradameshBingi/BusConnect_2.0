@@ -106,7 +106,7 @@ const PassengerAdminSchema = new mongoose.Schema({
   lastLogin: Date
 }, { 
   timestamps: true,
-  collection: 'Passenger_Admin'
+  collection: 'Passengers_Admin'
 });
 
 // Conductor Admin Schema
@@ -132,6 +132,23 @@ const FeedbackSchema = new mongoose.Schema({
   collection: 'Passengers_Feedbacks'
 });
 
+// Bus Pass Schema
+const BusPassSchema = new mongoose.Schema({
+  passCode: { type: String, unique: true, required: true },
+  holderName: { type: String, required: true },
+  passType: { type: String, enum: ['General', 'Route'], required: true },
+  category: { type: String, enum: ['Student', 'Citizen'], required: true },
+  validFrom: Date,
+  validTo: Date,
+  validBusTypes: [String],
+  route: {
+    from: String,
+    to: String
+  }
+}, { 
+  collection: 'Passengers_BusPass'
+});
+
 export function getTicketModel() {
   return mongoose.models.Ticket || mongoose.model('Ticket', TicketSchema);
 }
@@ -150,4 +167,8 @@ export function getAdminModel() {
 
 export function getFeedbackModel() {
   return mongoose.models.Feedback || mongoose.model('Feedback', FeedbackSchema);
+}
+
+export function getBusPassModel() {
+  return mongoose.models.BusPass || mongoose.model('BusPass', BusPassSchema);
 }

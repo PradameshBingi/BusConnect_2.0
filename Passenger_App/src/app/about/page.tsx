@@ -3,6 +3,7 @@
 import Header from '@/app/components/header';
 import { Separator } from '@/components/ui/separator';
 import { Info, Leaf } from 'lucide-react';
+import { AuthGuard } from '@/components/auth-guard';
 
 export default function AboutPage() {
   const whyPoints = [
@@ -42,7 +43,7 @@ export default function AboutPage() {
   ];
 
   return (
-    <>
+    <AuthGuard>
       <Header showBackButton={true} backHref="/" title="About BusConnect" />
       <div className="bg-background text-foreground max-w-4xl mx-auto p-4 md:p-8 space-y-10">
         
@@ -162,8 +163,7 @@ export default function AboutPage() {
           </p>
           <p className="text-sm text-muted-foreground">(This is a conceptual prototype created for demonstration and innovation purposes)</p>
         </div>
-
       </div>
-    </>
+    </AuthGuard>
   );
 }

@@ -48,34 +48,30 @@ export async function POST(
     } else if (isUpgradation) {
         transitionMsg = `Upgradation (${originalBusType} → ${newBusType})`;
     } else if (isModification) {
-        // Detailed Modification tracking (High Fidelity)
         const changes = [];
         
-        // Route Logic
+        // Detailed Route tracking
         if (updateData.from || updateData.to) {
             const finalFrom = updateData.from || ticket.from;
             const finalTo = updateData.to || ticket.to;
             if (finalFrom !== ticket.from || finalTo !== ticket.to) {
-                changes.push(`Route Changed (${finalFrom} -> ${finalTo})`);
+                changes.push(`Route Changed (${ticket.from} -> ${finalFrom} / ${ticket.to} -> ${finalTo})`);
             }
         }
         
-        // Passenger Logic
+        // Detailed Passenger tracking
         if (updateData.quantities) {
             const pChanges = [];
             const types = ['Men', 'Child', 'Women'] as const;
-            let totalDiff = 0;
             types.forEach(type => {
                 const diff = (updateData.quantities[type] || 0) - (ticket.quantities[type] || 0);
                 if (diff !== 0) {
                     pChanges.push(`${type}: ${diff > 0 ? '+' : ''}${diff}`);
                 }
-                totalDiff += diff;
             });
             
             if (pChanges.length > 0) {
-                const action = totalDiff > 0 ? "Added" : totalDiff < 0 ? "Removed" : "Updated";
-                changes.push(`Passengers ${action} (${pChanges.join(', ')})`);
+                changes.push(`Passengers Updated (${pChanges.join(', ')})`);
             }
         }
         
@@ -83,7 +79,7 @@ export async function POST(
         transitionMsg = `Modification${details}`;
     }
 
-    // 3. Financial Processing Logic (Refunds for modifications)
+    // 3. Financial Processing Logic
     const phone = ticket.bookedBy;
     if (phone) {
         const Wallet = getWalletModel();
@@ -124,12 +120,11 @@ export async function POST(
         ticket.serviceTransition.push(transitionMsg);
     }
 
-    // Update Issue Date if modified or upgraded
+    // Refresh timestamp for modifications or upgrades
     if (isModification || isUpgradation) {
         ticket.createdAt = new Date();
     }
 
-    // Status logic: modifications keep valid status, explicit validation marks used
     if (updateData.status) {
         ticket.status = updateData.status;
     } else if (isValidation && ticket.status === 'valid' && !updateData.from && !updateData.busType) {

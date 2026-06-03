@@ -1,8 +1,7 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { 
@@ -14,24 +13,11 @@ import {
   MessageSquare
 } from 'lucide-react';
 import Header from '@/app/components/header';
+import { AuthGuard } from '@/components/auth-guard';
 
 export const dynamic = "force-dynamic";
 
 export default function Home() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [isMounted, setIsMounted] = useState(false);
-  const router = useRouter();
-
-  useEffect(() => {
-    setIsMounted(true);
-    const user = localStorage.getItem('currentUser');
-    if (!user) {
-      router.replace('/login');
-    } else {
-      setIsLoggedIn(true);
-    }
-  }, [router]);
-
   const serviceLinks = [
     { 
       href: '/select-ticket-type', 
@@ -40,13 +26,6 @@ export default function Home() {
       icon: <Ticket className="h-6 w-6 text-purple-600" />,
       bgColor: 'bg-purple-50'
     },
-    // { 
-    //      href: '/conductor', 
-    //      title: 'Conductor Tool', 
-    //      description: 'Verify tickets and check fares.', 
-    //      icon: <User className="h-6 w-6 text-red-500" />,
-    //      bgColor: 'bg-red-50'
-    // },
     { 
       href: '/wallet', 
       title: 'My Wallet', 
@@ -77,41 +56,39 @@ export default function Home() {
     },
   ];
 
-  if (!isMounted || !isLoggedIn) return null;
-
   return (
-    <div className="bg-white min-h-screen pb-32">
-      <Header />
+    <AuthGuard>
+      <div className="bg-white min-h-screen pb-32">
+        <Header />
 
-      <main className="p-4 space-y-4 max-w-2xl mx-auto pt-8">
-        {/* Service List */}
-        <div className="space-y-3">
-          {serviceLinks.map((link) => (
-            <Link href={link.href} key={link.title} className="group block">
-              <Card className="flex items-center p-5 shadow-sm hover:shadow-md transition-all rounded-xl border border-slate-100 bg-white">
-                <div className={`w-12 h-12 flex items-center justify-center ${link.bgColor} rounded-xl mr-4 shrink-0`}>
-                    {link.icon}
-                </div>
-                <div className="flex-grow">
-                  <p className="font-bold text-slate-800 text-lg">{link.title}</p>
-                  <p className="text-xs text-muted-foreground font-medium">{link.description}</p>
-                </div>
-                <ChevronRight className="text-slate-300 h-5 w-5 group-hover:text-primary transition-colors" />
-              </Card>
-            </Link>
-          ))}
-        </div>
+        <main className="p-4 space-y-4 max-w-2xl mx-auto pt-8">
+          <div className="space-y-3">
+            {serviceLinks.map((link) => (
+              <Link href={link.href} key={link.title} className="group block">
+                <Card className="flex items-center p-5 shadow-sm hover:shadow-md transition-all rounded-xl border border-slate-100 bg-white">
+                  <div className={`w-12 h-12 flex items-center justify-center ${link.bgColor} rounded-xl mr-4 shrink-0`}>
+                      {link.icon}
+                  </div>
+                  <div className="flex-grow">
+                    <p className="font-bold text-slate-800 text-lg">{link.title}</p>
+                    <p className="text-xs text-muted-foreground font-medium">{link.description}</p>
+                  </div>
+                  <ChevronRight className="text-slate-300 h-5 w-5 group-hover:text-primary transition-colors" />
+                </Card>
+              </Link>
+            ))}
+          </div>
 
-        {/* Action Buttons */}
-        <div className="grid grid-cols-2 gap-4 pt-6">
-          <Button size="lg" className="bg-[#0A2B70] hover:bg-[#0A2B70]/90 text-white h-14 rounded-xl shadow-md font-bold text-sm">
-            Flag a Bus
-          </Button>
-          <Button size="lg" variant="destructive" className="bg-[#EF4444] hover:bg-[#EF4444]/90 h-14 rounded-xl shadow-md font-bold text-sm">
-            Emergency?
-          </Button>
-        </div>
-      </main>
-    </div>
+          <div className="grid grid-cols-2 gap-4 pt-6">
+            <Button size="lg" className="bg-[#0A2B70] hover:bg-[#0A2B70]/90 text-white h-14 rounded-xl shadow-md font-bold text-sm">
+              Flag a Bus
+            </Button>
+            <Button size="lg" variant="destructive" className="bg-[#EF4444] hover:bg-[#EF4444]/90 h-14 rounded-xl shadow-md font-bold text-sm">
+              Emergency?
+            </Button>
+          </div>
+        </main>
+      </div>
+    </AuthGuard>
   );
 }
