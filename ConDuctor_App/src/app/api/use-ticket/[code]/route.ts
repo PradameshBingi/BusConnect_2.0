@@ -1,3 +1,4 @@
+
 import { NextResponse } from 'next/server';
 import dbConnect, { getTicketModel, getUserModel, getConductorLogModel } from '@/lib/mongodb';
 import { calculateFare } from '@/lib/fare-calculator';
@@ -17,7 +18,7 @@ const getServiceLabel = (type: string) => {
 };
 
 /**
- * Atomic Fare Adjustment Handler (Refined to strictly update existing Passengers_Wallet data)
+ * Atomic Fare Adjustment Handler (Handles Type-Insensitive Wallet Search)
  */
 async function processFareAdjustment(
   ticket: any, 
@@ -25,20 +26,29 @@ async function processFareAdjustment(
   conductorId: string
 ) {
   const User = getUserModel();
-  const diff = ticket.totalFare - actualFare; // Positive = Refund (Credit), Negative = Deduction (Debit)
-  const phone = (ticket.bookedBy || "").trim();
+  const diff = ticket.totalFare - actualFare; 
+  const phoneVal = (ticket.bookedBy || "").toString().trim();
 
-  if (!phone) return; // Cannot process without a phone ID
+  if (!phoneVal) return;
+
+  const phoneNum = Number(phoneVal);
+  // Search with $or to match either string ID or numeric ID in MongoDB
+  const query = { 
+    $or: [
+      { phone: phoneVal },
+      { phone: isNaN(phoneNum) ? phoneVal : phoneNum }
+    ] 
+  };
 
   const bookedLabel = getServiceLabel(ticket.busType);
   const boardedLabel = getServiceLabel(ticket.actualBusType || ticket.busType);
   const transition = `${bookedLabel} -> ${boardedLabel}`;
 
   if (diff > 0) {
-    // REFUND (Credit) - Update EXISTING user balance in Passengers_Wallet
+    // REFUND (Credit)
     const amount = Math.abs(diff);
     const updatedUser = await User.findOneAndUpdate(
-      { phone: phone },
+      query,
       { 
         $inc: { walletBalance: amount },
         $push: { 
@@ -50,7 +60,7 @@ async function processFareAdjustment(
           }
         }
       },
-      { new: true, upsert: false } // DO NOT create new collection entries, use existing data
+      { new: true, upsert: false } 
     );
     
     if (updatedUser) {
@@ -59,13 +69,13 @@ async function processFareAdjustment(
       ticket.refundedAt = new Date();
     }
   } else if (diff < 0) {
-    // DEDUCTION (Debit) - ONLY IF AUTHORIZED by passenger settings in Passengers_Wallet
+    // DEDUCTION (Debit)
     const amountToDeduct = Math.abs(diff);
-    const user = await User.findOne({ phone });
+    const user = await User.findOne(query);
 
     if (user?.autoDeductEnabled && user.walletBalance >= amountToDeduct) {
       await User.findOneAndUpdate(
-        { phone: phone },
+        query,
         { 
           $inc: { walletBalance: -amountToDeduct },
           $push: { 
@@ -77,7 +87,7 @@ async function processFareAdjustment(
             }
           }
         },
-        { upsert: false } // Strictly update existing data
+        { upsert: false }
       );
       ticket.deductionAmount = amountToDeduct;
       ticket.deductionProcessed = true;
@@ -108,18 +118,15 @@ export async function POST(
     const originalFare = ticket.totalFare;
     const calculatedFare = calculateFare(ticket.from, ticket.to, ticket.quantities, actualBusType);
 
-    // Apply adjustments using strictly phone-identified wallet records
     ticket.actualBusType = actualBusType;
     await processFareAdjustment(ticket, calculatedFare, conductorId);
     
-    // Update ticket state in Passengers_Ticket
     ticket.status = "used";
     ticket.validatedAt = new Date();
     ticket.busType = actualBusType;
     ticket.totalFare = calculatedFare;
     await ticket.save();
 
-    // Log verification to conductor_logs
     if (conductorId) {
       await new ConductorLog({
         conductorId,

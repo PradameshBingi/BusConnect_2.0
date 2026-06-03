@@ -52,7 +52,7 @@ const TicketSchema = new mongoose.Schema({
   to: { type: String, required: true },
   routeNo: String,
   passengers: String,
-  bookedBy: String, 
+  bookedBy: { type: mongoose.Schema.Types.Mixed }, // Flexible for String/Number IDs
   quantities: {
     Men: { type: Number, default: 0 },
     Child: { type: Number, default: 0 },
@@ -85,13 +85,13 @@ const TicketSchema = new mongoose.Schema({
 });
 
 export function getTicketModel() {
-  // Using unique model name to avoid caching conflicts
-  return mongoose.models.PassengerTicket || mongoose.model('PassengerTicket', TicketSchema);
+  // Fresh model names to bypass cached collection mappings
+  return mongoose.models.FinalPassengerTicket || mongoose.model('FinalPassengerTicket', TicketSchema);
 }
 
 // User/Wallet Schema - Target for financial transactions (Passengers_Wallet)
 const UserSchema = new mongoose.Schema({
-  phone: { type: String, unique: true, required: true },
+  phone: { type: mongoose.Schema.Types.Mixed, unique: true, required: true }, // Mixed to support Number/String matching
   walletBalance: { type: Number, default: 0 },
   autoDeductEnabled: { type: Boolean, default: false },
   transactions: [{
@@ -104,7 +104,7 @@ const UserSchema = new mongoose.Schema({
 }, { timestamps: true, collection: 'Passengers_Wallet' });
 
 export function getUserModel() {
-  return mongoose.models.PassengerWallet || mongoose.model('PassengerWallet', UserSchema);
+  return mongoose.models.FinalPassengerWallet || mongoose.model('FinalPassengerWallet', UserSchema);
 }
 
 // Conductor Schema - Staff Admin (Conductors_Admin)
@@ -115,7 +115,7 @@ const ConductorSchema = new mongoose.Schema({
 }, { timestamps: true, collection: 'Conductors_Admin' });
 
 export function getConductorModel() {
-  return mongoose.models.ConductorAdmin || mongoose.model('ConductorAdmin', ConductorSchema);
+  return mongoose.models.FinalConductorAdmin || mongoose.model('FinalConductorAdmin', ConductorSchema);
 }
 
 // Conductor Log Schema - Verification Insights (conductor_logs)
@@ -127,7 +127,7 @@ const ConductorLogSchema = new mongoose.Schema({
 }, { timestamps: true, collection: 'conductor_logs' });
 
 export function getConductorLogModel() {
-  return mongoose.models.ConductorLog || mongoose.model('ConductorLog', ConductorLogSchema);
+  return mongoose.models.FinalConductorLog || mongoose.model('FinalConductorLog', ConductorLogSchema);
 }
 
 // Bus Pass Schema - Passenger Pass Data (Passengers_Bus_Pass_Data)
@@ -149,7 +149,7 @@ const BusPassSchema = new mongoose.Schema({
 });
 
 export function getBusPassModel() {
-  return mongoose.models.PassengerBusPass || mongoose.model('PassengerBusPass', BusPassSchema);
+  return mongoose.models.FinalPassengerBusPass || mongoose.model('FinalPassengerBusPass', BusPassSchema);
 }
 
 // Notifications Collection
@@ -163,5 +163,5 @@ const NotificationSchema = new mongoose.Schema({
 }, { timestamps: true, collection: 'Notifications' });
 
 export function getNotificationModel() {
-  return mongoose.models.Notification || mongoose.model('Notification', NotificationSchema);
+  return mongoose.models.FinalNotification || mongoose.model('FinalNotification', NotificationSchema);
 }

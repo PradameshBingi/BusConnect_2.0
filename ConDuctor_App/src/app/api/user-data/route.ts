@@ -1,3 +1,4 @@
+
 import { NextResponse } from 'next/server';
 import dbConnect, { getUserModel } from '@/lib/mongodb';
 
@@ -12,7 +13,15 @@ export async function GET(request: Request) {
   try {
     await dbConnect();
     const User = getUserModel();
-    const user = await User.findOne({ phone });
+    const phoneNum = Number(phone);
+    
+    // Search both string and number for robustness
+    const user = await User.findOne({ 
+      $or: [
+        { phone: phone },
+        { phone: isNaN(phoneNum) ? phone : phoneNum }
+      ] 
+    });
 
     if (!user) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
