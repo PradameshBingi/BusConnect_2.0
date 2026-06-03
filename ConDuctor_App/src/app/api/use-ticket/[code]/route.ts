@@ -17,7 +17,7 @@ const getServiceLabel = (type: string) => {
 };
 
 /**
- * Atomic Fare Adjustment Handler (Refined with specific transaction descriptions)
+ * Atomic Fare Adjustment Handler (Refined to strictly update existing Passengers_Wallet data)
  */
 async function processFareAdjustment(
   ticket: any, 
@@ -25,17 +25,19 @@ async function processFareAdjustment(
   conductorId: string
 ) {
   const User = getUserModel();
-  const diff = ticket.totalFare - actualFare; // Positive = Refund, Negative = Deduction
-  const phone = ticket.bookedBy;
+  const diff = ticket.totalFare - actualFare; // Positive = Refund (Credit), Negative = Deduction (Debit)
+  const phone = (ticket.bookedBy || "").trim();
+
+  if (!phone) return; // Cannot process without a phone ID
 
   const bookedLabel = getServiceLabel(ticket.busType);
   const boardedLabel = getServiceLabel(ticket.actualBusType || ticket.busType);
   const transition = `${bookedLabel} -> ${boardedLabel}`;
 
   if (diff > 0) {
-    // REFUND (Credit) - Conductor initiated refund for lower category boarding
+    // REFUND (Credit) - Update EXISTING user balance in Passengers_Wallet
     const amount = Math.abs(diff);
-    await User.findOneAndUpdate(
+    const updatedUser = await User.findOneAndUpdate(
       { phone: phone },
       { 
         $inc: { walletBalance: amount },
@@ -48,13 +50,16 @@ async function processFareAdjustment(
           }
         }
       },
-      { upsert: true }
+      { new: true, upsert: false } // DO NOT create new collection entries, use existing data
     );
-    ticket.refundAmount = amount;
-    ticket.refundProcessed = true;
-    ticket.refundedAt = new Date();
+    
+    if (updatedUser) {
+      ticket.refundAmount = amount;
+      ticket.refundProcessed = true;
+      ticket.refundedAt = new Date();
+    }
   } else if (diff < 0) {
-    // DEDUCTION (Debit) - ONLY IF AUTHORIZED by passenger
+    // DEDUCTION (Debit) - ONLY IF AUTHORIZED by passenger settings in Passengers_Wallet
     const amountToDeduct = Math.abs(diff);
     const user = await User.findOne({ phone });
 
@@ -71,7 +76,8 @@ async function processFareAdjustment(
               date: new Date()
             }
           }
-        }
+        },
+        { upsert: false } // Strictly update existing data
       );
       ticket.deductionAmount = amountToDeduct;
       ticket.deductionProcessed = true;
@@ -102,18 +108,18 @@ export async function POST(
     const originalFare = ticket.totalFare;
     const calculatedFare = calculateFare(ticket.from, ticket.to, ticket.quantities, actualBusType);
 
-    // Apply adjustments with precise logic
+    // Apply adjustments using strictly phone-identified wallet records
     ticket.actualBusType = actualBusType;
     await processFareAdjustment(ticket, calculatedFare, conductorId);
     
-    // Update ticket state
+    // Update ticket state in Passengers_Ticket
     ticket.status = "used";
     ticket.validatedAt = new Date();
     ticket.busType = actualBusType;
     ticket.totalFare = calculatedFare;
     await ticket.save();
 
-    // CLOUD SYNC: Log to Conductor Verification History
+    // Log verification to conductor_logs
     if (conductorId) {
       await new ConductorLog({
         conductorId,
