@@ -15,7 +15,6 @@ interface HeaderProps {
 
 export default function Header({ title, showBackButton, backHref }: HeaderProps) {
   const router = useRouter();
-  const pathname = usePathname();
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [hasNewNotifications, setHasNewNotifications] = useState(false);
   const [notificationsCount, setNotificationsCount] = useState(0);
@@ -64,42 +63,44 @@ export default function Header({ title, showBackButton, backHref }: HeaderProps)
   };
 
   return (
-    <header className="bg-[#00B893] text-white shadow-md sticky top-0 z-50 h-16 w-full">
-      <div className="container mx-auto flex items-center justify-between h-full px-4">
-        <div className="flex items-center gap-3">
+    <header className="bg-[#00B893] text-white shadow-md sticky top-0 z-50 h-20 w-full">
+      <div className="container mx-auto flex items-center justify-between h-full px-6">
+        <div className="flex items-center gap-4">
           {showBackButton && (
             <Button 
               variant="ghost" 
               size="icon" 
               onClick={handleBackNavigation} 
-              className="text-white hover:bg-white/20 rounded-full h-8 w-8"
+              className="text-white hover:bg-white/20 rounded-full h-12 w-12"
             >
-              <ChevronLeft className="h-6 w-6" />
+              <ChevronLeft className="h-8 w-8" />
             </Button>
           )}
           
-          <div className="flex items-center gap-2 cursor-pointer hover:opacity-90" onClick={goToDashboard}>
-            <div className="bg-red-600 p-1 border border-white rounded-sm shadow-inner shrink-0">
-              <div className="w-7 h-7 flex flex-col items-center justify-center text-white text-[5px] font-bold leading-none uppercase">
+          <div className="flex items-center gap-4 cursor-pointer hover:opacity-90" onClick={goToDashboard}>
+            <div className="bg-red-600 p-1 border-2 border-white rounded-sm shadow-inner shrink-0">
+              <div className="w-10 h-10 flex flex-col items-center justify-center text-white text-[6px] font-bold leading-none uppercase">
                 <span>TSRTC</span>
+                <span>GAMYAM</span>
+                <span className="text-[5px] mt-0.5 scale-90">Track and Active</span>
               </div>
             </div>
             <div>
-              <h1 className="text-lg font-black tracking-widest font-headline uppercase leading-none">TGSRTC</h1>
-              <p className="text-[7px] font-bold text-white/70 uppercase tracking-tighter mt-0.5">{title || 'Terminal'}</p>
+              <h1 className="text-2xl font-black tracking-widest font-headline uppercase leading-none">TGSRTC</h1>
+              <p className="text-[9px] font-bold text-white/70 uppercase tracking-tighter mt-1">{title || 'Terminal'}</p>
             </div>
           </div>
         </div>
 
         <div className="flex items-center gap-4">
-          <Globe className="h-4 w-4 text-white/60 cursor-pointer hover:text-white" />
+          <Globe className="h-5 w-5 text-white/60 cursor-pointer hover:text-white" />
           
           {notificationsCount > 0 && (
             <div className="relative">
               <NotificationsSheet 
                 trigger={
                   <div className="relative cursor-pointer group">
-                    <Bell className="h-4 w-4 text-white/60 group-hover:text-white transition-colors" />
+                    <Bell className="h-5 w-5 text-white/60 group-hover:text-white transition-colors" />
                     {hasNewNotifications && (
                       <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full border border-[#00B893] animate-pulse"></span>
                     )}
@@ -114,17 +115,17 @@ export default function Header({ title, showBackButton, backHref }: HeaderProps)
           )}
 
           <div className="relative">
-            <User className="h-5 w-5 text-white/80 cursor-pointer hover:text-white" onClick={() => setShowProfileMenu(!showProfileMenu)} />
+            <User className="h-6 w-6 text-white/80 cursor-pointer hover:text-white" onClick={() => setShowProfileMenu(!showProfileMenu)} />
             {showProfileMenu && (
-              <div className="absolute right-0 top-8 w-48 bg-white rounded-xl shadow-xl border overflow-hidden z-50 animate-in fade-in zoom-in duration-200">
+              <div className="absolute right-0 top-10 w-48 bg-white rounded-xl shadow-xl border overflow-hidden z-50 animate-in fade-in zoom-in duration-200">
                 <div className="px-4 py-2 bg-slate-50 border-b">
                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Account</p>
                 </div>
                 <button
                   onClick={handleLogout}
-                  className="w-full flex items-center gap-2 px-4 py-3 text-red-600 hover:bg-red-50 transition-colors font-bold uppercase text-[10px] tracking-widest"
+                  className="w-full flex items-center gap-2 px-4 py-4 text-red-600 hover:bg-red-50 transition-colors font-bold uppercase text-xs tracking-widest"
                 >
-                  <LogOut className="h-3.5 w-3.5" />
+                  <LogOut className="h-4 w-4" />
                   Logout Terminal
                 </button>
               </div>
