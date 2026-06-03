@@ -106,7 +106,8 @@ export function getUserModel() {
   return mongoose.models.FinalPassengerWallet || mongoose.model('FinalPassengerWallet', UserSchema);
 }
 
-// Conductor Schema (Strict Production Format)
+// Conductor Schema (Production Workable Structure)
+// Use Mixed for conductorId and password to handle both String and Number inputs from MongoDB
 const ConductorSchema = new mongoose.Schema({
   conductorId: { type: mongoose.Schema.Types.Mixed, unique: true, required: true },
   name: { type: String, required: true },

@@ -6,6 +6,14 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, LogOut, Bell, Globe, User } from 'lucide-react';
 import { NotificationsSheet } from './notifications-sheet';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface HeaderProps {
   title?: string;
@@ -15,15 +23,20 @@ interface HeaderProps {
 
 export default function Header({ title, showBackButton, backHref }: HeaderProps) {
   const router = useRouter();
-  const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [hasNewNotifications, setHasNewNotifications] = useState(false);
   const [notificationsCount, setNotificationsCount] = useState(0);
-  const [conductorName, setConductorName] = useState('Conductor');
+  const [conductorName, setConductorName] = useState('Staff Member');
 
   useEffect(() => {
-    const savedName = localStorage.getItem('conductorName');
-    if (savedName) setConductorName(savedName);
+    // Sync Name from Storage
+    const updateName = () => {
+      const savedName = localStorage.getItem('conductorName');
+      if (savedName) setConductorName(savedName);
+    };
 
+    updateName();
+    
+    // Notifications Logic
     const fetchNotifications = async () => {
       try {
         const res = await fetch('/api/notifications');
@@ -71,6 +84,17 @@ export default function Header({ title, showBackButton, backHref }: HeaderProps)
     router.push('/conductor/dashboard');
   };
 
+  // Reusable High-Fidelity Logo
+  const Logo = () => (
+    <div className="bg-red-600 p-1 border-2 border-white rounded-sm shadow-md shrink-0">
+      <div className="w-10 h-10 flex flex-col items-center justify-center text-white font-black leading-none uppercase text-center">
+        <span className="text-[7px]">TSRTC</span>
+        <span className="text-[8px] mt-0.5">GAMYAM</span>
+        <span className="text-[5px] mt-1 tracking-normal whitespace-nowrap px-0.5 border-t border-white/30 pt-0.5">Track and Active</span>
+      </div>
+    </div>
+  );
+
   return (
     <header className="bg-[#00B893] text-white shadow-md sticky top-0 z-50 h-20 w-full">
       <div className="container mx-auto flex items-center justify-between h-full px-6">
@@ -86,16 +110,8 @@ export default function Header({ title, showBackButton, backHref }: HeaderProps)
             </Button>
           )}
           
-          <div className="flex items-center gap-4 cursor-pointer hover:opacity-90" onClick={goToDashboard}>
-            {!showBackButton && (
-              <div className="bg-red-600 p-1 border-[2.5px] border-white rounded-sm shadow-md shrink-0">
-                <div className="w-10 h-10 flex flex-col items-center justify-center text-white text-[6px] font-black leading-none uppercase">
-                  <span>TSRTC</span>
-                  <span className="mt-0.5">GAMYAM</span>
-                  <span className="text-[5px] mt-1 scale-95 tracking-tighter">Track and Active</span>
-                </div>
-              </div>
-            )}
+          <div className="flex items-center gap-4 cursor-pointer hover:opacity-95" onClick={goToDashboard}>
+            {!showBackButton && <Logo />}
             <div>
               {!showBackButton ? (
                 <>
@@ -131,24 +147,25 @@ export default function Header({ title, showBackButton, backHref }: HeaderProps)
             </div>
           )}
 
-          <div className="relative">
-            <User className="h-6 w-6 text-white/80 cursor-pointer hover:text-white" onClick={() => setShowProfileMenu(!showProfileMenu)} />
-            {showProfileMenu && (
-              <div className="absolute right-0 top-10 w-56 bg-white rounded-xl shadow-xl border overflow-hidden z-50 animate-in fade-in zoom-in duration-200">
-                <div className="px-4 py-3 bg-slate-50 border-b">
-                   <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Logged In As</p>
-                   <p className="text-xs font-black text-slate-800 uppercase truncate">{conductorName}</p>
-                </div>
-                <button
-                  onClick={handleLogout}
-                  className="w-full flex items-center gap-2 px-4 py-4 text-red-600 hover:bg-red-50 transition-colors font-bold uppercase text-[10px] tracking-widest"
-                >
-                  <LogOut className="h-4 w-4" />
-                  Logout Terminal
-                </button>
-              </div>
-            )}
-          </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <User className="h-6 w-6 text-white/80 cursor-pointer hover:text-white transition-all outline-none" />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56 bg-white rounded-xl shadow-xl border-slate-100 p-1">
+              <DropdownMenuLabel className="px-3 py-2.5">
+                <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Logged In As</p>
+                <p className="text-xs font-black text-slate-800 uppercase truncate">{conductorName}</p>
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator className="bg-slate-50" />
+              <DropdownMenuItem 
+                onClick={handleLogout}
+                className="flex items-center gap-2 px-3 py-3 text-red-600 focus:text-red-600 focus:bg-red-50 transition-colors font-bold uppercase text-[10px] tracking-widest cursor-pointer rounded-lg"
+              >
+                <LogOut className="h-4 w-4" />
+                Logout Terminal
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
     </header>
