@@ -12,6 +12,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { API_ENDPOINTS } from '@/lib/api-config';
+import { AuthGuard } from '@/components/auth-guard';
 
 type Ticket = {
   from: string;
@@ -185,7 +186,6 @@ function TicketContent() {
                 </div>
             </div>
 
-            {/* Security Code section - Hidden for expired/cancelled */}
             {(displayStatus !== 'expired' && displayStatus !== 'cancelled') && (
               <div className="p-4 bg-primary/5 rounded-2xl border border-primary/20 flex flex-col items-center gap-2">
                   <p className="text-[10px] uppercase text-muted-foreground font-black tracking-[0.2em]">Security Code</p>
@@ -228,11 +228,11 @@ function TicketContent() {
 
 export default function TicketPage() {
   return (
-    <>
+    <AuthGuard>
       <Header showBackButton={true} backHref="/" title="My Ticket" />
       <Suspense fallback={<div className="p-20 text-center"><Loader2 className="animate-spin mx-auto h-10 w-10 text-primary" /></div>}>
         <TicketContent />
       </Suspense>
-    </>
+    </AuthGuard>
   );
 }

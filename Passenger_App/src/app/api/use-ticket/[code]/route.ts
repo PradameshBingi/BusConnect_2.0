@@ -48,18 +48,11 @@ export async function POST(
     } else if (isUpgradation) {
         transitionMsg = `Upgradation (${originalBusType} → ${newBusType})`;
     } else if (isModification) {
-        const changes = [];
+        const routePart = (updateData.from || updateData.to) 
+          ? `Route Changed (${ticket.from} -> ${updateData.from || ticket.from} / ${ticket.to} -> ${updateData.to || ticket.to})` 
+          : "";
         
-        // Detailed Route tracking
-        if (updateData.from || updateData.to) {
-            const finalFrom = updateData.from || ticket.from;
-            const finalTo = updateData.to || ticket.to;
-            if (finalFrom !== ticket.from || finalTo !== ticket.to) {
-                changes.push(`Route Changed (${ticket.from} -> ${finalFrom} / ${ticket.to} -> ${finalTo})`);
-            }
-        }
-        
-        // Detailed Passenger tracking
+        let passengerPart = "";
         if (updateData.quantities) {
             const pChanges = [];
             const types = ['Men', 'Child', 'Women'] as const;
@@ -69,14 +62,13 @@ export async function POST(
                     pChanges.push(`${type}: ${diff > 0 ? '+' : ''}${diff}`);
                 }
             });
-            
             if (pChanges.length > 0) {
-                changes.push(`Passengers Updated (${pChanges.join(', ')})`);
+                passengerPart = `Passengers Added (${pChanges.join(', ')})`;
             }
         }
         
-        const details = changes.length > 0 ? ` (${changes.join(" & ")})` : "";
-        transitionMsg = `Modification${details}`;
+        const details = [routePart, passengerPart].filter(Boolean).join(" & ");
+        transitionMsg = `Modification (${details})`;
     }
 
     // 3. Financial Processing Logic

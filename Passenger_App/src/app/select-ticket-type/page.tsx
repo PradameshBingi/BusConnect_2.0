@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { Card } from '@/components/ui/card';
 import { Route, History, ChevronRight, Edit3 } from 'lucide-react';
 import Header from '@/app/components/header';
+import { AuthGuard } from '@/components/auth-guard';
 
 const serviceLinks = [
   { 
@@ -25,7 +26,7 @@ const serviceLinks = [
 
 export default function SelectTicketTypePage() {
   return (
-    <>
+    <AuthGuard>
       <Header showBackButton={true} backHref="/" title="Book Tickets" />
       <main className="p-4 space-y-3 pt-8 max-w-md mx-auto">
         {serviceLinks.map((link) => (
@@ -40,6 +41,6 @@ export default function SelectTicketTypePage() {
           </Link>
         ))}
       </main>
-    </>
+    </AuthGuard>
   );
 }

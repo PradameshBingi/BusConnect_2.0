@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Bus, ChevronRight } from 'lucide-react';
 import Header from '@/app/components/header';
+import { AuthGuard } from '@/components/auth-guard';
 
 const busTypes = [
   {
@@ -28,7 +29,7 @@ const busTypes = [
 
 export default function SelectBusTypePage() {
   return (
-    <>
+    <AuthGuard>
       <Header showBackButton={true} backHref="/select-ticket-type" title="Select Bus Type" />
       <div className="p-4 md:p-8 max-w-lg mx-auto">
         <h1 className="text-2xl font-bold mb-6 font-headline text-center uppercase tracking-tight">Select Your Bus Type</h1>
@@ -54,6 +55,6 @@ export default function SelectBusTypePage() {
           ))}
         </div>
       </div>
-    </>
+    </AuthGuard>
   );
 }

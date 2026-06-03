@@ -13,6 +13,7 @@ import { SimulatedPayment } from '@/components/simulated-payment';
 import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { AuthGuard } from '@/components/auth-guard';
 
 export const dynamic = "force-dynamic";
 
@@ -156,7 +157,7 @@ export default function WalletPage() {
   );
 
   return (
-    <>
+    <AuthGuard>
       <Header showBackButton={true} backHref="/" title="My Wallet" />
       <div className="p-4 md:p-8 pb-32 max-w-md mx-auto space-y-6">
           <Card className="rounded-[2.5rem] shadow-2xl border-none overflow-hidden bg-slate-900 text-white">
@@ -211,6 +212,6 @@ export default function WalletPage() {
           </div>
       </div>
       <SimulatedPayment isOpen={showPayment} onClose={() => setShowPayment(false)} onComplete={finalizeAddMoney} amount={parseFloat(addAmount) || 0} />
-    </>
+    </AuthGuard>
   );
 }

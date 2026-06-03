@@ -1,10 +1,10 @@
-
 'use client';
 
 import { useSearchParams } from 'next/navigation';
 import { BookingForm } from './booking-form';
 import Header from '@/app/components/header';
 import { Suspense } from 'react';
+import { AuthGuard } from '@/components/auth-guard';
 
 export const dynamic = "force-dynamic";
 
@@ -39,12 +39,14 @@ function BookTicketContent() {
 
 export default function BookTicketPage() {
   return (
-    <Suspense fallback={
-      <div className="flex items-center justify-center min-h-screen">
-        <p className="text-muted-foreground">Loading booking form...</p>
-      </div>
-    }>
-      <BookTicketContent />
-    </Suspense>
+    <AuthGuard>
+      <Suspense fallback={
+        <div className="flex items-center justify-center min-h-screen">
+          <p className="text-muted-foreground">Loading booking form...</p>
+        </div>
+      }>
+        <BookTicketContent />
+      </Suspense>
+    </AuthGuard>
   );
 }
