@@ -92,6 +92,11 @@ export async function POST(
         ticket.serviceTransition.push(transitionMsg);
     }
 
+    // Update Issue Date if modified or upgraded as requested
+    if (isModification || isUpgradation) {
+        ticket.createdAt = new Date();
+    }
+
     // Status logic: modifications keep valid status, explicit validation marks used
     if (updateData.status) {
         ticket.status = updateData.status;
@@ -112,7 +117,6 @@ export async function POST(
     if (updateData.totalFare !== undefined) ticket.totalFare = updateData.totalFare;
     if (updateData.fare !== undefined) ticket.fare = updateData.fare;
     if (updateData.busType) ticket.busType = newBusType;
-    if (updateData.createdAt) ticket.createdAt = new Date(updateData.createdAt);
 
     await ticket.save();
 

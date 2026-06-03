@@ -5,12 +5,13 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Tag, History, ArrowDown, ArrowUp, CreditCard, Loader2, ShieldCheck, SwitchCamera } from 'lucide-react';
+import { Tag, History, ArrowDown, ArrowUp, CreditCard, Loader2, ShieldCheck } from 'lucide-react';
 import Header from '@/app/components/header';
 import { useToast } from "@/hooks/use-toast";
 import { cn } from '@/lib/utils';
 import { SimulatedPayment } from '@/components/simulated-payment';
 import { Switch } from '@/components/ui/switch';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export const dynamic = "force-dynamic";
 
@@ -120,7 +121,45 @@ export default function WalletPage() {
     }
   };
 
+  const TransactionList = ({ txs }: { txs: Transaction[] }) => {
+    if (txs.length === 0) {
+      return (
+        <Card className="border-dashed border-2 border-slate-200 p-12 text-center text-muted-foreground rounded-3xl bg-slate-50/50">
+          <p className="font-medium">No records found for this category.</p>
+        </Card>
+      );
+    }
+    return (
+      <div className="space-y-3">
+        {txs.map((tx, index) => (
+          <Card key={index} className="border-none shadow-sm rounded-2xl overflow-hidden bg-white">
+            <CardContent className="p-4 flex justify-between items-center">
+              <div className="flex items-center gap-3">
+                <div className={cn("p-2 rounded-xl", tx.type === 'credit' ? "bg-green-50" : "bg-red-50")}>
+                  {tx.type === 'credit' ? <ArrowDown className="h-5 w-5 text-green-600"/> : <ArrowUp className="h-5 w-5 text-red-600"/>}
+                </div>
+                <div className="max-w-[180px]">
+                  <p className="font-bold text-slate-800 text-xs leading-snug">{tx.description}</p>
+                  <p className="text-[9px] text-muted-foreground uppercase font-bold mt-0.5">{new Date(tx.date).toLocaleDateString()} • {new Date(tx.date).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'})}</p>
+                </div>
+              </div>
+              <div className="text-right shrink-0">
+                <p className={cn("font-black text-base", tx.type === 'credit' ? "text-green-600" : "text-red-600")}>
+                  {tx.type === 'credit' ? '+' : '-'} ₹{Math.round(tx.amount)}
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    );
+  };
+
   if (loading) return <div className="p-20 text-center"><Loader2 className="animate-spin h-10 w-10 text-primary mx-auto" /></div>;
+
+  const digitalHistory = wallet.transactions.filter(t => t.description.includes('Added via Online Payment'));
+  const walletUsageHistory = wallet.transactions.filter(t => t.type === 'debit');
+  const refundHistory = wallet.transactions.filter(t => t.description.toLowerCase().includes('refund'));
 
   return (
     <>
@@ -140,7 +179,6 @@ export default function WalletPage() {
                 <p className="text-5xl font-black tracking-tighter">Rs. {wallet.walletBalance.toFixed(2)}</p>
                 <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mt-4">Wallet ID: {phone}</p>
                 
-                {/* Auto Deduct Authorization Section */}
                 <div className="mt-8 pt-6 border-t border-white/10 space-y-4">
                   <div className="flex items-center justify-between">
                     <div className="space-y-1">
@@ -156,9 +194,6 @@ export default function WalletPage() {
                       disabled={isUpdatingSettings}
                     />
                   </div>
-                  <p className="text-[10px] leading-relaxed text-slate-500 italic">
-                    * Enabling this allows conductors to deduct fare differences directly from your wallet if you board a higher category bus.
-                  </p>
                 </div>
               </div>
             </CardContent>
@@ -170,7 +205,6 @@ export default function WalletPage() {
                 <CreditCard className="h-6 w-6 text-primary" />
                 Add Funds
               </CardTitle>
-              <CardDescription>Securely recharge your balance.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
@@ -195,38 +229,32 @@ export default function WalletPage() {
             </CardFooter>
           </Card>
           
-          <div className="space-y-4">
+          <div className="space-y-6">
               <h3 className="text-sm font-black uppercase tracking-widest text-slate-400 flex items-center gap-2 px-1">
                   <History className="h-4 w-4" /> Transaction History
               </h3>
-              {wallet.transactions.length > 0 ? (
-                <div className="space-y-3">
-                {wallet.transactions.map((tx, index) => (
-                    <Card key={index} className="border-none shadow-sm rounded-2xl overflow-hidden bg-white">
-                        <CardContent className="p-4 flex justify-between items-center">
-                            <div className="flex items-center gap-3">
-                                <div className={cn("p-2 rounded-xl", tx.type === 'credit' ? "bg-green-50" : "bg-red-50")}>
-                                    {tx.type === 'credit' ? <ArrowDown className="h-5 w-5 text-green-600"/> : <ArrowUp className="h-5 w-5 text-red-600"/>}
-                                </div>
-                                <div className="max-w-[180px]">
-                                    <p className="font-bold text-slate-800 text-xs leading-snug">{tx.description}</p>
-                                    <p className="text-[9px] text-muted-foreground uppercase font-bold mt-0.5">{new Date(tx.date).toLocaleDateString()} • {new Date(tx.date).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'})}</p>
-                                </div>
-                            </div>
-                            <div className="text-right shrink-0">
-                                <p className={cn("font-black text-base", tx.type === 'credit' ? "text-green-600" : "text-red-600")}>
-                                {tx.type === 'credit' ? '+' : '-'} ₹{Math.round(tx.amount)}
-                                </p>
-                            </div>
-                        </CardContent>
-                    </Card>
-                ))}
-                </div>
-              ) : (
-                <Card className="border-dashed border-2 border-slate-200 p-12 text-center text-muted-foreground rounded-3xl bg-slate-50/50">
-                   <p className="font-medium">No wallet transactions found.</p>
-                </Card>
-              )}
+              
+              <Tabs defaultValue="all" className="w-full">
+                <TabsList className="grid grid-cols-4 w-full h-12 bg-slate-100 rounded-xl p-1 mb-4">
+                  <TabsTrigger value="all" className="text-[10px] uppercase font-bold rounded-lg">All</TabsTrigger>
+                  <TabsTrigger value="digital" className="text-[10px] uppercase font-bold rounded-lg">Digital</TabsTrigger>
+                  <TabsTrigger value="wallet" className="text-[10px] uppercase font-bold rounded-lg">Wallet</TabsTrigger>
+                  <TabsTrigger value="refund" className="text-[10px] uppercase font-bold rounded-lg">Refund</TabsTrigger>
+                </TabsList>
+                
+                <TabsContent value="all">
+                  <TransactionList txs={wallet.transactions} />
+                </TabsContent>
+                <TabsContent value="digital">
+                  <TransactionList txs={digitalHistory} />
+                </TabsContent>
+                <TabsContent value="wallet">
+                  <TransactionList txs={walletUsageHistory} />
+                </TabsContent>
+                <TabsContent value="refund">
+                  <TransactionList txs={refundHistory} />
+                </TabsContent>
+              </Tabs>
           </div>
         </div>
       </div>
