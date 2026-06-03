@@ -5,26 +5,30 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import Header from '@/app/components/header';
-import { HelpCircle, User, Zap, Edit3, ShieldCheck, Linkedin , Mail, Globe } from "lucide-react";
+import { HelpCircle, User, Zap, Edit3, ShieldCheck, Linkedin , Mail, Globe, Cloud, Smartphone } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
 const passengerFaqs = [
   {
     question: "How do I login to my account?",
-    answer: "Use your 10-digit mobile number and 5-digit security password. Once logged in, your session is saved locally for quick access. Every ticket you book is securely linked to your account identity."
+    answer: "Use your 10-digit mobile number and unique security password. Once logged in, your session is saved locally for quick access. Every ticket you book is securely linked to your account identity in the cloud database."
   },
   {
     question: "How do I book a ticket?",
-    answer: "Select 'Book Bus Tickets' > 'Select Route'. Choose your bus type (Ordinary, Express, or Deluxe), enter your route, and set the passenger count. You can pay via UPI, Cards, or your BusConnect Wallet."
+    answer: "Select 'Book Bus Tickets' > 'Select Route'. Choose your bus type (City Ordinary, Metro Express, or Metro Deluxe), enter your route, and set the passenger count. You can pay via UPI, Cards, Netbanking, or your BusConnect Wallet balance."
   },
   {
     question: "How do I modify my booking?",
-    answer: "If your ticket is still valid (before boarding or expiry), go to 'Modify Booking'. You can change your destination or passenger count. If you add people, you pay the difference. If you remove people, the fare is refunded to your wallet minus a 10% processing fee per person."
+    answer: "If your ticket is valid, go to 'Modify Booking'. You can update the route or passenger count. The system tracks granular changes (e.g., 'Men: +1, Child: -1'). Refunds for removed members (minus 10% fee) go to your wallet, and additions require a digital payment. Modifications also refresh the ticket's 'Issued Date' to the latest update time."
+  },
+  {
+    question: "What is the 5-digit Security PIN and Tap-to-Copy?",
+    answer: "The PIN prevents unauthorized use. The conductor will ask for this to validate your boarding. For your convenience, you can tap the 'Ticket No' box in the preview to instantly copy the code to your clipboard."
   },
   {
     question: "How is the fare calculated?",
-    answer: "Fares are distance-based. Women travel free on City Ordinary and Metro Express buses. Surcharges apply for men and children on premium services, and for everyone on Metro Deluxe buses. Per-person rates are rounded to ensure transparent scaling."
+    answer: "Fares are distance-based. Women travel free on City Ordinary and Metro Express buses under the Maha Lakshmi scheme. Surcharges apply for men and children on premium services, and standard fares apply for everyone on Metro Deluxe buses."
   },
   {
     question: "What are the cancellation rules?",
@@ -32,15 +36,11 @@ const passengerFaqs = [
   },
   {
     question: "What happens if my ticket expires?",
-    answer: "Tickets expire 10 minutes after booking if not validated by a conductor. To ensure you don't lose your money, the system automatically processes a refund to your wallet (minus a 10% processing fee) for any unused, expired tickets."
+    answer: "Tickets expire 10 minutes after booking if not validated. To ensure fair usage, the system automatically processes a FULL REFUND (100% credit) to your wallet for any unused, expired tickets. No processing fee is charged for expiry."
   },
   {
-    question: "Why is the Security PIN important?",
-    answer: "The 5-digit PIN prevents unauthorized use of your ticket. The conductor will ask for this code to validate your boarding. It is also required as a secondary authentication if you need to redeem a manual refund code issued by a conductor."
-  },
-  {
-    question: "How do I use my Wallet?",
-    answer: "Your wallet stores refunds from cancellations, modifications, or expired tickets. You can also top up your balance. Use 'Wallet' to pay for tickets or upgrades instantly without entering payment details every time."
+    question: "How do I use my Wallet and its categorized history?",
+    answer: "Your wallet stores refunds and top-ups. The 'Transaction History' is now split into tabs: 'Digital' (external payments), 'Wallet' (internal balance usage), and 'Refund' (credits from cancellations/expiry). You can also enable 'Auto Deduct for Conductor Use' to allow staff to instantly adjust fares for upgrades during boarding."
   },
 ];
 
