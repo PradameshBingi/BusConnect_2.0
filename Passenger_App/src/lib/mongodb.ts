@@ -149,6 +149,18 @@ const BusPassSchema = new mongoose.Schema({
   collection: 'Passengers_BusPass'
 });
 
+// Notification Schema
+const NotificationSchema = new mongoose.Schema({
+  title: { type: String, required: true },
+  description: { type: String, required: true },
+  iconType: { type: String, default: 'info' }, // info, ticket, zap, wallet
+  category: { type: String, default: 'system' }, // emerald, purple, amber, blue
+  isNew: { type: Boolean, default: true },
+  createdAt: { type: Date, default: Date.now }
+}, { 
+  collection: 'Notifications'
+});
+
 export function getTicketModel() {
   return mongoose.models.Ticket || mongoose.model('Ticket', TicketSchema);
 }
@@ -171,4 +183,8 @@ export function getFeedbackModel() {
 
 export function getBusPassModel() {
   return mongoose.models.BusPass || mongoose.model('BusPass', BusPassSchema);
+}
+
+export function getNotificationModel() {
+  return mongoose.models.Notification || mongoose.model('Notification', NotificationSchema);
 }
