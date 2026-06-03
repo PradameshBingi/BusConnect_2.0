@@ -13,7 +13,6 @@ import {
   IndianRupee, 
   TrendingUp, 
   MapPin, 
-  Ticket as TicketIcon,
   RefreshCw,
   CheckCircle,
   BookUser,
@@ -65,77 +64,67 @@ type FullStats = {
 
 export default function ConductorStatsPage() {
   const [stats, setStats] = useState<FullStats | null>(null);
-  const [isClient, setIsClient] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
-  const calculateStats = () => {
+  const calculateStats = async () => {
     setIsLoading(true);
-    try {
-      const storedTickets: any[] = JSON.parse(localStorage.getItem('generatedTickets') || '[]');
-      const verificationStats: any[] = JSON.parse(localStorage.getItem('conductorVerificationStats') || '[]');
-      const passStats: any[] = JSON.parse(localStorage.getItem('conductorPassVerificationStats') || '[]');
-      
-      const mergedData = new Map<string, any>();
-      storedTickets.forEach(t => {
-        if (t.ticketCode) mergedData.set(t.ticketCode, t);
-      });
-      verificationStats.forEach(v => {
-        if (v.ticketCode) {
-          const existing = mergedData.get(v.ticketCode) || {};
-          mergedData.set(v.ticketCode, { ...existing, ...v });
-        }
-      });
+    const conductorId = localStorage.getItem('currentUser');
+    if (!conductorId) return;
 
-      const allUniqueTickets = Array.from(mergedData.values());
-      
+    try {
+      const res = await fetch(`/api/conductor-logs?conductorId=${conductorId}`);
+      const data = await res.json();
+      const logs: any[] = data.logs || [];
+
+      const ticketLogs = logs.filter(l => l.type === 'ticket');
+      const passLogs = logs.filter(l => l.type === 'pass');
+
       let totalRevenue = 0;
+      let totalCollectedDifference = 0;
       let totalMen = 0;
       let totalWomen = 0;
       let totalChildren = 0;
       const routeMap = new Map<string, number>();
 
-      for (const item of allUniqueTickets) {
+      ticketLogs.forEach(log => {
+        const item = log.data;
         totalRevenue += (item.totalFare || 0);
+        if (item.boardingChanged) {
+            const diff = (item.totalFare || 0) - (item.originalFare || 0);
+            if (diff > 0) totalCollectedDifference += diff;
+        }
         totalMen += (item.quantities?.Men || 0);
         totalWomen += (item.quantities?.Women || 0);
         totalChildren += (item.quantities?.Child || 0);
 
-        const routeKey = item.from && item.to ? `${item.from} ➔ ${item.to}` : "Unknown Route";
+        const routeKey = item.from && item.to ? `${item.from} → ${item.to}` : "Unknown Route";
         if (routeKey !== "Unknown Route") {
           routeMap.set(routeKey, (routeMap.get(routeKey) || 0) + 1);
         }
-      }
+      });
 
       const topRoutes = Array.from(routeMap.entries())
         .map(([route, bookings]) => ({ route, bookings }))
         .sort((a, b) => b.bookings - a.bookings)
         .slice(0, 5);
 
-      let totalCollectedDifference = 0;
-      for (const record of verificationStats) {
-        if (record.fareDifference && record.fareDifference > 0) {
-          totalCollectedDifference += record.fareDifference;
-        }
-      }
-
-      // Bus Pass Breakdown
       const passBreakdown = {
-        studentGeneral: passStats.filter(p => p.category === 'Student' && p.passType === 'General').length,
-        studentRoute: passStats.filter(p => p.category === 'Student' && p.passType === 'Route').length,
-        citizenGeneral: passStats.filter(p => p.category === 'Citizen' && p.passType === 'General').length,
-        citizenRoute: passStats.filter(p => p.category === 'Citizen' && p.passType === 'Route').length,
+        studentGeneral: passLogs.filter(p => p.data.category === 'Student' && p.data.passType === 'General').length,
+        studentRoute: passLogs.filter(p => p.data.category === 'Student' && p.data.passType === 'Route').length,
+        citizenGeneral: passLogs.filter(p => p.data.category === 'Citizen' && p.data.passType === 'General').length,
+        citizenRoute: passLogs.filter(p => p.data.category === 'Citizen' && p.data.passType === 'Route').length,
       };
 
       setStats({
-        totalTickets: allUniqueTickets.length,
-        totalRevenue: Math.round(totalRevenue + totalCollectedDifference),
+        totalTickets: ticketLogs.length,
+        totalRevenue: Math.round(totalRevenue),
         totalMen,
         totalWomen,
         totalChildren,
         topRoutes,
-        verifiedTickets: verificationStats.length,
+        verifiedTickets: ticketLogs.length,
         totalCollectedDifference: Math.round(totalCollectedDifference),
-        totalPassesVerified: passStats.length,
+        totalPassesVerified: passLogs.length,
         passBreakdown
       });
     } catch (error) {
@@ -146,244 +135,223 @@ export default function ConductorStatsPage() {
   };
 
   useEffect(() => {
-    setIsClient(true);
     calculateStats();
   }, []);
-
-  if (!isClient) return null;
 
   const chartConfig = {
     bookings: {
       label: "Bookings",
-      color: "hsl(var(--primary))",
+      color: "#00B893",
     },
   };
-
-  const hasData = stats && (stats.totalTickets > 0 || stats.verifiedTickets > 0 || stats.totalPassesVerified > 0);
 
   return (
     <AuthGuard>
     <div className="min-h-screen bg-slate-50 flex flex-col">
       <Header showBackButton={true} backHref="/conductor/dashboard" title="Verification Insights" />
-      <div className="p-4 md:p-8 max-w-5xl mx-auto space-y-8 pb-32 flex-grow">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="bg-primary/10 p-2 rounded-lg">
-              <BarChartIcon className="h-8 w-8 text-primary" />
+      <div className="p-4 md:p-6 max-w-6xl mx-auto space-y-6 pb-28">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="bg-emerald-50 p-1.5 rounded-md">
+              <BarChartIcon className="h-6 w-6 text-[#00B893]" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold font-headline">Conductor Insights</h1>
-              <p className="text-sm text-muted-foreground">Analytics for tickets and verified bus passes.</p>
+              <h1 className="text-xl font-black text-slate-900 leading-none">Conductor Insights</h1>
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Analytics for tickets and verified bus passes.</p>
             </div>
           </div>
-          <Button variant="outline" size="sm" onClick={calculateStats} disabled={isLoading}>
-            <RefreshCw className={cn("h-4 w-4 mr-2", isLoading && "animate-spin")} />
+          <Button variant="outline" size="sm" onClick={calculateStats} disabled={isLoading} className="h-8 text-[10px] font-bold uppercase rounded-lg border-slate-200">
+            <RefreshCw className={cn("h-3 w-3 mr-1.5", isLoading && "animate-spin")} />
             Refresh Data
           </Button>
         </div>
 
         {isLoading ? (
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-            {[...Array(4)].map((_, i) => (
-              <Card key={i}><CardContent className="p-6 space-y-2"><Skeleton className="h-4 w-2/3"/><Skeleton className="h-8 w-1/2"/></CardContent></Card>
-            ))}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-24 rounded-xl" />)}
           </div>
-        ) : hasData ? (
+        ) : (
           <>
-            {/* Ticket Summary Section */}
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-              <Card className="border-l-4 border-l-blue-600">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Tickets Verified</CardTitle>
-                  <CheckCircle className="h-4 w-4 text-blue-600" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{stats.verifiedTickets}</div>
-                  <p className="text-[10px] text-muted-foreground mt-1">Validated during boarding</p>
+            {/* Top 4 Insight Cards */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <Card className="border-none shadow-sm border-l-4 border-l-blue-500 rounded-xl overflow-hidden">
+                <CardContent className="p-4">
+                  <div className="flex justify-between items-center mb-1">
+                    <p className="text-[9px] font-black uppercase text-slate-400 tracking-wider">Tickets Verified</p>
+                    <CheckCircle className="h-3.5 w-3.5 text-blue-500" />
+                  </div>
+                  <h2 className="text-2xl font-black text-slate-900 leading-none">{stats?.verifiedTickets || 0}</h2>
+                  <p className="text-[8px] font-bold text-slate-400 mt-1 uppercase">Validated during boarding</p>
                 </CardContent>
               </Card>
 
-              <Card className="border-l-4 border-l-green-600">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Fare Revenue</CardTitle>
-                  <IndianRupee className="h-4 w-4 text-green-600" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">Rs. {stats.totalRevenue.toLocaleString()}</div>
-                  <p className="text-[10px] text-muted-foreground mt-1">Total digital + cash collected</p>
+              <Card className="border-none shadow-sm border-l-4 border-l-emerald-500 rounded-xl overflow-hidden">
+                <CardContent className="p-4">
+                  <div className="flex justify-between items-center mb-1">
+                    <p className="text-[9px] font-black uppercase text-slate-400 tracking-wider">Fare Revenue</p>
+                    <IndianRupee className="h-3.5 w-3.5 text-emerald-500" />
+                  </div>
+                  <h2 className="text-2xl font-black text-slate-900 leading-none">Rs. {stats?.totalRevenue || 0}</h2>
+                  <p className="text-[8px] font-bold text-slate-400 mt-1 uppercase">Total digital + cash collected</p>
                 </CardContent>
               </Card>
 
-              <Card className="border-l-4 border-l-indigo-600">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Passes Checked</CardTitle>
-                  <BookUser className="h-4 w-4 text-indigo-600" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{stats.totalPassesVerified}</div>
-                  <p className="text-[10px] text-muted-foreground mt-1">Student & Citizen validations</p>
+              <Card className="border-none shadow-sm border-l-4 border-l-indigo-500 rounded-xl overflow-hidden">
+                <CardContent className="p-4">
+                  <div className="flex justify-between items-center mb-1">
+                    <p className="text-[9px] font-black uppercase text-slate-400 tracking-wider">Passes Checked</p>
+                    <BookUser className="h-3.5 w-3.5 text-indigo-500" />
+                  </div>
+                  <h2 className="text-2xl font-black text-slate-900 leading-none">{stats?.totalPassesVerified || 0}</h2>
+                  <p className="text-[8px] font-bold text-slate-400 mt-1 uppercase">Student & Citizen validations</p>
                 </CardContent>
               </Card>
 
-              <Card className="border-l-4 border-l-orange-500">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Cash Difference</CardTitle>
-                  <TrendingUp className="h-4 w-4 text-orange-500" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">Rs. {stats.totalCollectedDifference.toLocaleString()}</div>
-                  <p className="text-[10px] text-muted-foreground mt-1">Physical collections (Upgrades)</p>
+              <Card className="border-none shadow-sm border-l-4 border-l-orange-500 rounded-xl overflow-hidden">
+                <CardContent className="p-4">
+                  <div className="flex justify-between items-center mb-1">
+                    <p className="text-[9px] font-black uppercase text-slate-400 tracking-wider">Cash Difference</p>
+                    <TrendingUp className="h-3.5 w-3.5 text-orange-500" />
+                  </div>
+                  <h2 className="text-2xl font-black text-slate-900 leading-none">Rs. {stats?.totalCollectedDifference || 0}</h2>
+                  <p className="text-[8px] font-bold text-slate-400 mt-1 uppercase">Physical collections (Upgrades)</p>
                 </CardContent>
               </Card>
             </div>
 
-            {/* Bus Pass Breakdown Section */}
-            <div className="grid gap-6 md:grid-cols-2">
-               <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg font-bold flex items-center gap-2">
-                    <GraduationCap className="h-5 w-5 text-[#0A2B70]" />
+            {/* Breakdown Cards */}
+            <div className="grid md:grid-cols-2 gap-4">
+              <Card className="border-none shadow-sm rounded-xl overflow-hidden">
+                <CardHeader className="p-4 pb-0">
+                  <CardTitle className="text-sm font-black flex items-center gap-2 uppercase text-slate-800">
+                    <GraduationCap className="h-4 w-4 text-slate-600" />
                     Student Pass Breakdown
                   </CardTitle>
-                  <CardDescription>Verified student concessions by pass type.</CardDescription>
+                  <CardDescription className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Verified student concessions by pass type.</CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-4 pt-2">
-                  <div className="flex items-center justify-between p-4 bg-blue-50/50 rounded-xl border border-blue-100">
+                <CardContent className="p-4 pt-6 space-y-3">
+                  <div className="flex items-center justify-between p-3 bg-slate-50/50 rounded-lg border border-slate-100">
                     <div>
-                      <p className="font-bold text-slate-800">General Passes</p>
-                      <p className="text-xs text-slate-500">Valid on all ordinary/metro express</p>
+                      <p className="font-black text-xs text-slate-800">General Passes</p>
+                      <p className="text-[9px] font-bold text-slate-400 uppercase">Valid on all ordinary/metro express</p>
                     </div>
-                    <span className="text-2xl font-bold text-blue-700">{stats.passBreakdown.studentGeneral}</span>
+                    <span className="text-xl font-black text-blue-700">{stats?.passBreakdown.studentGeneral || 0}</span>
                   </div>
-                  <div className="flex items-center justify-between p-4 bg-indigo-50/50 rounded-xl border border-indigo-100">
+                  <div className="flex items-center justify-between p-3 bg-slate-50/50 rounded-lg border border-slate-100">
                     <div>
-                      <p className="font-bold text-slate-800">Route-Specific Passes</p>
-                      <p className="text-xs text-slate-500">Valid on specific source-destination</p>
+                      <p className="font-black text-xs text-slate-800">Route-Specific Passes</p>
+                      <p className="text-[9px] font-bold text-slate-400 uppercase">Valid on specific source-destination</p>
                     </div>
-                    <span className="text-2xl font-bold text-indigo-700">{stats.passBreakdown.studentRoute}</span>
+                    <span className="text-xl font-black text-blue-700">{stats?.passBreakdown.studentRoute || 0}</span>
                   </div>
                 </CardContent>
               </Card>
 
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg font-bold flex items-center gap-2">
-                    <Users className="h-5 w-5 text-amber-600" />
+              <Card className="border-none shadow-sm rounded-xl overflow-hidden">
+                <CardHeader className="p-4 pb-0">
+                  <CardTitle className="text-sm font-black flex items-center gap-2 uppercase text-slate-800">
+                    <Users className="h-4 w-4 text-orange-500" />
                     Citizen Pass Breakdown
                   </CardTitle>
-                  <CardDescription>Verified citizen passes by pass type.</CardDescription>
+                  <CardDescription className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Verified citizen passes by pass type.</CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-4 pt-2">
-                  <div className="flex items-center justify-between p-4 bg-amber-50/50 rounded-xl border border-amber-100">
+                <CardContent className="p-4 pt-6 space-y-3">
+                  <div className="flex items-center justify-between p-3 bg-slate-50/50 rounded-lg border border-slate-100">
                     <div>
-                      <p className="font-bold text-slate-800">General Passes</p>
-                      <p className="text-xs text-slate-500">Standard citizen concession</p>
+                      <p className="font-black text-xs text-slate-800">General Passes</p>
+                      <p className="text-[9px] font-bold text-slate-400 uppercase">Standard citizen concession</p>
                     </div>
-                    <span className="text-2xl font-bold text-amber-700">{stats.passBreakdown.citizenGeneral}</span>
+                    <span className="text-xl font-black text-orange-700">{stats?.passBreakdown.citizenGeneral || 0}</span>
                   </div>
-                  <div className="flex items-center justify-between p-4 bg-orange-50/50 rounded-xl border border-orange-100">
+                  <div className="flex items-center justify-between p-3 bg-slate-50/50 rounded-lg border border-slate-100">
                     <div>
-                      <p className="font-bold text-slate-800">Route-Specific Passes</p>
-                      <p className="text-xs text-slate-500">Regular commuter route passes</p>
+                      <p className="font-black text-xs text-slate-800">Route-Specific Passes</p>
+                      <p className="text-[9px] font-bold text-slate-400 uppercase">Regular commuter route passes</p>
                     </div>
-                    <span className="text-2xl font-bold text-orange-700">{stats.passBreakdown.citizenRoute}</span>
+                    <span className="text-xl font-black text-orange-700">{stats?.passBreakdown.citizenRoute || 0}</span>
                   </div>
                 </CardContent>
               </Card>
             </div>
 
-            <div className="grid gap-6 lg:grid-cols-3">
-              <Card className="lg:col-span-2">
-                <CardHeader>
-                  <CardTitle className="text-lg font-bold flex items-center gap-2">
-                    <MapPin className="h-5 w-5 text-primary" />
+            {/* Bottom Row */}
+            <div className="grid md:grid-cols-3 gap-4">
+              <Card className="md:col-span-2 border-none shadow-sm rounded-xl">
+                <CardHeader className="p-4">
+                  <CardTitle className="text-xs font-black uppercase text-slate-800 flex items-center gap-2">
+                    <MapPin className="h-3.5 w-3.5 text-[#00B893]" />
                     Top 5 Ticket Routes
                   </CardTitle>
-                  <CardDescription>Routes with the highest ticket verification density.</CardDescription>
+                  <CardDescription className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Routes with the highest ticket verification density.</CardDescription>
                 </CardHeader>
-                <CardContent className="h-[300px] pt-4">
-                  {stats.topRoutes.length > 0 ? (
+                <CardContent className="h-[250px] p-4">
+                  {stats?.topRoutes && stats.topRoutes.length > 0 ? (
                     <ChartContainer config={chartConfig}>
                       <ResponsiveContainer width="100%" height="100%">
-                        <BarChart data={stats.topRoutes} layout="vertical" margin={{ left: 40, right: 20 }}>
+                        <BarChart data={stats.topRoutes} layout="vertical" margin={{ left: 20 }}>
                           <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} />
                           <XAxis type="number" hide />
                           <YAxis 
                             dataKey="route" 
                             type="category" 
-                            width={120} 
-                            fontSize={10} 
-                            tick={{ fill: 'currentColor' }}
+                            width={100} 
+                            fontSize={8} 
+                            tick={{ fill: '#64748b', fontWeight: 'bold' }}
                             axisLine={false}
                             tickLine={false}
                           />
                           <ChartTooltip content={<ChartTooltipContent hideLabel />} />
-                          <Bar dataKey="bookings" radius={[0, 4, 4, 0]}>
-                            {stats.topRoutes.map((entry, index) => (
-                              <Cell key={`cell-${index}`} fill={`hsl(var(--primary) / ${1 - index * 0.15})`} />
-                            ))}
-                          </Bar>
+                          <Bar dataKey="bookings" radius={[0, 4, 4, 0]} fill="#00B893" />
                         </BarChart>
                       </ResponsiveContainer>
                     </ChartContainer>
                   ) : (
-                    <div className="h-full flex items-center justify-center text-muted-foreground">No route data available yet.</div>
+                    <div className="h-full flex items-center justify-center text-[9px] font-bold text-slate-300 uppercase tracking-widest">No verification data.</div>
                   )}
                 </CardContent>
               </Card>
 
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg font-bold">Passenger Load</CardTitle>
-                  <CardDescription>verified travelers split.</CardDescription>
+              <Card className="border-none shadow-sm rounded-xl">
+                <CardHeader className="p-4">
+                  <CardTitle className="text-xs font-black uppercase text-slate-800">Passenger Load</CardTitle>
+                  <CardDescription className="text-[9px] font-bold text-slate-400 uppercase">verified travelers split.</CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-6 pt-2">
-                  <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
-                    <div className="flex items-center gap-3">
-                      <User className="h-5 w-5 text-blue-600" />
-                      <span className="font-bold text-slate-700">Men</span>
+                <CardContent className="p-4 space-y-2">
+                  <div className="flex items-center justify-between p-2 bg-blue-50 rounded-md">
+                    <div className="flex items-center gap-2">
+                      <User className="h-4 w-4 text-blue-500" />
+                      <span className="font-bold text-[10px] uppercase text-slate-600">Men</span>
                     </div>
-                    <span className="text-xl font-bold text-blue-700">{stats.totalMen}</span>
+                    <span className="font-black text-blue-600">{stats?.totalMen || 0}</span>
                   </div>
                   
-                  <div className="flex items-center justify-between p-3 bg-pink-50 rounded-lg">
-                    <div className="flex items-center gap-3">
-                      <PersonStanding className="h-5 w-5 text-pink-600" />
-                      <span className="font-bold text-slate-700">Women</span>
+                  <div className="flex items-center justify-between p-2 bg-pink-50 rounded-md">
+                    <div className="flex items-center gap-2">
+                      <PersonStanding className="h-4 w-4 text-pink-500" />
+                      <span className="font-bold text-[10px] uppercase text-slate-600">Women</span>
                     </div>
-                    <span className="text-xl font-bold text-pink-700">{stats.totalWomen}</span>
+                    <span className="font-black text-pink-600">{stats?.totalWomen || 0}</span>
                   </div>
 
-                  <div className="flex items-center justify-between p-3 bg-amber-50 rounded-lg">
-                    <div className="flex items-center gap-3">
-                      <Baby className="h-5 w-5 text-amber-600" />
-                      <span className="font-bold text-slate-700">Children</span>
+                  <div className="flex items-center justify-between p-2 bg-amber-50 rounded-md">
+                    <div className="flex items-center gap-2">
+                      <Baby className="h-4 w-4 text-amber-500" />
+                      <span className="font-bold text-[10px] uppercase text-slate-600">Children</span>
                     </div>
-                    <span className="text-xl font-bold text-amber-700">{stats.totalChildren}</span>
+                    <span className="font-black text-amber-600">{stats?.totalChildren || 0}</span>
                   </div>
 
-                  <div className="pt-4 border-t text-center">
-                    <p className="text-xs text-muted-foreground uppercase font-bold tracking-widest mb-1">Total Headcount</p>
-                    <p className="text-3xl font-bold text-primary">{stats.totalMen + stats.totalWomen + stats.totalChildren}</p>
+                  <div className="pt-4 border-t border-dashed mt-4 text-center">
+                    <p className="text-[8px] text-slate-400 uppercase font-black tracking-widest mb-1">Total Headcount</p>
+                    <p className="text-2xl font-black text-[#00B893] tracking-tighter">{(stats?.totalMen || 0) + (stats?.totalWomen || 0) + (stats?.totalChildren || 0)}</p>
                   </div>
                 </CardContent>
               </Card>
             </div>
           </>
-        ) : (
-           <Card className="max-w-md mx-auto">
-            <CardContent className="p-12 text-center space-y-4">
-              <div className="bg-muted w-16 h-16 rounded-full flex items-center justify-center mx-auto">
-                <BarChartIcon className="h-8 w-8 text-muted-foreground" />
-              </div>
-              <div className="space-y-1">
-                <h3 className="font-bold text-lg">No Statistics Available</h3>
-                <p className="text-sm text-muted-foreground">Start verifying tickets or bus passes to see your analytics dashboard here.</p>
-              </div>
-            </CardContent>
-          </Card>
         )}
       </div>
-    </div> </AuthGuard>
+    </div>
+    </AuthGuard>
   );
 }

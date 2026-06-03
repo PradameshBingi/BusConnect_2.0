@@ -46,13 +46,13 @@ async function dbConnect() {
 
 export default dbConnect;
 
-// Ticket Schema - Primary source for verification (Passengers_Ticket)
+// Ticket Schema
 const TicketSchema = new mongoose.Schema({
   from: { type: String, required: true },
   to: { type: String, required: true },
   routeNo: String,
   passengers: String,
-  bookedBy: { type: mongoose.Schema.Types.Mixed }, // String "9999999999" support
+  bookedBy: { type: mongoose.Schema.Types.Mixed },
   quantities: {
     Men: { type: Number, default: 0 },
     Child: { type: Number, default: 0 },
@@ -88,9 +88,9 @@ export function getTicketModel() {
   return mongoose.models.FinalPassengerTicket || mongoose.model('FinalPassengerTicket', TicketSchema);
 }
 
-// User/Wallet Schema - Target for financial transactions (Passengers_Wallet)
+// User/Wallet Schema
 const UserSchema = new mongoose.Schema({
-  phone: { type: mongoose.Schema.Types.Mixed, unique: true, required: true }, // Mixed to support Number 9999999999 matching
+  phone: { type: mongoose.Schema.Types.Mixed, unique: true, required: true },
   walletBalance: { type: Number, default: 0 },
   autoDeductEnabled: { type: Boolean, default: false },
   transactions: [{
@@ -106,9 +106,10 @@ export function getUserModel() {
   return mongoose.models.FinalPassengerWallet || mongoose.model('FinalPassengerWallet', UserSchema);
 }
 
-// Conductor Schema - Staff Admin (Conductors_Admin)
+// Conductor Schema
 const ConductorSchema = new mongoose.Schema({
   conductorId: { type: String, unique: true, required: true },
+  name: { type: String, default: 'Conductor' }, // Added name field
   sessionId: String,
   lastActive: { type: Date, default: Date.now }
 }, { timestamps: true, collection: 'Conductors_Admin' });
@@ -117,7 +118,7 @@ export function getConductorModel() {
   return mongoose.models.FinalConductorAdmin || mongoose.model('FinalConductorAdmin', ConductorSchema);
 }
 
-// Conductor Log Schema - Verification Insights (conductor_logs)
+// Conductor Log Schema
 const ConductorLogSchema = new mongoose.Schema({
   conductorId: { type: String, required: true },
   type: { type: String, enum: ['ticket', 'pass'], required: true },
@@ -129,13 +130,14 @@ export function getConductorLogModel() {
   return mongoose.models.FinalConductorLog || mongoose.model('FinalConductorLog', ConductorLogSchema);
 }
 
-// Bus Pass Schema - Passenger Pass Data (Passengers_Bus_Pass_Data)
+// Bus Pass Schema
 const BusPassSchema = new mongoose.Schema({
   passCode: { type: String, unique: true, required: true },
   name: String,
   validTill: Date,
   category: String,
   passType: String,
+  status: { type: String, enum: ['valid', 'expired'], default: 'valid' }, // Added status element
   busTypes: [String],
   route: {
     from: String,
@@ -151,16 +153,16 @@ export function getBusPassModel() {
   return mongoose.models.FinalPassengerBusPass || mongoose.model('FinalPassengerBusPass', BusPassSchema);
 }
 
-// Notifications Collection
-const NotificationSchema = new mongoose.Schema({
+// Conductor Notifications Schema
+const ConductorNotificationSchema = new mongoose.Schema({
   title: { type: String, required: true },
   description: { type: String, required: true },
   iconType: { type: String, default: 'info' },
   category: { type: String, default: 'blue' },
   isLatest: { type: Boolean, default: true },
   createdAt: { type: Date, default: Date.now }
-}, { timestamps: true, collection: 'Notifications' });
+}, { timestamps: true, collection: 'Conuctors_Notification' });
 
-export function getNotificationModel() {
-  return mongoose.models.FinalNotification || mongoose.model('FinalNotification', NotificationSchema);
+export function getConductorNotificationModel() {
+  return mongoose.models.ConductorNotification || mongoose.model('ConductorNotification', ConductorNotificationSchema);
 }

@@ -2,8 +2,10 @@
 'use client';
 
 import { useRouter, usePathname } from 'next/navigation';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, Bus } from 'lucide-react';
+import { ChevronLeft, LogOut, Bell, Globe, User } from 'lucide-react';
+import { NotificationsSheet } from './notifications-sheet';
 
 interface HeaderProps {
   title?: string;
@@ -14,6 +16,40 @@ interface HeaderProps {
 export default function Header({ title, showBackButton, backHref }: HeaderProps) {
   const router = useRouter();
   const pathname = usePathname();
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [hasNewNotifications, setHasNewNotifications] = useState(false);
+  const [notificationsCount, setNotificationsCount] = useState(0);
+
+  useEffect(() => {
+    const fetchNotifications = async () => {
+      try {
+        const res = await fetch('/api/notifications');
+        const data = await res.json();
+        const notifications = data.notifications || [];
+        setNotificationsCount(notifications.length);
+
+        const lastRead = localStorage.getItem('lastReadConductorNotification');
+        if (notifications.length > 0) {
+          const latestTime = new Date(notifications[0].createdAt).getTime();
+          if (!lastRead || latestTime > parseInt(lastRead)) {
+            setHasNewNotifications(true);
+          }
+        }
+      } catch (err) {
+        console.error("Failed to fetch notifications");
+      }
+    };
+
+    fetchNotifications();
+    const interval = setInterval(fetchNotifications, 60000); // Polling for new alerts
+    return () => clearInterval(interval);
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem('currentUser');
+    localStorage.removeItem('sessionId');
+    router.replace('/login');
+  };
 
   const handleBackNavigation = () => {
     if (backHref) {
@@ -24,46 +60,78 @@ export default function Header({ title, showBackButton, backHref }: HeaderProps)
   };
 
   const goToDashboard = () => {
-    // Detect context and route to appropriate dashboard
-    if (pathname.startsWith('/passenger/conductor-tool')) {
-        router.push('/passenger/conductor-tool');
-    } else {
-        router.push('/conductor/dashboard');
-    }
+    router.push('/conductor/dashboard');
   };
 
   return (
-    <header className="bg-[#00B893] text-white shadow-md sticky top-0 z-20">
-      <div className="container mx-auto flex items-center p-4">
-        {showBackButton && (
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            onClick={handleBackNavigation} 
-            className="mr-2 text-white hover:bg-white/20"
-          >
-            <ChevronLeft className="h-6 w-6" />
-          </Button>
-        )}
-        
-        <div 
-          className="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity"
-          onClick={goToDashboard}
-          title="Back to Dashboard"
-        >
-          <Bus className="h-6 w-6" />
-          <h1 className="text-xl font-bold tracking-wider font-headline uppercase">
-            {title || 'Conductor Tools'}
-          </h1>
+    <header className="bg-[#00B893] text-white shadow-md sticky top-0 z-50 h-16 w-full">
+      <div className="container mx-auto flex items-center justify-between h-full px-4">
+        <div className="flex items-center gap-3">
+          {showBackButton && (
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={handleBackNavigation} 
+              className="text-white hover:bg-white/20 rounded-full h-8 w-8"
+            >
+              <ChevronLeft className="h-6 w-6" />
+            </Button>
+          )}
+          
+          <div className="flex items-center gap-2 cursor-pointer hover:opacity-90" onClick={goToDashboard}>
+            <div className="bg-red-600 p-1 border border-white rounded-sm shadow-inner shrink-0">
+              <div className="w-7 h-7 flex flex-col items-center justify-center text-white text-[5px] font-bold leading-none uppercase">
+                <span>TSRTC</span>
+              </div>
+            </div>
+            <div>
+              <h1 className="text-lg font-black tracking-widest font-headline uppercase leading-none">TGSRTC</h1>
+              <p className="text-[7px] font-bold text-white/70 uppercase tracking-tighter mt-0.5">{title || 'Terminal'}</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-4">
+          <Globe className="h-4 w-4 text-white/60 cursor-pointer hover:text-white" />
+          
+          {notificationsCount > 0 && (
+            <div className="relative">
+              <NotificationsSheet 
+                trigger={
+                  <div className="relative cursor-pointer group">
+                    <Bell className="h-4 w-4 text-white/60 group-hover:text-white transition-colors" />
+                    {hasNewNotifications && (
+                      <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full border border-[#00B893] animate-pulse"></span>
+                    )}
+                  </div>
+                } 
+                onOpen={() => {
+                  setHasNewNotifications(false);
+                  localStorage.setItem('lastReadConductorNotification', Date.now().toString());
+                }}
+              />
+            </div>
+          )}
+
+          <div className="relative">
+            <User className="h-5 w-5 text-white/80 cursor-pointer hover:text-white" onClick={() => setShowProfileMenu(!showProfileMenu)} />
+            {showProfileMenu && (
+              <div className="absolute right-0 top-8 w-48 bg-white rounded-xl shadow-xl border overflow-hidden z-50 animate-in fade-in zoom-in duration-200">
+                <div className="px-4 py-2 bg-slate-50 border-b">
+                   <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Account</p>
+                </div>
+                <button
+                  onClick={handleLogout}
+                  className="w-full flex items-center gap-2 px-4 py-3 text-red-600 hover:bg-red-50 transition-colors font-bold uppercase text-[10px] tracking-widest"
+                >
+                  <LogOut className="h-3.5 w-3.5" />
+                  Logout Terminal
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </header>
   );
 }
-
-
-
-
-
-
-
