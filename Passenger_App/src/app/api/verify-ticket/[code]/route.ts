@@ -55,7 +55,7 @@ export async function GET(
                     $push: {
                         transactions: {
                             type: 'credit',
-                            description: `Full Refund (Expired): ${ticketCode}`,
+                            description: `Wallet: Full Refund (Expired) - ${ticketCode}`,
                             amount: refundAmount,
                             date: new Date()
                         }

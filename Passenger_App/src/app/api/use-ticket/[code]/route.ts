@@ -73,7 +73,7 @@ export async function POST(
                     transactions: {
                         type: 'credit',
                         amount: refundWithFee,
-                        description: `Conductor Adjustment Refund: ${ticketCode}`,
+                        description: `Wallet: Conductor Adjustment Refund (${ticketCode})`,
                         date: new Date()
                     }
                 }

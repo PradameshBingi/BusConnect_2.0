@@ -97,8 +97,7 @@ export default function WalletPage() {
         body: JSON.stringify({
           phone,
           amount,
-          type: 'recharge',
-          description: 'Digital Pay (Debited) → Wallet (Credited)'
+          type: 'recharge'
         })
       });
       const result = await response.json();
@@ -144,12 +143,14 @@ export default function WalletPage() {
   };
 
   const digitalHistory = wallet.transactions.filter(t => 
-    t.description.toLowerCase().includes('digital pay') || 
-    t.description.toLowerCase().includes('online payment')
+    t.description.startsWith('Digital Pay:')
   );
+  
   const walletUsageHistory = wallet.transactions.filter(t => 
-    t.description.toLowerCase().includes('wallet')
+    t.description.startsWith('Wallet:') || 
+    t.description.toLowerCase().includes('wallet payment')
   );
+  
   const refundHistory = wallet.transactions.filter(t => 
     t.description.toLowerCase().includes('refund') || 
     t.description.toLowerCase().includes('reimbursement')
@@ -157,60 +158,62 @@ export default function WalletPage() {
 
   return (
     <AuthGuard>
-      <Header showBackButton={true} backHref="/" title="My Wallet" />
-      <div className="p-4 md:p-8 pb-32 max-w-md mx-auto space-y-6">
-          <Card className="rounded-[2.5rem] shadow-2xl border-none overflow-hidden bg-slate-900 text-white">
-            <CardHeader className="bg-primary p-8 pb-10">
-              <CardTitle className="flex items-center gap-3 text-2xl font-black uppercase tracking-tight">
-                <Tag className="h-7 w-7" />
-                Balance
-              </CardTitle>
-              <CardDescription className="text-white/80">Real-time Cloud Wallet</CardDescription>
-            </CardHeader>
-            <CardContent className="p-8 pt-0 -mt-6">
-              <div className="bg-slate-900 rounded-3xl p-6 border border-white/5">
-                <p className="text-5xl font-black tracking-tighter" suppressHydrationWarning>Rs. {wallet.walletBalance.toFixed(2)}</p>
-                <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mt-4">Wallet ID: {phone}</p>
-                <div className="mt-8 pt-6 border-t border-white/10 flex items-center justify-between">
-                    <div className="flex flex-col pr-4">
-                        <p className="text-xs font-bold text-white flex items-center gap-2">
-                            <ShieldCheck className="h-4 w-4 text-primary" /> Auto Deduct for Conductor Use
-                        </p>
-                        <p className="text-[9px] text-white/40 ml-6 mt-1 font-medium leading-relaxed italic">
-                            Enables conductors to deduct fare differences directly from your wallet for inter-category upgrades during boarding.
-                        </p>
-                    </div>
-                    <Switch checked={wallet.autoDeductEnabled} onCheckedChange={handleToggleAutoDeduct} disabled={isUpdatingSettings} />
+      <div className="bg-white min-h-screen">
+        <Header showBackButton={true} backHref="/" title="My Wallet" />
+        <div className="p-4 md:p-8 pb-32 max-w-md mx-auto space-y-6">
+            <Card className="rounded-[2.5rem] shadow-2xl border-none overflow-hidden bg-slate-900 text-white">
+              <CardHeader className="bg-primary p-8 pb-10">
+                <CardTitle className="flex items-center gap-3 text-2xl font-black uppercase tracking-tight">
+                  <Tag className="h-7 w-7" />
+                  Balance
+                </CardTitle>
+                <CardDescription className="text-white/80">Real-time Cloud Wallet</CardDescription>
+              </CardHeader>
+              <CardContent className="p-8 pt-0 -mt-6">
+                <div className="bg-slate-900 rounded-3xl p-6 border border-white/5">
+                  <p className="text-5xl font-black tracking-tighter" suppressHydrationWarning>Rs. {wallet.walletBalance.toFixed(2)}</p>
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mt-4">Wallet ID: {phone}</p>
+                  <div className="mt-8 pt-6 border-t border-white/10 flex items-center justify-between">
+                      <div className="flex flex-col pr-4">
+                          <p className="text-xs font-bold text-white flex items-center gap-2">
+                              <ShieldCheck className="h-4 w-4 text-primary" /> Auto Deduct for Conductor Use
+                          </p>
+                          <p className="text-[9px] text-white/40 ml-6 mt-1 font-medium leading-relaxed italic">
+                              Enables conductors to deduct fare differences directly from your wallet for inter-category upgrades during boarding.
+                          </p>
+                      </div>
+                      <Switch checked={wallet.autoDeductEnabled} onCheckedChange={handleToggleAutoDeduct} disabled={isUpdatingSettings} />
+                  </div>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
 
-          <Card className="rounded-3xl shadow-lg bg-white overflow-hidden">
-            <CardHeader className="pb-4"><CardTitle className="text-xl font-bold flex items-center gap-2"><CreditCard className="h-6 w-6 text-primary" /> Add Funds</CardTitle></CardHeader>
-            <CardContent className="space-y-4">
-                <Input type="tel" placeholder="Amount (Rs.)" value={addAmount} onChange={handleAmountChange} className="h-14 rounded-xl text-xl font-black bg-slate-50 border-none shadow-inner" suppressHydrationWarning />
-                <Button className='w-full h-14 rounded-2xl text-lg font-bold bg-[#0A2B70]' onClick={() => setShowPayment(true)}>Recharge</Button>
-            </CardContent>
-          </Card>
-          
-          <div className="space-y-4">
-              <h3 className="text-xs font-black uppercase tracking-widest text-slate-400 flex items-center gap-2 px-1"><History className="h-4 w-4" /> History</h3>
-              <Tabs defaultValue="all" className="w-full">
-                <TabsList className="grid grid-cols-4 w-full h-11 bg-slate-100 rounded-xl p-1 mb-4">
-                  <TabsTrigger value="all" className="text-[9px] uppercase font-bold rounded-lg">All</TabsTrigger>
-                  <TabsTrigger value="digital" className="text-[9px] uppercase font-bold rounded-lg">Digital</TabsTrigger>
-                  <TabsTrigger value="wallet" className="text-[9px] uppercase font-bold rounded-lg">Wallet</TabsTrigger>
-                  <TabsTrigger value="refund" className="text-[9px] uppercase font-bold rounded-lg">Refund</TabsTrigger>
-                </TabsList>
-                <TabsContent value="all"><TransactionList txs={wallet.transactions} /></TabsContent>
-                <TabsContent value="digital"><TransactionList txs={digitalHistory} /></TabsContent>
-                <TabsContent value="wallet"><TransactionList txs={walletUsageHistory} /></TabsContent>
-                <TabsContent value="refund"><TransactionList txs={refundHistory} /></TabsContent>
-              </Tabs>
-          </div>
+            <Card className="rounded-3xl shadow-lg bg-white overflow-hidden">
+              <CardHeader className="pb-4"><CardTitle className="text-xl font-bold flex items-center gap-2"><CreditCard className="h-6 w-6 text-primary" /> Add Funds</CardTitle></CardHeader>
+              <CardContent className="space-y-4">
+                  <Input type="tel" placeholder="Amount (Rs.)" value={addAmount} onChange={handleAmountChange} className="h-14 rounded-xl text-xl font-black bg-slate-50 border-none shadow-inner" suppressHydrationWarning />
+                  <Button className='w-full h-14 rounded-2xl text-lg font-bold bg-[#0A2B70]' onClick={() => setShowPayment(true)}>Recharge</Button>
+              </CardContent>
+            </Card>
+            
+            <div className="space-y-4">
+                <h3 className="text-xs font-black uppercase tracking-widest text-slate-400 flex items-center gap-2 px-1"><History className="h-4 w-4" /> History</h3>
+                <Tabs defaultValue="all" className="w-full">
+                  <TabsList className="grid grid-cols-4 w-full h-11 bg-slate-100 rounded-xl p-1 mb-4">
+                    <TabsTrigger value="all" className="text-[9px] uppercase font-bold rounded-lg">All</TabsTrigger>
+                    <TabsTrigger value="digital" className="text-[9px] uppercase font-bold rounded-lg">Digital</TabsTrigger>
+                    <TabsTrigger value="wallet" className="text-[9px] uppercase font-bold rounded-lg">Wallet</TabsTrigger>
+                    <TabsTrigger value="refund" className="text-[9px] uppercase font-bold rounded-lg">Refund</TabsTrigger>
+                  </TabsList>
+                  <TabsContent value="all"><TransactionList txs={wallet.transactions} /></TabsContent>
+                  <TabsContent value="digital"><TransactionList txs={digitalHistory} /></TabsContent>
+                  <TabsContent value="wallet"><TransactionList txs={walletUsageHistory} /></TabsContent>
+                  <TabsContent value="refund"><TransactionList txs={refundHistory} /></TabsContent>
+                </Tabs>
+            </div>
+        </div>
+        <SimulatedPayment isOpen={showPayment} onClose={() => setShowPayment(false)} onComplete={finalizeAddMoney} amount={parseFloat(addAmount) || 0} />
       </div>
-      <SimulatedPayment isOpen={showPayment} onClose={() => setShowPayment(false)} onComplete={finalizeAddMoney} amount={parseFloat(addAmount) || 0} />
     </AuthGuard>
   );
 }

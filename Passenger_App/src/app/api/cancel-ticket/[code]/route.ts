@@ -57,7 +57,7 @@ export async function POST(
                 $push: { 
                     transactions: {
                         type: 'credit',
-                        description: `Cancellation Refund: ${ticketCode}`,
+                        description: `Wallet: Cancellation Refund (${ticketCode})`,
                         amount: refundAmount,
                         date: new Date()
                     }

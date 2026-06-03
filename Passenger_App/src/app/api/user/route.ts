@@ -79,9 +79,43 @@ export async function POST(request: Request) {
      * TRANSACTION TYPE LOGIC:
      * 'credit': +Balance, History: Credit (Green)
      * 'debit': -Balance, History: Debit (Red)
-     * 'digital': 0 change, History: Debit (Red) - User wants external pay shown as debit from source
-     * 'recharge': +Balance, History: Debit (Red) - User wants bank debit shown in red for recharge
+     * 'digital': 0 change, History: Debit (Red) - Bank side debit tracking
+     * 'recharge': Dual History Push + Balance Increment
      */
+    if (type === 'recharge') {
+        const now = new Date();
+        const transactionsToPush = [
+            {
+                type: 'debit',
+                description: 'Digital Pay: Wallet Recharge (Bank Debit)',
+                amount: amount,
+                date: now
+            },
+            {
+                type: 'credit',
+                description: 'Wallet: Recharge Success (Balance Credit)',
+                amount: amount,
+                date: new Date(now.getTime() + 10) // Offset slightly for UI sorting
+            }
+        ];
+
+        const updatedWallet = await Wallet.findOneAndUpdate(
+            query,
+            { 
+                $inc: { walletBalance: amount },
+                $push: { 
+                    transactions: { $each: transactionsToPush } 
+                }
+            },
+            { new: true }
+        );
+
+        return NextResponse.json({ 
+            status: "success", 
+            walletBalance: updatedWallet.walletBalance 
+        });
+    }
+
     let adjustment = 0;
     let historyType: 'credit' | 'debit' = 'debit';
 
@@ -95,11 +129,8 @@ export async function POST(request: Request) {
         adjustment = -amount;
         historyType = 'debit';
     } else if (type === 'digital') {
-        adjustment = 0;
+        adjustment = 0; // External digital pay doesn't deduct from wallet
         historyType = 'debit';
-    } else if (type === 'recharge') {
-        adjustment = amount;
-        historyType = 'debit'; 
     }
     
     const updatedWallet = await Wallet.findOneAndUpdate(
